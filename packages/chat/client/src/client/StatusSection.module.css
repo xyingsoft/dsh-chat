@@ -1,0 +1,64 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary {
+  margin: 0;
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 13px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name status' 'note note';
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--dsh-color-border, #e0e0e0);
+  border-radius: 6px;
+}
+
+.name {
+  grid-area: name;
+  font-weight: 500;
+}
+
+/* 颜色不是唯一的状态信号——文字标签始终存在（§49 无障碍）。 */
+.status {
+  grid-area: status;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+}
+
+.status[data-status='ready'] {
+  color: var(--dsh-color-success, #2e7d32);
+}
+
+.status[data-status='partial'] {
+  color: var(--dsh-color-warning, #ed6c02);
+}
+
+.status[data-status='not_implemented'] {
+  color: var(--dsh-color-text-secondary, #666);
+}
+
+.note {
+  grid-area: note;
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 12px;
+}
