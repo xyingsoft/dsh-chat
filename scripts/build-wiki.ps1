@@ -142,10 +142,28 @@ $sidebar = @'
 - [原文档映射表](meta-source-mapping)
 - [实现记录](meta-implementation-log)
 - [骨架走查记录](meta-skeleton-walkthrough)
+- [P0-a 失败路径覆盖](meta-acceptance-coverage)
 - [DSH 装载验证](meta-dsh-integration-evidence)
 '@
 [System.IO.File]::WriteAllText((Join-Path $OutDir '_Sidebar.md'), $sidebar, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "  _Sidebar.md 已生成"
+
+# 侧边栏是手写的 —— 顺序与标题比从文件名推导出来的好，但代价是新增页面会被
+# 悄悄漏掉：页面生成了却没有任何入口。这里把「漏掉」变成构建失败。
+$linkedPages = @{}
+foreach ($m in [regex]::Matches($sidebar, '\]\(([^)]+)\)')) {
+    $linkedPages[$m.Groups[1].Value] = $true
+}
+$orphans = @()
+foreach ($f in (Get-ChildItem $OutDir -File -Filter *.md)) {
+    $name = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
+    if ($name -eq '_Sidebar') { continue }
+    if (-not $linkedPages.ContainsKey($name)) { $orphans += $name }
+}
+if ($orphans.Count -gt 0) {
+    throw "以下页面已生成但未出现在 _Sidebar.md 中，读者没有入口：`n  $($orphans -join "`n  ")`n请在本脚本的 `$sidebar 中补上对应条目。"
+}
+Write-Host "  侧边栏覆盖全部 $($linkedPages.Count) 个页面"
 
 $pageCount = (Get-ChildItem $OutDir -File -Filter *.md).Count
 Write-Host "`n生成完成：$pageCount 个页面 -> $OutDir"
