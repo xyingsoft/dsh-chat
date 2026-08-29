@@ -1,4 +1,4 @@
-# build-wiki.ps1
+﻿# build-wiki.ps1
 # 从 docs/ 生成 GitHub Wiki 扁平页面副本。
 #
 # GitHub Wiki 是独立仓库且不支持子目录，因此本脚本：
