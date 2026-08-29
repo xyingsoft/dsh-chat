@@ -39,13 +39,18 @@ dsh-chat 自身就是一组 DSH 插件。若你要做与之协作的插件：
 | 依赖 | 版本 |
 |---|---|
 | Node | `^22.19.0 \|\| >=24.0.0` |
-| 包管理器 | Yarn（通过 corepack 启用） |
+| 包管理器 | Yarn 4（由根 `package.json` 的 `packageManager` 字段固定，经 corepack 启用） |
 
 ```bash
 corepack enable
 yarn install --immutable
 yarn check
 ```
+
+> **工程尚未初始化。** 仓库当前只有文档，没有 `package.json`，上述命令要等工程骨架合入后才可用。
+> 在那之前，文档类 PR 的检查由 CI 的「文档一致性」job 完成，本地可跑 `bash scripts/check-links.sh`。
+>
+> 注意 `corepack enable` 本身不决定 Yarn 版本 —— 没有 `packageManager` 字段时它会回落到 Yarn 1.x，而 `--immutable` 在 1.x 中不是合法参数。该字段随工程骨架一并落地。
 
 ### 仓库边界（开始前务必了解）
 
@@ -61,7 +66,7 @@ yarn check
 ### 提交与 PR
 
 - 分支从 `main` 切出，命名 `feat/...`、`fix/...`、`docs/...`、`chore/...`。
-- **`main` 禁止直接推送**，一律通过 PR 合入。
+- **`main` 一律通过 PR 合入，不直接推送。**（分支保护规则待开启；在此之前本条靠自觉遵守，不由服务端强制。）
 - 提交信息使用 [conventional commits](https://www.conventionalcommits.org/) 风格，带 scope，例如 `feat(messaging): ...`、`fix(identity): ...`、`docs: ...`。
 - 文档改动请**中英同步**（`CONTRIBUTING.md` / `CONTRIBUTING.en.md` 这类成对文件）。
 - 提交前运行 `yarn check` 并保证全绿。
@@ -71,7 +76,7 @@ yarn check
 ### 测试要求
 
 - 每个状态转换都要有聚焦的单元测试；封闭联合类型用 `assertNever` 保证穷尽。
-- **触及授权、内容授权、出站或执行路径的改动，必须同时补充对应的拒绝用例才能合入。** 安全用例断言的是拒绝行为与错误码，而不仅是「未崩溃」。
+- **触及授权、内容授权、出站或执行路径的改动，必须同时补充[§39 安全规范清单](./docs/03-details/04-security-compliance.md#39-安全规范清单)对应条目与拒绝用例才能合入。** 安全用例断言的是拒绝行为与错误码，而不仅是「未崩溃」。
 - 测试数据**不得**包含真实凭证、真实组织数据或可用密钥。
 
 分层测试策略见[测试与验收策略](./docs/04-roadmap/04-test-strategy.md)。

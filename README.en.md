@@ -16,11 +16,11 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ## Status
 
-**Not released. Currently implementing `P0-a`.**
+**Not released. The project scaffolding is not initialized yet — the repository currently contains documentation only.**
 
 | Stage | Scope | Status |
 |---|---|---|
-| `P0-a` | Write protocol, delivery semantics, same-transaction audit | In progress |
+| `P0-a` | Write protocol, delivery semantics, same-transaction audit | Preparing (documentation-first phase) |
 | `P0-b` | Second factor, recovery, presence visibility, local search, protocol negotiation | Not started |
 | `P1`–`P4` | Groups and resources, collaboration sessions and bots, governance and analytics, enterprise and E2EE | Not started |
 
@@ -48,12 +48,15 @@ The root `DESIGN.md` is the pre-refactor single-file original, kept as a histori
 | | |
 |---|---|
 | Plugin framework | [`@deepseek-ai/cordis`](https://www.npmjs.com/package/@deepseek-ai/cordis) 4.0.1 |
-| DSH runtime | `@deepseek-ai/dsh-*` 0.1.1-rc.1 |
+| DSH runtime | `0.1.2-alpha.1`, matching DSH Desktop `v2.0.4` |
 | Language | TypeScript, ESM-only |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Client | React 18 + CSS Modules |
 | Config validation | [`@deepseek-ai/schemastery`](https://www.npmjs.com/package/@deepseek-ai/schemastery) |
 | Persistence | `P0` SQLite (L1); `P1` onward PostgreSQL + Redis + object storage (L2) |
+
+> The DSH runtime is **not installed from npm.** Upstream moved to vendored tarball distribution as of `0.1.2-alpha.1`, and the `latest` tag on npm points at a version far older than the current one.
+> Exact versions, the source commit, verification, and the upgrade process are recorded in the [implementation log](https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/implementation-log.md); this table is only an overview.
 
 ## License
 
