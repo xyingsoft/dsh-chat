@@ -4,7 +4,7 @@
 >
 > 阶段划分是实现顺序的工程安排，不是文档概念；每个阶段对应的验收依据都标注了文档出处。
 
-最后更新：2026-08-30 · 23 个 PR 已合并 · 288 个测试
+最后更新：2026-08-30 · 24 个 PR 已合并 · 335 个测试
 
 ---
 
@@ -19,7 +19,7 @@
 | 4 | `@dsh-chat/kernel` 入口包，装入 DSH | ✅ |
 | 5 | 持久化层（SQLite schema 与迁移） | ✅ |
 | 6 | 身份、组织与权限 | ✅ |
-| 7 | 联系人与文本私聊 | 🔶 |
+| 7 | 联系人与文本私聊 | ✅ |
 | 8 | 工作项与通知 | 🔶 |
 | 9 | 审计 | ✅ |
 | 10 | 客户端界面 | 🔶 |
@@ -38,6 +38,8 @@
 | `POST /api/chat/messages` | 发送私聊：准入判定、幂等、队列容量、审计同事务 |
 | `POST /api/chat/messages/pull` | 按设备租约拉取批次 |
 | `POST /api/chat/messages/ack` | 确认投递，返回实际确认数与请求数 |
+| `POST /api/chat/messages/edit` | 编辑，追加事件，只接受更高 revision |
+| `POST /api/chat/messages/revoke` | 撤回，tombstone 事件，幂等 |
 | `POST /api/chat/work-items` | 创建工作项，需 `project.create` |
 | `POST /api/chat/work-items/assign` | 分派并在同事务发通知 |
 | `POST /api/chat/work-items/dependencies` | 添加依赖，成环返回 `DEPENDENCY_CYCLE` |
@@ -101,7 +103,7 @@
 >
 > 跨组织隔离靠 `organization_id` 显式过滤，不靠授权判定：调用者在自己组织有 owner 成员关系时，作用域链走上去是会通过的。三处安全边界都做过变异验证。
 
-### 阶段 7 · 联系人与文本私聊 🔶
+### 阶段 7 · 联系人与文本私聊 ✅
 
 | 项 | 状态 |
 |---|:---:|
@@ -113,8 +115,12 @@
 | 队列满在写入前拒绝，不淘汰未 ACK 消息 | ✅ |
 | 租约按设备，ACK 幂等，到期重投 | ✅ |
 | 发送、拉取、ACK 的 HTTP 端点 | ✅ |
-| 发送方本地 `pending → accepted` 状态机 | ⬜ |
-| 消息编辑与撤回 | ⬜ |
+| 发送方本地 `pending → accepted` 状态机 | ✅ |
+| 消息编辑与撤回 | ✅ |
+
+> 发送方是**三态**而非两态。只有 `pending`/`accepted` 的话终态失败无处安放，只能表现为「一直发送中」—— 用户看着转圈，永远不知道这条其实已经不会发出去了。没有 `delivered` 态：发送方无从得知接收方是否真收到。
+>
+> 编辑追加事件而非覆盖，`messages.body` 始终是初始正文。撤回也占一个 revision，使「撤回」与「迟到的编辑」能按同一把尺子比较。
 
 ### 阶段 8 · 工作项与通知 🔶
 

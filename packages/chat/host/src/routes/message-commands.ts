@@ -11,10 +11,18 @@
  */
 
 import type { IncomingMessage } from 'node:http'
+import type { DatabaseSync } from 'node:sqlite'
 
 import type { ErrorCode } from '@dsh-chat/contract'
 import { recordAuditEvent } from '@dsh-chat/audit'
-import { checkDirectMessageGate, acceptDirectMessage, acknowledge, leaseBatch } from '@dsh-chat/messaging'
+import {
+  checkDirectMessageGate,
+  acceptDirectMessage,
+  acknowledge,
+  editMessage,
+  leaseBatch,
+  revokeMessage,
+} from '@dsh-chat/messaging'
 
 import type { ChatDatabaseService } from '../storage/service.js'
 
@@ -36,6 +44,19 @@ export interface MessageCommandDeps {
   readonly queueCapacity: number
   readonly leaseMs: number
   readonly now: () => Date
+  /**
+   * 组织配置的编辑窗口（§14.1）。缺省用 `DEFAULT_EDIT_WINDOW_MS`。
+   *
+   * 文档说「组织配置的」但没给默认值，已登记为缺口。
+   */
+  readonly editWindowMs?: number
+  /**
+   * 判定调用者是否具备合规撤回权限（§14.1）。
+   *
+   * 不提供时视为**没有**该权限 —— 默认拒绝而非默认放行。一个忘了接线的部署
+   * 应该表现为「管理员撤不了别人的消息」，而不是「谁都能撤别人的消息」。
+   */
+  readonly authorizeCompliance?: (db: DatabaseSync, principal: Principal) => boolean
 }
 
 interface SendBody {
@@ -206,6 +227,173 @@ export function ackMessagesHandler(deps: MessageCommandDeps) {
         }),
       )
       return { ok: true as const, value: { acked, requested: seqs.length } }
+    },
+  })
+}
+
+// ── 编辑与撤回（§14.1）─────────────────────────────────────────────
+
+/**
+ * 编辑窗口的默认值。
+ *
+ * §14.1 说「组织配置的编辑窗口」，但**没有给出默认值**。这里取 15 分钟并把它
+ * 登记为文档缺口 —— 不是因为 15 分钟有依据，而是因为端点必须有一个值才能工作。
+ * 由 `MessageCommandDeps` 覆盖，不写死在判定逻辑里。
+ */
+export const DEFAULT_EDIT_WINDOW_MS = 15 * 60 * 1000
+
+/** 编辑与撤回共用的正文校验，与发送保持同一口径。 */
+function validBody(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  const segmenter = new Intl.Segmenter('zh', { granularity: 'grapheme' })
+  const graphemes = [...segmenter.segment(value)].length
+  return graphemes > 0 && graphemes <= 8000
+}
+
+/**
+ * 编辑自己发出的消息。
+ *
+ * `senderId` **取自认证结果而不是请求体** —— 否则任何人填上别人的 accountId
+ * 就能去编辑别人的消息，领域层那道「只有原发送者」的检查会因为拿到的是伪造的
+ * senderId 而通过。
+ */
+export function editMessageHandler(deps: MessageCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      if (typeof raw !== 'object' || raw === null) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+      const input = raw as Record<string, unknown>
+      const messageId = input['messageId']
+      const targetRevision = input['targetRevision']
+      const operationId = input['operationId']
+      const body = input['body']
+      if (
+        typeof messageId !== 'string' ||
+        typeof operationId !== 'string' ||
+        typeof targetRevision !== 'number' ||
+        !Number.isInteger(targetRevision) ||
+        targetRevision < 2 ||
+        !validBody(body)
+      ) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const now = deps.now()
+      return deps.database.transaction((db) => {
+        const result = editMessage(db, {
+          organizationId: principal.organizationId,
+          // 认证结果，不是请求体
+          senderId: principal.accountId,
+          messageId,
+          editorId: principal.accountId,
+          targetRevision,
+          body,
+          now,
+          policyRevision: 1,
+          operationId,
+          editWindowMs: deps.editWindowMs ?? DEFAULT_EDIT_WINDOW_MS,
+        })
+
+        recordAuditEvent(db, {
+          auditEventId: `ae-${operationId}-${result.ok ? 'succeeded' : 'rejected'}`,
+          organizationId: principal.organizationId,
+          eventType: 'message_edited',
+          occurredAt: now,
+          actorAccountId: principal.accountId,
+          deviceId: principal.deviceId,
+          // 只放引用，不放新正文 —— 否则审计表就成了消息正文的第二份副本
+          targetRef: `message:${principal.accountId}/${messageId}`,
+          outcome: result.ok ? 'succeeded' : 'rejected',
+          policyRevision: 1,
+          operationId,
+          ...(result.ok ? {} : { errorCode: result.errorCode }),
+        })
+
+        return result.ok
+          ? { ok: true as const, value: { revision: result.revision } }
+          : { ok: false as const, errorCode: result.errorCode }
+      })
+    },
+  })
+}
+
+/**
+ * 撤回消息。
+ *
+ * 与编辑不同，撤回可以针对**他人的**消息（合规管理员），所以 `senderId` 必须
+ * 来自请求体。合规权限由 `authorizeCompliance` 判定 —— 缺省实现返回 false，
+ * 也就是说没有显式接线时只有原发送者能撤回。**默认拒绝**，不是默认放行。
+ */
+export function revokeMessageHandler(deps: MessageCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      if (typeof raw !== 'object' || raw === null) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+      const input = raw as Record<string, unknown>
+      const messageId = input['messageId']
+      const senderId = input['senderId']
+      const operationId = input['operationId']
+      if (
+        typeof messageId !== 'string' ||
+        typeof senderId !== 'string' ||
+        typeof operationId !== 'string'
+      ) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const now = deps.now()
+      return deps.database.transaction((db) => {
+        const hasCompliance =
+          senderId === principal.accountId
+            ? false
+            : (deps.authorizeCompliance?.(db, principal) ?? false)
+
+        const result = revokeMessage(db, {
+          organizationId: principal.organizationId,
+          senderId,
+          messageId,
+          actorId: principal.accountId,
+          actorHasComplianceAuthority: hasCompliance,
+          now,
+          policyRevision: 1,
+          operationId,
+        })
+
+        // 幂等重放跳过审计：重放是**查询首次执行的结果**，不是再次执行。
+        // 不跳的话，同一 operationId 会生成同一个审计 ID，撞上审计表主键 ——
+        // 而那会让一次本该成功的幂等重放变成 500。
+        if (result.ok && result.idempotentReplay) {
+          return { ok: true as const, value: { revision: result.revision } }
+        }
+
+        recordAuditEvent(db, {
+          auditEventId: `ae-${operationId}-${result.ok ? 'succeeded' : 'rejected'}`,
+          organizationId: principal.organizationId,
+          eventType: 'message_revoked',
+          occurredAt: now,
+          actorAccountId: principal.accountId,
+          deviceId: principal.deviceId,
+          targetRef: `message:${senderId}/${messageId}`,
+          outcome: result.ok ? 'succeeded' : 'rejected',
+          policyRevision: 1,
+          operationId,
+          ...(result.ok ? {} : { errorCode: result.errorCode }),
+        })
+
+        return result.ok
+          ? { ok: true as const, value: { revision: result.revision } }
+          : { ok: false as const, errorCode: result.errorCode }
+      })
     },
   })
 }
