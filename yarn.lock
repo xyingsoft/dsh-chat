@@ -89,6 +89,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dsh-chat/identity@workspace:packages/chat/identity":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/identity@workspace:packages/chat/identity"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
 "@dsh-chat/kernel@workspace:packages/chat/kernel":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/kernel@workspace:packages/chat/kernel"
@@ -97,6 +108,17 @@ __metadata:
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.1
     "@deepseek-ai/dsh-host-webserver": 0.1.2-alpha.1
+  languageName: unknown
+  linkType: soft
+
+"@dsh-chat/organization@workspace:packages/chat/organization":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/organization@workspace:packages/chat/organization"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
   languageName: unknown
   linkType: soft
 
