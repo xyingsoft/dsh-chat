@@ -82,6 +82,7 @@ dsh-chat/
     chat/
       contract/          @dsh-chat/contract：共享品牌 ID、命令、事件、错误码、schema 与 SPI
       kernel/            @dsh-chat/kernel：L1 插件 bundle 与社区默认配置
+        cordis.patch.yml   本 bundle 向 profile 插入的 loader 条目（见 §6.2）
       team/              @dsh-chat/team：L2 provider 覆盖与团队 bundle
       enterprise/        @dsh-chat/enterprise：L3 provider 覆盖与企业 bundle
       host/              dsh-chat host 插件：本地数据库、relay 客户端、同源路由、事件发布
@@ -107,6 +108,8 @@ dsh-chat/
 > **注**：上述结构中的 `DESIGN.md` 现已重构为 `docs/` Wiki，原文件保留为历史归档。详见[原文档映射表](../_meta/source-mapping.md)。
 
 `@dsh-chat/contract` 是唯一的共享协议包；`kernel`、`team` 和 `enterprise` 只选择其服务提供者，不重新定义命令或权限语义。
+
+`kernel` 同时是 **DSH 的安装入口**：它以 `dsh.bundle.patch` 指向自身的 `cordis.patch.yml`，宿主 profile 在 `dsh.profile.bundles` 中登记该包名后才会装载 dsh-chat 的各插件。装载形态与版本锚定要求见[插件化架构 §6.2](../02-architecture/02-plugin-model.md#62-bundle-的装载形态)。这不改变 `kernel` 既有的职责边界 —— 它仍然只排列插件与提供默认配置，不承载业务单例。
 
 `client` 绝不访问 relay 凭证或数据库。
 
