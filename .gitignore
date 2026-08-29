@@ -6,6 +6,12 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Yarn 4：yarn.lock 必须提交；以下为本地状态与缓存
+.yarn/*
+!.yarn/patches/
+!.yarn/releases/
+.pnp.*
+
 # 环境与本地配置
 .env
 .env.local

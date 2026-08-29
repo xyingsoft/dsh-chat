@@ -1,0 +1,20 @@
+{
+  "name": "@dsh-chat/contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "dsh-chat 的唯一共享协议包：品牌化 ID、命令、事件、错误码、状态机与服务接口",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  }
+}

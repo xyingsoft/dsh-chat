@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/chat/contract" },
+    { "path": "./packages/chat/host" }
+  ]
+}

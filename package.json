@@ -1,0 +1,35 @@
+{
+  "name": "dsh-chat",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "面向自建团队、受管团队与企业组织的 DSH Web 协作平台",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xyingsoft/dsh-chat.git"
+  },
+  "packageManager": "yarn@4.18.0",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "workspaces": [
+    "packages/chat/*"
+  ],
+  "scripts": {
+    "check": "yarn check:vendor && yarn check:links && yarn check:types",
+    "check:vendor": "node scripts/verify-vendored-runtime.mjs",
+    "check:links": "bash scripts/check-links.sh",
+    "check:types": "tsc --build --verbose"
+  },
+  "resolutions": {
+    "@deepseek-ai/dsh-host-webserver": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz",
+    "@deepseek-ai/dsh-client-ui-slots": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz",
+    "@deepseek-ai/dsh-client-ui-renderer": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz",
+    "@deepseek-ai/dsh-invariants": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-invariants-0.1.2-alpha.1.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "~5.9.2"
+  }
+}
