@@ -1,0 +1,92 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px;
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 13px;
+  text-align: center;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name meta' 'preview meta';
+  gap: 2px 12px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.item:hover {
+  background: var(--dsh-color-bg-hover, #f5f5f5);
+}
+
+/* 选中态同时用背景与左边框标示 —— 只用颜色的话，色觉障碍用户看不出选了哪一条 */
+.selected {
+  background: var(--dsh-color-bg-selected, #eef3fb);
+  box-shadow: inset 3px 0 0 var(--dsh-color-accent, #3574d6);
+}
+
+.name {
+  grid-area: name;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.preview {
+  grid-area: preview;
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 12px;
+  /* 预览是单行摘要；超出省略而不是把列表撑成不等高 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  grid-area: meta;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.time {
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 未读角标。带文字计数而非纯圆点 —— 「有未读」与「有 12 条未读」是不同的信息 */
+.unread {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--dsh-color-accent, #3574d6);
+  color: var(--dsh-color-text-inverse, #fff);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
