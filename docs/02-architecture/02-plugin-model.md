@@ -10,6 +10,7 @@
 
 - [6. 插件化架构](#6-插件化架构)
 - [6.1 能力与提供者矩阵](#61-能力与提供者矩阵)
+- [6.2 bundle 的装载形态](#62-bundle-的装载形态)
 
 ---
 
@@ -43,6 +44,27 @@ dsh-chat 遵循 DSH 的“一切皆插件”模型。除 `@dsh-chat/contract` �
 插件的配置**必须**通过 schema 验证，含 `OrganizationId` 范围、依赖服务、权限、资源上限、保留期和停机行为。启动顺序由 bundle 配置的依赖关系决定：先加载身份、组织和审计，再加载消息/内容等消费者；**缺少必需提供者时 profile 加载失败，不允许静默降级**。可选能力**必须**显式显示为未安装或 `NOT_IMPLEMENTED`。
 
 组织公共插件与系统核心插件使用**不同信任级别**。系统核心插件随 dsh-chat bundle 安装、只能由部署管理员替换并受部署审计；组织公共插件由组织审核后供成员启用，始终运行在能力租约和成员 ACL 内，**不能替换身份、授权、审计、出站或密钥插件**。
+
+### 6.2 bundle 的装载形态
+
+§6 规定「启动顺序由 bundle 配置的依赖关系决定」，本节补充 bundle 在 DSH 中**以什么形态存在**。
+
+bundle 是一个可被 DSH 安装的包，通过 `package.json` 的 `dsh` 字段向宿主声明自身构成：
+
+| 字段 | 作用 |
+|---|---|
+| `dsh.bundle.patch` | 指向本包的 `cordis.patch.yml`，即该 bundle 向 profile 插入的 loader 条目列表 |
+| `dsh.client` | 声明浏览器半：`platform` 与所需的客户端服务 `inject` 列表 |
+
+`cordis.patch.yml` 是一个 loader 补丁条目数组，每个条目含 `id`、`name`（Node 可解析的包名）与 `config`。**同一 bundle 内条目的书写顺序不表达启动顺序** —— 启动顺序由各插件声明的 `inject` 依赖推导，§6 的「先加载身份、组织和审计」由此保证，不靠人工排列。
+
+安装后，宿主 profile 的 `package.json` 在 `dsh.profile.bundles` 中登记该包名；未登记的包即使存在于 `node_modules` 中也不会被装载。
+
+对 dsh-chat 而言，承担这一角色的是 [`kernel`](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构)（L1 社区 bundle）。**bundle 只排列插件、提供默认配置并选择提供者，不承载业务单例** —— 这条既有约束不因它同时是安装入口而放宽。
+
+> **版本锚定**：bundle 声明的 DSH 运行时依赖**必须**是精确版本，不得使用 `*`、`latest` 或范围匹配。运行时包不从公共 registry 解析，宽松范围会静默装到错误版本。
+>
+> 各插件对宿主提供的服务**应当**在 `peerDependencies` 中声明为 `*` 并由宿主满足；**不得**将其装入自身的 `node_modules`，否则会遮蔽宿主运行时，造成同一符号在两个版本间错配。
 
 > 各能力对应的工程目录结构，见[最小可运行骨架 §43.3 初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构)。
 > 插件相关的编码约束，见[契约与规范附录 §48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范)。

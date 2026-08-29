@@ -88,14 +88,15 @@ DSH 运行时在 `0.1.2-alpha.1` 起改为**全量 vendor 化**：上游 DSH Des
 
 | 提案 | 应写入 | 变更类型 | 当前状态 |
 |---|---|---|---|
-| 增加一个被 DSH 装载的插件入口包（承载 `dsh.client` / `dsh.bundle` 字段与 `cordis.patch.yml`），命名遵循 DSH 生态的 `dsh-plugin-<name>` 约定 | [§43.3 初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构) + [§6.1 能力与提供者矩阵](../02-architecture/02-plugin-model.md#61-能力与提供者矩阵) + [§47 术语表](../03-details/06-contracts-and-conventions.md#47-术语表) | 新增插件能力 + 新增品牌化 ID | 未实现 |
+| ~~增加一个被 DSH 装载的插件入口包~~ **改为澄清既有的 `kernel` 即安装入口** | [§6.2 bundle 的装载形态](../02-architecture/02-plugin-model.md#62-bundle-的装载形态) + [§43.3 初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构) | 补充架构说明 | **已完成** |
 | 明确包管理器与版本（DSH 生态的桌面产品仓库使用 `yarn@4.18.0`，harness 核心仓库使用 pnpm） | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) | 工程约定 | **已在工程骨架中实现，文档待补** |
 | 明确 DSH 运行时依赖的精确版本与升级流程 | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) 或 [§41 协议版本协商](../03-details/05-observability-and-ops.md#41-协议版本协商与升级顺序) | 工程约定 | **已在工程骨架中实现，文档待补** |
 
 > **本节此前写有「在那之前本项目不据此实现」，而工程骨架 PR 先实现了后两项，违反了这条自我约束。**
 > 这里如实记录而不是抹去：两项已落地的工程约定需要尽快补进 §48，在补完之前它们只是既成事实，不构成对其他实现的约束。第一项（插件入口包）仍未实现，保持原状。
 
-> §43.3 目前枚举了 19 个包并明确「全部 19 个包」。新增入口包会改变这个数字，属于[变更分类表](./documentation-workflow.md#2-变更分类与所需更新)中的「新增／调整插件能力」，需架构评审。
+> 原方案是新增一个 `dsh-plugin-chat` 入口包，会把 §43.3 的包数从 19 改为 20，属于「新增插件能力 + 新增品牌化 ID」。
+> **实际不需要。** §43.3 早已把 `kernel` 定义为「L1 插件 bundle」，它本就是这个角色；DSH 对 bundle 的包名也没有强制约定（宿主 profile 中同时存在 `@deepseek-ai/dsh-base`、`dshmarket`、`@local/dsh-weixin` 等多种命名）。因此改为补充说明 `kernel` 的装载形态，包数不变，也不新增品牌化 ID。
 
 ### 2.3 Wiki 生成
 
