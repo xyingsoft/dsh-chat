@@ -13,37 +13,14 @@
 
 import type { DatabaseSync } from 'node:sqlite'
 
-/** 操作结果。被拒绝的尝试同样要记录，因此这不是布尔值。 */
-export const AUDIT_OUTCOMES = ['succeeded', 'rejected'] as const
-export type AuditOutcome = (typeof AUDIT_OUTCOMES)[number]
+// 结构定义在契约包 —— §37：「`AuditEvent` 的结构属于 `@dsh-chat/contract`，
+// 不由各插件自行定义」。本模块只负责**写入实现**（SQL、序列号分配），
+// 那是副作用，按 §48 不能进契约包。
+import type { AuditEvent, AuditEventInput, AuditOutcome } from '@dsh-chat/contract'
 
-/**
- * 审计事件。字段对应 §37 的清单。
- *
- * **注意没有 `body` / `content` 字段** —— 审计记录的是「事实与引用」，
- * 不是内容本身。`targetRef` 只放引用（如 `message:sender/msg-id`），
- * 需要正文时按引用去主表查，且那条查询本身受权限约束。
- */
-export interface AuditEventInput {
-  readonly auditEventId: string
-  readonly organizationId: string
-  readonly eventType: string
-  readonly occurredAt: Date
-  readonly actorAccountId?: string
-  readonly deviceId?: string
-  /** 只记 IP 前缀而非完整地址（§37）。 */
-  readonly sourceIpPrefix?: string
-  readonly coarseRegion?: string
-  readonly targetRef: string
-  readonly outcome: AuditOutcome
-  /** 被拒绝时记录错误码，供事后核对拒绝是否符合预期。 */
-  readonly errorCode?: string
-  /** 判定时生效的策略版本，使权限判定可复算（§48）。 */
-  readonly policyRevision: number
-  readonly operationId?: string
-  readonly relatedEventId?: string
-  readonly traceId?: string
-}
+// 为既有调用方保留从本包导入的路径，避免一次结构搬迁牵动所有领域插件
+export { AUDIT_OUTCOMES } from '@dsh-chat/contract'
+export type { AuditEvent, AuditEventInput, AuditOutcome } from '@dsh-chat/contract'
 
 /**
  * 写入一条审计事件。
@@ -97,32 +74,6 @@ function allocateServerSeq(db: DatabaseSync, organizationId: string): number {
     .prepare('SELECT COALESCE(MAX(server_seq), 0) AS max_seq FROM audit_events WHERE organization_id = ?')
     .get(organizationId) as { max_seq: number }
   return row.max_seq + 1
-}
-
-/**
- * 读出的审计事件。
- *
- * 不从 `AuditEventInput` 派生：写入侧的可选字段是「调用方可以不传」，
- * 读取侧的是「数据库里可能为 NULL」。在 `exactOptionalPropertyTypes` 下这是两种
- * 不同的类型，合并会让读取侧无法显式赋 `undefined`。
- */
-export interface AuditEvent {
-  readonly auditEventId: string
-  readonly organizationId: string
-  readonly eventType: string
-  readonly occurredAt: string
-  readonly serverSeq: number
-  readonly actorAccountId: string | undefined
-  readonly deviceId: string | undefined
-  readonly sourceIpPrefix: string | undefined
-  readonly coarseRegion: string | undefined
-  readonly targetRef: string
-  readonly outcome: AuditOutcome
-  readonly errorCode: string | undefined
-  readonly policyRevision: number
-  readonly operationId: string | undefined
-  readonly relatedEventId: string | undefined
-  readonly traceId: string | undefined
 }
 
 /** 按组织读取审计事件，按序列升序。 */
