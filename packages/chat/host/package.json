@@ -1,0 +1,33 @@
+{
+  "name": "@dsh-chat/host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "dsh-chat host 插件：本地数据库、relay 客户端、同源路由与事件发布",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@dsh-chat/contract": "workspace:^"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-host-webserver": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-invariants": "^0.1.2-alpha.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-host-webserver": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-invariants": "^0.1.2-alpha.1"
+  }
+}
