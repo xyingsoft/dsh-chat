@@ -67,6 +67,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dsh-chat/audit@workspace:packages/chat/audit":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/audit@workspace:packages/chat/audit"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
 "@dsh-chat/contract@workspace:^, @dsh-chat/contract@workspace:packages/chat/contract":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/contract@workspace:packages/chat/contract"
