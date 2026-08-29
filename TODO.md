@@ -125,12 +125,12 @@
 | 不做推断性描述 | ✅ |
 | 事件流状态必须显式呈现 | ✅ |
 | 状态面板组件与 CSS Modules | ✅ |
-| slot 注册 | ⛔ |
+| slot 注册 | ✅ |
 | 会话列表与消息视图 | ⬜ |
 
-> **slot 注册被类型依赖挡住。** `settings.section` 由 `@deepseek-ai/dsh-client-ui-settings` 声明，其传递闭包是 **54 个包 / 1.9 MB**（依赖整个 session/agent 栈）。本地 `declare module` 猜形状则可能编译通过但运行时对不上。
+> 早先认为 slot 注册被类型依赖挡住 —— `settings.section` 由 `@deepseek-ai/dsh-client-ui-settings` 声明，其**传递**闭包是 54 个包 / 1.9 MB。
 >
-> 两条出路：上游把 slot 键类型拆到轻量包；或本项目改为在 DSH Desktop 工作区内联调。组件已就绪，`apply()` 中加一行即可接通。
+> 那个判断是错的。那些传递依赖只在 ui-settings 自己的 `.d.ts` 中被引用，而 `skipLibCheck: true` 会跳过对 `.d.ts` 的类型检查、**同时仍然处理其中的模块增强**。因此只 vendor 这一个包（28.6 KB）即可拿到 slot 键类型。
 
 ### 阶段 11 · 集成验收 🔶
 
