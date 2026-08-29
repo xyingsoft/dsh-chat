@@ -128,7 +128,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dsh-chat/client@workspace:packages/chat/client":
+"@dsh-chat/client@workspace:^, @dsh-chat/client@workspace:packages/chat/client":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/client@workspace:packages/chat/client"
   dependencies:
@@ -164,6 +164,7 @@ __metadata:
     "@deepseek-ai/dsh-invariants": "npm:0.1.2-alpha.1"
     "@deepseek-ai/schemastery": "npm:^3.18.1"
     "@dsh-chat/audit": "workspace:^"
+    "@dsh-chat/client": "workspace:^"
     "@dsh-chat/contract": "workspace:^"
     "@dsh-chat/messaging": "workspace:^"
     "@dsh-chat/notification": "workspace:^"
