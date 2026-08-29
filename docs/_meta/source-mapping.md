@@ -214,6 +214,7 @@
 | 交叉引用链接 | 全部文档 | 替代原文的隐式关联 |
 | 文档维护规范 | [`_meta/documentation-workflow.md`](./documentation-workflow.md) | **文档先行**流程、变更分类表、评审清单 |
 | 本映射表 | `_meta/source-mapping.md` | 完整性核对 |
+| 实现记录 | [`_meta/implementation-log.md`](./implementation-log.md) | 外部依赖版本、工程决策与文档缺口登记 |
 
 **原文档中的「阅读指引」与「目录」两节**（原 6–54 行）已被 Wiki 首页与各文档的本篇目录取代，其导航意图完整保留。
 
