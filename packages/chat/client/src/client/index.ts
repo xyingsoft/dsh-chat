@@ -4,50 +4,91 @@
  * §5：Web 客户端**必须**作为 DSH client 插件实现，UI 通过 `ctx.slots.register`
  * 贡献，样式用 DSH 主题 token + CSS Modules。
  *
- * ## 当前状态：组件已就绪，slot 注册暂缓
+ * ## 两步式注册
  *
- * `StatusSection` 与其样式已实现并测试，但**尚未注册到 `settings.section`**。
+ * `ctx.slots.inject(key, cb)` 先等待该 slot 被其**所有者**声明，然后在回调里
+ * `ctx.slots.register(options, Component)` 填入。直接 register 一个尚未声明的
+ * slot 会失败 —— 这也是为什么注册要嵌套在 inject 里。
  *
- * 原因是类型而非能力：`settings.section` 这个 slot 键由
- * `@deepseek-ai/dsh-client-ui-settings` 声明，而该包的传递闭包是 **54 个包 /
- * 1.9 MB**（依赖整个 session/agent 栈）。为一个类型键把它拖进 vendor 不合理。
+ * ## 关于 ui-settings 的依赖
  *
- * 尝试在本地 `declare module` 补这个键也不可行：`register` 的选项类型是
- * `BaseOptions<K, EntryKey, D, H, M, N> & KindOptions<K, EntryKey, M>`，
- * 其形状由 SlotMap 条目的具体类型推导而来。本地猜一个形状可能编译通过但运行时
- * 对不上 —— 那比不注册更糟，因为失败会发生在用户的界面上而不是 CI 里。
+ * `settings.section` 这个 slot 键由 `@deepseek-ai/dsh-client-ui-settings` 声明。
+ * 它的**传递**依赖闭包是 54 个包 / 1.9 MB（依赖整个 session/agent 栈），但那些
+ * 只在它自己的 `.d.ts` 里被引用 —— `skipLibCheck: true` 会跳过对 `.d.ts` 的类型
+ * 检查，同时**仍然处理其中的模块增强**。因此只 vendor 这一个包（28.6 KB）即可
+ * 拿到 slot 键的类型，不必把整个栈拖进来。
  *
- * 接通方式有两条，取其一即可：
- *
- * 1. 上游把 slot 键的类型拆到一个轻量包中；
- * 2. 本项目改为在 DSH Desktop 的工作区内联调，直接使用其已装的 ui-settings 类型。
- *
- * 在那之前，本插件只注册不依赖外部 slot 的部分。§6 要求「可选能力必须显式显示为
- * 未安装，**不得伪装为可用**」—— 注册一个类型来路不明的 slot 正是「伪装」。
+ * 运行时依赖在 `package.json` 的 `dsh.client.inject` 中声明，由宿主提供。
  */
 
 import type { Context } from '@deepseek-ai/cordis'
 
+// slots 服务由 ui-renderer 增强到 Context 上；settings.section 这个键由
+// ui-settings 增强到 SlotMap 上。两者都是类型层面的副作用导入。
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+
+import { StatusSection, type CapabilityRow } from './StatusSection.js'
+
 export const name = 'dsh-chat-client'
 
-/**
- * 声明所需服务。
- *
- * `slots` 由 ui-renderer 提供；`@deepseek-ai/dsh-client-ui-settings` 在
- * `package.json` 的 `dsh.client.inject` 中声明，宿主装载它之后
- * `settings.section` 才存在。
- */
 export const inject = ['slots']
+
+/**
+ * 各能力的就绪状态。
+ *
+ * §6 要求「可选能力**必须**显式显示为未安装或 `NOT_IMPLEMENTED`，**不得伪装为
+ * 可用**」。这张表如实呈现哪些已就绪、哪些没有 —— 一个假装能用的聊天界面比
+ * 没有界面更糟。
+ *
+ * 写在这里而不是从 host 拉取，因为它描述的是**本次构建装载了什么**，
+ * 属于构建期事实而非运行期状态。
+ */
+const CAPABILITIES: readonly CapabilityRow[] = [
+  { name: '插件装载与卸载', status: 'ready', note: '路由注册与 disposer 级联已验证' },
+  { name: '错误码与状态集合', status: 'ready', note: '32 条错误码、11 组状态，与文档双向锁定' },
+  { name: '本地持久化', status: 'ready', note: 'SQLite schema 与迁移，含 P0 全部必备字段' },
+  { name: '授权判定', status: 'ready', note: '角色默认能力 + 作用域链合并' },
+  { name: '邀请码', status: 'ready', note: '一次性消费，并发下由条件更新保证' },
+  { name: '组织与成员', status: 'ready', note: '三级层次、版本控制、邀请与接受' },
+  { name: '文本私聊', status: 'ready', note: '发送、租约拉取、ACK 均经 HTTP 走通' },
+  { name: '工作项与通知', status: 'ready', note: '创建、分派、依赖成环、收件箱均经 HTTP 走通' },
+  { name: '审计', status: 'ready', note: '仅追加，与领域写入同事务' },
+  { name: '消息编辑与撤回', status: 'partial', note: '追加事件模型已实现，界面未接' },
+  { name: '第二验证因素与恢复', status: 'not_implemented', note: '属 P0-b 关口' },
+  { name: '在线状态', status: 'not_implemented', note: '属 P0-b 关口' },
+  { name: '群聊与附件', status: 'not_implemented', note: '属 P1 及之后' },
+]
 
 export interface ClientConfig {
   readonly protocolVersion?: string
   readonly schemaVersion?: number
 }
 
-export function apply(_ctx: Context, _config: ClientConfig = {}): void {
-  // 目前没有可安全注册的 slot，见文件头部说明。
-  // 这个空实现是刻意的：插件仍会被装载，导出形态正确，卸载时无残留；
-  // 等 slot 类型可用后在此加入 ctx.slots.inject(...) 即可，不需要改动其他部分。
+export function apply(ctx: Context, config: ClientConfig = {}): void {
+  // 两步式：先等 settings.section 被其所有者声明，再填入自己的分区。
+  // 整个注册经 inject 的回调返回，卸载时随 fiber 级联释放（§48）。
+  ctx.effect(
+    () =>
+      ctx.slots.inject('settings.section', () =>
+        ctx.slots.register(
+          {
+            name: 'settings.section',
+            id: 'dsh-chat',
+            // 给一个靠后的顺序值，不抢占既有分区的位置
+            order: 200,
+            label: () => 'dsh-chat',
+            inject: () => ({
+              capabilities: CAPABILITIES,
+              protocolVersion: config.protocolVersion ?? '1.0',
+              schemaVersion: config.schemaVersion ?? 1,
+            }),
+          },
+          StatusSection,
+        ),
+      ),
+    'dsh-chat-client: settings section',
+  )
 }
 
 export { StatusSection } from './StatusSection.js'
