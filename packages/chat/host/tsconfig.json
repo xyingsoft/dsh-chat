@@ -25,6 +25,9 @@
     },
     {
       "path": "../workitem"
+    },
+    {
+      "path": "../client"
     }
   ],
   "exclude": [

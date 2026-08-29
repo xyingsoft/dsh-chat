@@ -16,21 +16,42 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ## Status
 
-**Not released. `P0-a` is under implementation.** The plugin already installs into DSH and loads correctly, but no chat functionality exists yet.
+**Not released.** `P0-a`'s skeleton steps and acceptance checklist are fully covered and the host side is complete; **there is still no UI** — see "Known gaps" below.
 
 | Stage | Scope | Status |
 |---|---|---|
-| `P0-a` | Write protocol, delivery semantics, same-transaction audit | In progress (4 of 11 implementation stages) |
-| `P0-b` | Second factor, recovery, presence visibility, local search, protocol negotiation | Not started |
+| `P0-a` | Write protocol, delivery semantics, same-transaction audit | §43 skeleton steps and the §44.1.2 checklist are fully covered |
+| `P0-b` | Second factor, recovery, presence visibility, local search, full protocol-negotiation acceptance | Not started (the negotiation codec is implemented) |
 | `P1`–`P4` | Groups and resources, collaboration sessions and bots, governance and analytics, enterprise and E2EE | Not started |
 
-**Per-stage progress, completed items, and blockers are tracked in [TODO.md](./TODO.md).** See the [iteration plan](./docs/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
+**Per-stage progress, completed items, and gaps are tracked in [TODO.md](./TODO.md).** See the [iteration plan](./docs/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
 
 ### What works today
 
-Direct messaging and work items run **over real HTTP**: send, lease-based pull, acknowledge; create a work item, assign it with a notification, add dependencies (with cycle detection), read the inbox. Every write endpoint has cross-origin protection, injected authentication, and same-transaction audit.
+The following run **over real HTTP**, backed by 506 tests:
 
-**The UI is not usable yet** — the client component exists, but slot registration is blocked by a type dependency; see [TODO stage 10](./TODO.md). Second factor, recovery, presence, groups, and attachments belong to later gates; their entry points are explicitly absent rather than pretending to work.
+- **Direct messaging** — send, lease-based pull, acknowledge, edit, revoke
+- **Organizations** — create organization/workspace/project, invite members, accept invitations
+- **Work items** — create, assign with notification, add dependencies (with cycle detection), review gate
+- **Notifications** — cursor-based inbox catch-up, 5-minute aggregation window, SSE event stream
+
+Every write endpoint has cross-origin protection, injected authentication, and same-transaction
+audit. The identity side additionally has device registration and Ed25519 request signing
+(nonce deduplication, clock-skew tolerance window).
+
+Integration acceptance runs **three real OS processes**: one relay plus two hosts, each with
+its own local database.
+
+### Known gaps
+
+| Gap | Impact |
+|---|---|
+| **The client plugin is not loaded by real DSH** | No UI appears in DSH. The renderer entry must be a pre-bundled single file; see the [load verification](./docs/_meta/dsh-integration-evidence.md) |
+| Data source for the conversation list | Components and presentation rules are ready and tested, but the host lacks a per-conversation aggregation endpoint |
+| Relay client abstraction | In the three-process acceptance the host calls relay HTTP directly, so there is one fewer layer than the docs describe |
+
+Second factor, recovery, presence, groups, and attachments belong to later gates; their entry
+points are **explicitly absent rather than pretending to work**.
 
 ## Documentation
 

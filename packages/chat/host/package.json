@@ -9,7 +9,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
@@ -20,6 +25,7 @@
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",
     "@dsh-chat/audit": "workspace:^",
+    "@dsh-chat/client": "workspace:^",
     "@dsh-chat/contract": "workspace:^",
     "@dsh-chat/messaging": "workspace:^",
     "@dsh-chat/notification": "workspace:^",
