@@ -32,5 +32,5 @@ This project's security constraints live in the documents and act as acceptance 
 - [安全与合规 / Security and compliance](./docs/03-details/04-security-compliance.md) —— 租户隔离、授权链、SSRF 防护、加密与密钥、审计模型、安全规范清单
 - [测试与验收策略 / Test and acceptance strategy](./docs/04-roadmap/04-test-strategy.md) —— **安全回归用例库是交付物而不是一次性验证**
 
-触及授权、内容授权、出站或执行路径的改动，必须同时补充对应的拒绝用例才能合入。
-A change that touches authorization, content grants, egress, or execution paths must add the matching rejection cases before it can land.
+触及授权、内容授权、出站或执行路径的改动，必须同时补充 [§39 安全规范清单](./docs/03-details/04-security-compliance.md#39-安全规范清单)对应条目与拒绝用例才能合入。
+A change that touches authorization, content grants, egress, or execution paths must add both the corresponding [§39 security checklist](./docs/03-details/04-security-compliance.md#39-安全规范清单) entry and the matching rejection cases before it can land.

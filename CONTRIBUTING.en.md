@@ -39,13 +39,18 @@ dsh-chat is itself a set of DSH plugins. If you are writing a plugin that works 
 | Requirement | Version |
 |---|---|
 | Node | `^22.19.0 \|\| >=24.0.0` |
-| Package manager | Yarn (enabled via corepack) |
+| Package manager | Yarn 4 (pinned by the root `package.json` `packageManager` field, enabled via corepack) |
 
 ```bash
 corepack enable
 yarn install --immutable
 yarn check
 ```
+
+> **The workspace is not initialized yet.** The repository currently contains documentation only — there is no `package.json`, so these commands will not work until the project scaffolding lands.
+> Until then, documentation PRs are checked by the CI "documentation consistency" job, and you can run `bash scripts/check-links.sh` locally.
+>
+> Note that `corepack enable` alone does not select a Yarn version — without a `packageManager` field it falls back to Yarn 1.x, where `--immutable` is not a valid flag. That field lands together with the scaffolding.
 
 ### Repository boundaries (read before you start)
 
@@ -61,7 +66,7 @@ These boundaries come from the architecture documents. Violating them is a defec
 ### Commits and pull requests
 
 - Branch from `main`, named `feat/...`, `fix/...`, `docs/...`, or `chore/...`.
-- **Direct pushes to `main` are forbidden.** Everything lands through a PR.
+- **Everything lands on `main` through a PR — no direct pushes.** (Branch protection is not enabled yet; until it is, this rule is followed by convention rather than enforced by the server.)
 - Use [conventional commits](https://www.conventionalcommits.org/) with a scope, for example `feat(messaging): ...`, `fix(identity): ...`, `docs: ...`.
 - Keep documentation changes **synchronized across languages** (paired files such as `CONTRIBUTING.md` / `CONTRIBUTING.en.md`).
 - Run `yarn check` before committing and make sure it is green.
@@ -71,7 +76,7 @@ These boundaries come from the architecture documents. Violating them is a defec
 ### Testing requirements
 
 - Every state transition needs a focused unit test. Use `assertNever` to keep closed unions exhaustive.
-- **A change that touches authorization, content grants, egress, or execution paths must add the matching rejection cases before it can land.** Security cases assert the rejection behaviour and the error code, not merely "it did not crash".
+- **A change that touches authorization, content grants, egress, or execution paths must add both the corresponding entry in the [§39 security checklist](./docs/03-details/04-security-compliance.md#39-安全规范清单) and the matching rejection cases before it can land.** Security cases assert the rejection behaviour and the error code, not merely "it did not crash".
 - Test data **must not** contain real credentials, real organization data, or usable keys.
 
 The layered testing strategy is in the [test and acceptance strategy](./docs/04-roadmap/04-test-strategy.md).

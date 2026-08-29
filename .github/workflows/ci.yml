@@ -10,7 +10,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # 只取消同一 PR 的在途运行；main 上的每个合并都要跑完，便于定位是哪次合并引入的问题
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   docs:

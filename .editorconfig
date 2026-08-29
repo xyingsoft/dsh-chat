@@ -15,6 +15,14 @@ trim_trailing_whitespace = false
 [*.ps1]
 end_of_line = crlf
 indent_size = 4
+# Windows PowerShell 5.1 对无 BOM 的文件按系统 ANSI 代码页解码，
+# 中文脚本会被错误解码并破坏语法。BOM 是必需的，不是可选项。
+charset = utf-8-bom
+
+[DESIGN.md]
+# 历史归档，原文件为 UTF-16LE。不要让编辑器按 utf-8 重存，
+# 否则会产生一个 150 KB 的纯编码变更 diff。
+charset = utf-16le
 
 [Makefile]
 indent_style = tab

@@ -16,11 +16,11 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 
 ## 当前状态
 
-**尚未发布，处于 `P0-a` 实现阶段。**
+**尚未发布。工程骨架尚未初始化，仓库当前只有文档。**
 
 | 阶段 | 范围 | 状态 |
 |---|---|---|
-| `P0-a` | 写入协议、投递语义、审计同事务三项架构承诺 | 进行中 |
+| `P0-a` | 写入协议、投递语义、审计同事务三项架构承诺 | 准备中（文档先行阶段） |
 | `P0-b` | 第二因素、恢复、在线可见范围、本地搜索、协议协商 | 未开始 |
 | `P1`–`P4` | 群聊与资源、协作会话与 Bot、治理与分析、企业与 E2EE | 未开始 |
 
@@ -48,12 +48,15 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 | | |
 |---|---|
 | 插件框架 | [`@deepseek-ai/cordis`](https://www.npmjs.com/package/@deepseek-ai/cordis) 4.0.1 |
-| DSH 运行时 | `@deepseek-ai/dsh-*` 0.1.1-rc.1 |
+| DSH 运行时 | `0.1.2-alpha.1`，对应 DSH Desktop `v2.0.4` |
 | 语言 | TypeScript，ESM-only |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 客户端 | React 18 + CSS Modules |
 | 配置校验 | [`@deepseek-ai/schemastery`](https://www.npmjs.com/package/@deepseek-ai/schemastery) |
 | 持久化 | `P0` SQLite（L1），`P1` 起 PostgreSQL + Redis + 对象存储（L2） |
+
+> DSH 运行时**不从 npm 安装** —— 上游自 `0.1.2-alpha.1` 起改为 vendored tarball 分发，npm 上的 `latest` 标签指向一个远早于当前的版本。
+> 精确版本、来源 commit、校验方式与升级流程记录在[实现记录](https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/implementation-log.md)，本表只作概览。
 
 ## 许可
 
