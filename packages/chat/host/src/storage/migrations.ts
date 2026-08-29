@@ -349,5 +349,72 @@ const migration002: Migration = {
   ],
 }
 
+/**
+ * 版本 3：消息编辑与撤回的事件流，以及发送方本地发送状态。
+ *
+ * §14.1：「**消息正文不是可原地覆盖的字段。**每个 `MessageId` 具有单调递增的
+ * `MessageRevision`，初始正文为 revision 1；编辑追加不可变 `message_edited`
+ * 事件，撤回追加 `message_revoked` tombstone 事件。」
+ *
+ * 因此这里加的是**事件表**而不是给 messages 加几个列。给 messages 加
+ * `edited_at` / `is_revoked` 会让编辑历史无处存放，而 §14.1 的整段约束
+ * （只接受更高 revision、引用展示发送时快照）都建立在历史可查之上。
+ */
+const migration003: Migration = {
+  version: 3,
+  name: 'message-events-and-send-state',
+  statements: [
+    // 不可变事件流。没有 UPDATE 路径 —— 表里每一行都是一个已发生的事实。
+    //
+    // 主键含 revision：同一条消息的每次编辑是一行。(sender_id, message_id) 与
+    // messages 表的幂等键对齐，便于按同一把钥匙关联。
+    `CREATE TABLE message_events (
+       organization_id TEXT NOT NULL,
+       sender_id       TEXT NOT NULL,
+       message_id      TEXT NOT NULL,
+       -- 该事件把消息推进到的 revision。撤回也占一个 revision，
+       -- 使「撤回」与「撤回后又收到一条迟到的编辑」可比较
+       revision        INTEGER NOT NULL,
+       -- message_edited / message_revoked
+       event_type      TEXT NOT NULL,
+       actor_id        TEXT NOT NULL,
+       occurred_at     TEXT NOT NULL,
+       -- §14.1：编辑事件包含新内容摘要。撤回事件为 NULL —— tombstone 不带内容
+       body            TEXT,
+       -- 判定时生效的策略版本，使「当时是否在编辑窗口内」可复算
+       policy_revision INTEGER NOT NULL,
+       operation_id    TEXT NOT NULL,
+       PRIMARY KEY (organization_id, sender_id, message_id, revision)
+     ) STRICT`,
+    `CREATE INDEX idx_message_events_lookup
+       ON message_events(organization_id, sender_id, message_id, revision)`,
+
+    // 发送方本地发送状态（§4「离线时界面区分三种状态」）。
+    //
+    // 与 messages 分表：messages 是**已被服务器接收**的消息，而 pending 的
+    // 那条按定义还没被接收。塞进 messages 会让「查我收到的消息」意外查出
+    // 自己尚未发出的草稿。
+    `CREATE TABLE outgoing_messages (
+       organization_id TEXT NOT NULL,
+       sender_id       TEXT NOT NULL,
+       message_id      TEXT NOT NULL,
+       recipient_id    TEXT NOT NULL,
+       body            TEXT NOT NULL,
+       -- pending / accepted / failed，见 contract 的 OUTGOING_STATES
+       state           TEXT NOT NULL,
+       created_at      TEXT NOT NULL,
+       updated_at      TEXT NOT NULL,
+       -- accepted 后由服务器给出；pending 与 failed 时为 NULL
+       delivery_seq    INTEGER,
+       -- failed 时记录终态错误码，供界面按可重试性呈现
+       error_code      TEXT,
+       attempts        INTEGER NOT NULL DEFAULT 0,
+       PRIMARY KEY (organization_id, sender_id, message_id)
+     ) STRICT`,
+    `CREATE INDEX idx_outgoing_pending
+       ON outgoing_messages(organization_id, sender_id, state)`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
-export const MIGRATIONS: readonly Migration[] = [migration001, migration002]
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003]
