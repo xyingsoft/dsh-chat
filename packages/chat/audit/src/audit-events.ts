@@ -99,9 +99,30 @@ function allocateServerSeq(db: DatabaseSync, organizationId: string): number {
   return row.max_seq + 1
 }
 
-export interface AuditEvent extends Omit<AuditEventInput, 'occurredAt'> {
+/**
+ * 读出的审计事件。
+ *
+ * 不从 `AuditEventInput` 派生：写入侧的可选字段是「调用方可以不传」，
+ * 读取侧的是「数据库里可能为 NULL」。在 `exactOptionalPropertyTypes` 下这是两种
+ * 不同的类型，合并会让读取侧无法显式赋 `undefined`。
+ */
+export interface AuditEvent {
+  readonly auditEventId: string
+  readonly organizationId: string
+  readonly eventType: string
   readonly occurredAt: string
   readonly serverSeq: number
+  readonly actorAccountId: string | undefined
+  readonly deviceId: string | undefined
+  readonly sourceIpPrefix: string | undefined
+  readonly coarseRegion: string | undefined
+  readonly targetRef: string
+  readonly outcome: AuditOutcome
+  readonly errorCode: string | undefined
+  readonly policyRevision: number
+  readonly operationId: string | undefined
+  readonly relatedEventId: string | undefined
+  readonly traceId: string | undefined
 }
 
 /** 按组织读取审计事件，按序列升序。 */
