@@ -53,7 +53,7 @@
 |---|---|---|---|
 | 新增用户可见能力 | [协作能力需求](../01-requirements/02-collaboration-requirements.md) | 细节层对应文档、[迭代计划](../04-roadmap/03-iteration-plan.md)、[操作状态矩阵](../04-roadmap/01-operation-states.md) | 产品 + 架构 |
 | 调整能力边界／不做清单 | [定位与边界](../01-requirements/01-positioning-and-boundaries.md) | 所有引用该边界的下游文档 | 产品 + 架构 + 安全 |
-| 新增／调整插件能力 | [插件化架构](../02-architecture/02-plugin-model.md) 能力矩阵 | [初始工程结构](../04-roadmap/02-minimum-skeleton.md#431-初始工程结构) | 架构 |
+| 新增／调整插件能力 | [插件化架构](../02-architecture/02-plugin-model.md) 能力矩阵 | [初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构) | 架构 |
 | 调整三层职责或凭证归属 | [三层总体架构](../02-architecture/01-overall-architecture.md) | [安全与合规 §31](../03-details/04-security-compliance.md#31-标识租户与会话隔离) | 架构 + 安全 |
 | 新增／修改错误码 | [错误码目录](../03-details/06-contracts-and-conventions.md#46-错误码目录) | [操作状态矩阵](../04-roadmap/01-operation-states.md) | 架构 |
 | 新增术语或品牌化 ID | [术语表](../03-details/06-contracts-and-conventions.md#47-术语表) | 引用该术语的文档 | 架构 |
