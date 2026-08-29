@@ -25,7 +25,8 @@ export interface CapabilityRow {
 export interface StatusSectionProps {
   /** 由 host 注入；客户端不自行推断。 */
   readonly capabilities: readonly CapabilityRow[]
-  readonly protocolVersion: string
+  /** §41 规定协议版本是单调递增整数，不是 `major.minor` 字符串。 */
+  readonly protocolVersion: number
   readonly schemaVersion: number
 }
 
@@ -48,7 +49,7 @@ export function StatusSection(props: StatusSectionProps): ReactElement {
     createElement(
       'p',
       { className: styles['summary'] },
-      `协议版本 ${props.protocolVersion} · 数据库 schema v${props.schemaVersion}`,
+      `协议版本 v${props.protocolVersion} · 数据库 schema v${props.schemaVersion}`,
     ),
     createElement(
       'ul',

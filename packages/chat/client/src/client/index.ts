@@ -61,7 +61,8 @@ const CAPABILITIES: readonly CapabilityRow[] = [
 ]
 
 export interface ClientConfig {
-  readonly protocolVersion?: string
+  /** §41：单调递增整数。 */
+  readonly protocolVersion?: number
   readonly schemaVersion?: number
 }
 
@@ -80,7 +81,7 @@ export function apply(ctx: Context, config: ClientConfig = {}): void {
             label: () => 'dsh-chat',
             inject: () => ({
               capabilities: CAPABILITIES,
-              protocolVersion: config.protocolVersion ?? '1.0',
+              protocolVersion: config.protocolVersion ?? 1,
               schemaVersion: config.schemaVersion ?? 1,
             }),
           },
