@@ -50,3 +50,5 @@ export interface HealthResponse {
   /** 应答的插件名，便于在多插件环境下定位是谁在提供该路由。 */
   readonly plugin: string
 }
+
+export * from './errors.js'
