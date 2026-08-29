@@ -16,6 +16,15 @@
     },
     {
       "path": "../messaging"
+    },
+    {
+      "path": "../notification"
+    },
+    {
+      "path": "../organization"
+    },
+    {
+      "path": "../workitem"
     }
   ],
   "exclude": [
