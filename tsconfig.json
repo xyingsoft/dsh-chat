@@ -12,6 +12,9 @@
     },
     {
       "path": "./packages/chat/organization"
+    },
+    {
+      "path": "./packages/chat/messaging"
     }
   ]
 }
