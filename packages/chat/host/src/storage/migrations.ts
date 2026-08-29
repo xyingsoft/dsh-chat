@@ -416,5 +416,94 @@ const migration003: Migration = {
   ],
 }
 
+/**
+ * 版本 4：通知聚合与评论。
+ *
+ * §17.1：「聚合按 `(接收人, 来源对象, 事件类型)` 在可配置的聚合窗口（默认 5 分钟）
+ * 内进行……保留最早与最新事件引用和计数，不生成 N 条独立记录。」
+ *
+ * 聚合是**呈现层**的折叠，不是数据的丢弃 —— 「展开后逐条跳转」要求被折叠的
+ * 每一条仍然可查。所以这里加的是聚合组表加成员表，而不是给 notifications
+ * 加一个 count 列然后丢掉后续条目。
+ *
+ * §18：「评论包含作者、目标对象与版本、正文、创建时间和 `CommentRevision`；
+ * 编辑追加修订，删除写入 tombstone 并保留作者与时间。」与消息编辑同一模型。
+ */
+const migration004: Migration = {
+  version: 4,
+  name: 'notification-aggregation-and-comments',
+  statements: [
+    // 聚合组。键就是 §17.1 的三元组，加上组织分区。
+    //
+    // window_started_at 记的是**组内最早一条**的时间，窗口从它起算。
+    // 若从最新一条起算，持续的提及会让窗口无限延长，一个吵闹的会话
+    // 可以永远折叠成一条，用户再也看不到新提醒。
+    `CREATE TABLE notification_groups (
+       group_id        TEXT PRIMARY KEY,
+       organization_id TEXT NOT NULL,
+       recipient_id    TEXT NOT NULL,
+       source_ref      TEXT NOT NULL,
+       event_type      TEXT NOT NULL,
+       window_started_at TEXT NOT NULL,
+       -- 最早与最新事件引用（§17.1）
+       earliest_notification_id TEXT NOT NULL,
+       latest_notification_id   TEXT NOT NULL,
+       count           INTEGER NOT NULL,
+       -- 已读语义作用于整条（§17.1）
+       state           TEXT NOT NULL,
+       updated_at      TEXT NOT NULL
+     ) STRICT`,
+    // 同一 (接收人, 来源对象, 事件类型) 在同一时刻只能有一个**开放**的组。
+    // 窗口关闭后新事件开新组，因此不能对三元组建唯一索引 —— 用普通索引，
+    // 由查询按窗口筛出开放的那个
+    `CREATE INDEX idx_notification_groups_key
+       ON notification_groups(organization_id, recipient_id, source_ref, event_type,
+                              window_started_at)`,
+
+    // 组成员。展开时逐条跳转靠它。
+    `CREATE TABLE notification_group_members (
+       group_id        TEXT NOT NULL,
+       notification_id TEXT NOT NULL,
+       created_at      TEXT NOT NULL,
+       PRIMARY KEY (group_id, notification_id)
+     ) STRICT`,
+
+    // 评论。§18：不进入 GroupLog，也不参与消息撤回语义
+    `CREATE TABLE comments (
+       comment_id      TEXT PRIMARY KEY,
+       organization_id TEXT NOT NULL,
+       -- 目标对象与版本。work_item / resource_version / review / session
+       target_kind     TEXT NOT NULL,
+       target_id       TEXT NOT NULL,
+       target_version  INTEGER,
+       author_id       TEXT NOT NULL,
+       created_at      TEXT NOT NULL,
+       -- 当前修订号。编辑追加 comment_revisions，本列跟着走
+       revision        INTEGER NOT NULL DEFAULT 1,
+       -- 删除写 tombstone：正文置空但**保留作者与时间**（§18）
+       deleted_at      TEXT
+     ) STRICT`,
+    `CREATE INDEX idx_comments_target
+       ON comments(organization_id, target_kind, target_id, created_at)`,
+
+    // CommentRevision：每次编辑一行，正文只存在这里。
+    // comments 表刻意没有 body 列 —— 有的话就会有人去 UPDATE 它，
+    // 「编辑追加修订」的约束当场破掉
+    `CREATE TABLE comment_revisions (
+       comment_id      TEXT NOT NULL,
+       revision        INTEGER NOT NULL,
+       body            TEXT NOT NULL,
+       editor_id       TEXT NOT NULL,
+       occurred_at     TEXT NOT NULL,
+       PRIMARY KEY (comment_id, revision)
+     ) STRICT`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
-export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003]
+export const MIGRATIONS: readonly Migration[] = [
+  migration001,
+  migration002,
+  migration003,
+  migration004,
+]
