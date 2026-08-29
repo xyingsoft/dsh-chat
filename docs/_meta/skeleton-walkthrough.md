@@ -1,3 +1,7 @@
+[← 返回 Wiki 首页](../README.md) | **元文档** · 骨架走查记录 | [上一篇：实现记录](./implementation-log.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)
+
+---
+
 # P0-a 最小可运行骨架走查记录
 
 > 本文件由 `packages/chat/kernel/src/skeleton.host.spec.ts` 在测试运行时自动生成，
@@ -65,3 +69,7 @@
 - 其中 2 条为被拒绝的尝试，各自记录了错误码
 - 审计表结构中没有 `body` / `content` 列
 - **审计事件序列化后不含任何已发送的消息正文**
+
+---
+
+[← 上一篇：实现记录](./implementation-log.md) | [返回 Wiki 首页](../README.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)
