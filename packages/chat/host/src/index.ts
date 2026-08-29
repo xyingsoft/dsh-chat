@@ -12,10 +12,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { Context } from '@deepseek-ai/cordis'
+import Schema from '@deepseek-ai/schemastery'
 
 // `ctx.webServer` 由 dsh-host-webserver 通过 `declare module '@deepseek-ai/cordis'`
 // 增强到 Context 上。这里必须引入该包才能让增强生效 —— 只 import cordis 是拿不到的。
 import type {} from '@deepseek-ai/dsh-host-webserver'
+
+import type { HealthResponse } from '@dsh-chat/contract'
 
 /** host 路由的同源前缀。§4 规定浏览器只与 `/api/chat` 和 `/api/organization` 通信。 */
 export const CHAT_API_PREFIX = '/api/chat'
@@ -25,16 +28,30 @@ export const name = 'dsh-chat-host'
 /**
  * 声明所需服务。缺少必需提供者时 profile 加载失败，不允许静默降级
  * （见 docs/02-architecture/02-plugin-model.md §6）。
+ *
+ * 用普通数组而非 `as const`：Cordis 的 `Inject` 类型是 `(keyof M)[] | {...}`，
+ * readonly 元组不满足数组分支，只是靠落入对象分支才通过类型检查，且无法赋给
+ * 生态中普遍使用的 `string[]`。
  */
-export const inject = ['webServer'] as const
+export const inject = ['webServer']
 
 export interface Config {
   /**
    * L1 只服务一个由部署明确指定的组织。
    * 见 docs/04-roadmap/03-iteration-plan.md §44.1。
    */
-  readonly organizationId?: string
+  organizationId?: string
 }
+
+/**
+ * 与 `Config` 接口同名的运行时 schema。
+ *
+ * 两者必须成对导出：类型给调用方，schema 给 Cordis 做校验与填默认值。缺少 schema 时
+ * Cordis 会原样透传未经校验的配置，这与「不允许静默降级」相冲突。
+ */
+export const Config: Schema<Config> = Schema.object({
+  organizationId: Schema.string(),
+})
 
 export function apply(ctx: Context, _config: Config = {}): void {
   // 所有 Cordis 注册通过 ctx.effect() 完成并返回 disposer；插件卸载后不得残留
@@ -45,8 +62,9 @@ export function apply(ctx: Context, _config: Config = {}): void {
         kind: 'exact',
         path: `${CHAT_API_PREFIX}/health`,
         handler: (_request: IncomingMessage, response: ServerResponse) => {
+          const body: HealthResponse = { status: 'ok', plugin: name }
           response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
-          response.end(JSON.stringify({ status: 'ok', plugin: name }))
+          response.end(JSON.stringify(body))
         },
       }),
     `${name}: health route`,

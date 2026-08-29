@@ -38,3 +38,15 @@ export type ProtocolVersion = Branded<string, 'ProtocolVersion'>
 export function assertNever(value: never, message = '未处理的分支'): never {
   throw new Error(`${message}: ${JSON.stringify(value)}`)
 }
+
+/**
+ * host 健康检查的响应。
+ *
+ * 放在 contract 而不是 host，是为了让浏览器端与 host 端共用同一个定义 —— 编码规范
+ * 要求协议 schema 只放在本包，其他插件不得各自定义同名结构。
+ */
+export interface HealthResponse {
+  readonly status: 'ok'
+  /** 应答的插件名，便于在多插件环境下定位是谁在提供该路由。 */
+  readonly plugin: string
+}

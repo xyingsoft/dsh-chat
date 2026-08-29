@@ -78,13 +78,14 @@ __metadata:
   resolution: "@dsh-chat/host@workspace:packages/chat/host"
   dependencies:
     "@deepseek-ai/cordis": "npm:^4.0.1"
-    "@deepseek-ai/dsh-host-webserver": "npm:^0.1.2-alpha.1"
-    "@deepseek-ai/dsh-invariants": "npm:^0.1.2-alpha.1"
+    "@deepseek-ai/dsh-host-webserver": "npm:0.1.2-alpha.1"
+    "@deepseek-ai/dsh-invariants": "npm:0.1.2-alpha.1"
+    "@deepseek-ai/schemastery": "npm:^3.18.1"
     "@dsh-chat/contract": "workspace:^"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.1
-    "@deepseek-ai/dsh-host-webserver": ^0.1.2-alpha.1
-    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.1
+    "@deepseek-ai/dsh-host-webserver": 0.1.2-alpha.1
+    "@deepseek-ai/dsh-invariants": 0.1.2-alpha.1
   languageName: unknown
   linkType: soft
 

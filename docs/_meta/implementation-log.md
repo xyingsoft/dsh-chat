@@ -49,13 +49,23 @@ DSH 运行时在 `0.1.2-alpha.1` 起改为**全量 vendor 化**：上游 DSH Des
 |---|---|---|---|
 | `@deepseek-ai/cordis` | `4.0.1` | npm | 插件框架。**不是**社区版 `cordis` / `@cordisjs/*`。npm `latest` 即 `4.0.1`，与上游锁定一致 |
 | `@deepseek-ai/dsh-host-webserver` | `0.1.2-alpha.1` | vendor tarball | host 路由注册 |
-| `@deepseek-ai/dsh-client-ui-slots` | `0.1.2-alpha.1` | vendor tarball | 客户端 slot 注册 |
-| `@deepseek-ai/dsh-client-ui-renderer` | `0.1.2-alpha.1` | vendor tarball | slot 服务的 Cordis 封装 |
+| `@deepseek-ai/dsh-invariants` | `0.1.2-alpha.1` | vendor tarball | 前者的 peer 依赖 |
 | `@deepseek-ai/schemastery` | `^3.18.1` | npm | 配置 schema 校验 |
 | Node | `^22.19.0 \|\| >=24.0.0` | — | 与 harness 的 `engines` 一致 |
-| React | 见 1.3 | npm | 客户端插件 |
 
-具体包名按实际依赖逐个列出，不用 `@deepseek-ai/dsh-*` 通配 —— **不同版本之间包的集合本身就不同**。例如 `@deepseek-ai/dsh-client-store` 与 `@deepseek-ai/dsh-util-crypto` 只存在于 `0.1.2-alpha.1`，在 npm 上返回 404。传递依赖的完整闭包在工程初始化时确定并记入本表。
+以上是 **host 入口点的完整闭包**，共 2 个 vendored 包，随工程骨架落地。
+
+具体包名按实际依赖逐个列出，不用 `@deepseek-ai/dsh-*` 通配 —— **不同版本之间包的集合本身就不同**。
+
+### 1.2.1 客户端闭包尚未确定，且不能只看 dependencies
+
+客户端所需的 `dsh-client-ui-slots` 与 `dsh-client-ui-renderer` **暂不收录**，随 `packages/chat/client` 一并加入。原因是它们的闭包比声明的更大，且用常规方式求不出来：
+
+这两个包**发布出来的 `.d.ts` 里直接 import 了 `react` 与 `@deepseek-ai/dsh-client-store`**，而上游把这两者放在 `devDependencies` —— 遍历 `dependencies` 与 `peerDependencies` 是发现不了的。运行时确实不需要它们（`lib/client.js` 走 DSH 的模块加载器，由宿主提供 react），但**类型检查需要**。
+
+其中 `@deepseek-ai/dsh-client-store` 在 npm 上返回 404，只存在于 `0.1.2-alpha.1`，因此必须一并 vendor。
+
+> **`skipLibCheck: true` 会让这个问题静默发生。** 关闭该选项时上述缺失会报 5 个 `TS2307`；开启时编译通过，但 `SlotComponent`、`PropsStore` 等类型会退化为 `any`，客户端类型安全归零而无任何提示。引入客户端包时须一并重新评估该选项。
 
 ### 1.3 React 版本的两个口径
 
@@ -74,13 +84,16 @@ DSH 运行时在 `0.1.2-alpha.1` 起改为**全量 vendor 化**：上游 DSH Des
 
 ### 2.2 待提交的文档变更
 
-以下三项是实现需要、但**当前文档未覆盖**的内容。按 §3.1 流程，它们要先写入对应层级的文档才能生效；**在那之前本项目不据此实现**。本节只登记提案与去向：
+以下三项是实现需要、但**当前文档未覆盖**的内容，须按 §3.1 流程写入对应层级的文档：
 
-| 提案 | 应写入 | 变更类型 |
-|---|---|---|
-| 增加一个被 DSH 装载的插件入口包（承载 `dsh.client` / `dsh.bundle` 字段与 `cordis.patch.yml`），命名遵循 DSH 生态的 `dsh-plugin-<name>` 约定 | [§43.3 初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构) + [§6.1 能力与提供者矩阵](../02-architecture/02-plugin-model.md#61-能力与提供者矩阵) + [§47 术语表](../03-details/06-contracts-and-conventions.md#47-术语表) | 新增插件能力 + 新增品牌化 ID |
-| 明确包管理器与版本（DSH 生态的桌面产品仓库使用 `yarn@4.18.0`，harness 核心仓库使用 pnpm） | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) | 工程约定 |
-| 明确 DSH 运行时依赖的精确版本与升级流程 | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) 或 [§41 协议版本协商](../03-details/05-observability-and-ops.md#41-协议版本协商与升级顺序) | 工程约定 |
+| 提案 | 应写入 | 变更类型 | 当前状态 |
+|---|---|---|---|
+| 增加一个被 DSH 装载的插件入口包（承载 `dsh.client` / `dsh.bundle` 字段与 `cordis.patch.yml`），命名遵循 DSH 生态的 `dsh-plugin-<name>` 约定 | [§43.3 初始工程结构](../04-roadmap/02-minimum-skeleton.md#433-初始工程结构) + [§6.1 能力与提供者矩阵](../02-architecture/02-plugin-model.md#61-能力与提供者矩阵) + [§47 术语表](../03-details/06-contracts-and-conventions.md#47-术语表) | 新增插件能力 + 新增品牌化 ID | 未实现 |
+| 明确包管理器与版本（DSH 生态的桌面产品仓库使用 `yarn@4.18.0`，harness 核心仓库使用 pnpm） | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) | 工程约定 | **已在工程骨架中实现，文档待补** |
+| 明确 DSH 运行时依赖的精确版本与升级流程 | [§48 编码规范](../03-details/06-contracts-and-conventions.md#48-编码规范) 或 [§41 协议版本协商](../03-details/05-observability-and-ops.md#41-协议版本协商与升级顺序) | 工程约定 | **已在工程骨架中实现，文档待补** |
+
+> **本节此前写有「在那之前本项目不据此实现」，而工程骨架 PR 先实现了后两项，违反了这条自我约束。**
+> 这里如实记录而不是抹去：两项已落地的工程约定需要尽快补进 §48，在补完之前它们只是既成事实，不构成对其他实现的约束。第一项（插件入口包）仍未实现，保持原状。
 
 > §43.3 目前枚举了 19 个包并明确「全部 19 个包」。新增入口包会改变这个数字，属于[变更分类表](./documentation-workflow.md#2-变更分类与所需更新)中的「新增／调整插件能力」，需架构评审。
 
