@@ -4,7 +4,7 @@
 >
 > 阶段划分是实现顺序的工程安排，不是文档概念；每个阶段对应的验收依据都标注了文档出处。
 
-最后更新：2026-08-30 · 22 个 PR 已合并 · 225 个测试
+最后更新：2026-08-30 · 23 个 PR 已合并 · 288 个测试
 
 ---
 
@@ -18,7 +18,7 @@
 | 3 | `@dsh-chat/contract` 契约层 | ✅ |
 | 4 | `@dsh-chat/kernel` 入口包，装入 DSH | ✅ |
 | 5 | 持久化层（SQLite schema 与迁移） | ✅ |
-| 6 | 身份、组织与权限 | 🔶 |
+| 6 | 身份、组织与权限 | ✅ |
 | 7 | 联系人与文本私聊 | 🔶 |
 | 8 | 工作项与通知 | 🔶 |
 | 9 | 审计 | ✅ |
@@ -42,6 +42,12 @@
 | `POST /api/chat/work-items/assign` | 分派并在同事务发通知 |
 | `POST /api/chat/work-items/dependencies` | 添加依赖，成环返回 `DEPENDENCY_CYCLE` |
 | `POST /api/chat/notifications` | 读收件箱，按游标补拉 |
+| `POST /api/organization` | 创建组织，创建者成为 active 的所有者 |
+| `POST /api/organization/workspaces` | 创建工作区，需 `workspace.create` |
+| `POST /api/organization/projects` | 创建项目，按 `organization_id` 过滤工作区 |
+| `POST /api/organization/members/invite` | 邀请成员，进入 `invited` 而非 `active` |
+| `POST /api/organization/members/accept` | 接受邀请，仅本人，带版本检查 |
+| `POST /api/organization/members/me` | 只返回调用者自己的成员关系 |
 | `GET /api/chat/health` | 健康检查 |
 
 所有写端点都有跨源防护、认证注入与审计同事务。
@@ -78,7 +84,7 @@
 >
 > `ProtocolVersion` 此前实现为 `'1.0'` 字符串，与 §41 的「单调递增整数」不符 —— 字符串序下 `'1.10' < '1.9'`，已改为整数。
 
-### 阶段 6 · 身份、组织与权限 🔶
+### 阶段 6 · 身份、组织与权限 ✅
 
 | 项 | 状态 |
 |---|:---:|
@@ -87,9 +93,13 @@
 | 双层授权判定，10 个角色的默认能力表 | ✅ |
 | 组织/工作区/项目，版本控制与冲突检测 | ✅ |
 | 成员邀请与接受 | ✅ |
-| 设备注册与请求签名证明 | ⬜ |
-| 组织切换时的缓存隔离 | ⬜ |
-| 组织与成员的 HTTP 端点 | ⬜ |
+| 设备注册与请求签名证明 | ✅ |
+| 组织切换时的缓存隔离 | ✅ |
+| 组织与成员的 HTTP 端点 | ✅ |
+
+> 请求签名的**检查顺序**由测试锁定，不只是「都检查了」：§7.1 规定 `TIME_SKEW` 只在签名等其他条件正确时返回，先查时间的话任何人拿垃圾签名就能换到一份服务器签名的时间。nonce 同理放在最后 —— 先记再验会让攻击者填满受害设备的 nonce 空间。
+>
+> 跨组织隔离靠 `organization_id` 显式过滤，不靠授权判定：调用者在自己组织有 owner 成员关系时，作用域链走上去是会通过的。三处安全边界都做过变异验证。
 
 ### 阶段 7 · 联系人与文本私聊 🔶
 
@@ -151,7 +161,7 @@
 
 > 证据：[骨架走查记录](./docs/_meta/skeleton-walkthrough.md)（测试生成）、[DSH 装载验证](./docs/_meta/dsh-integration-evidence.md)。
 >
-> 当前的「两实例」是**同一进程内的两个用户身份**，不是两个独立的 host 进程。后者需要 relay 客户端，属阶段 6 的剩余项。
+> 当前的「两实例」是**同一进程内的两个用户身份**，不是两个独立的 host 进程。后者需要 relay 客户端，列在本阶段自己的剩余项里。
 
 ---
 
