@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 原文档映射表 | [上一篇：文档维护规范](./documentation-workflow.md)
+[← 返回 Wiki 首页](../README.md) | **元文档** · 原文档映射表 | [上一篇：文档维护规范](./documentation-workflow.md) | [下一篇：实现记录 →](./implementation-log.md)
 
 ---
 
@@ -228,4 +228,4 @@
 
 ---
 
-[← 上一篇：文档维护规范](./documentation-workflow.md) | [返回 Wiki 首页](../README.md)
+[← 上一篇：文档维护规范](./documentation-workflow.md) | [返回 Wiki 首页](../README.md) | [下一篇：实现记录 →](./implementation-log.md)
