@@ -74,6 +74,7 @@
 | [文档维护规范](./_meta/documentation-workflow.md) | **文档先行**开发流程、变更类型与所需更新、评审检查清单 |
 | [原文档映射表](./_meta/source-mapping.md) | 原 `DESIGN.md` 全部 50 节到新结构的逐节映射，用于核对完整性 |
 | [实现记录](./_meta/implementation-log.md) | 外部依赖锁定、工程决策、文档缺口登记与开放决策的阶段影响 |
+| [骨架走查记录](./_meta/skeleton-walkthrough.md) | `P0-a` 九个骨架步骤的实际执行结果，由测试自动生成 |
 
 ---
 
