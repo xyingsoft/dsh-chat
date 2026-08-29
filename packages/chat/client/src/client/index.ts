@@ -54,7 +54,10 @@ const CAPABILITIES: readonly CapabilityRow[] = [
   { name: '文本私聊', status: 'ready', note: '发送、租约拉取、ACK 均经 HTTP 走通' },
   { name: '工作项与通知', status: 'ready', note: '创建、分派、依赖成环、收件箱均经 HTTP 走通' },
   { name: '审计', status: 'ready', note: '仅追加，与领域写入同事务' },
-  { name: '消息编辑与撤回', status: 'partial', note: '追加事件模型已实现，界面未接' },
+  { name: '消息编辑与撤回', status: 'ready', note: '追加事件模型，撤回后显示占位' },
+  { name: '设备注册与请求签名', status: 'ready', note: 'Ed25519，nonce 去重与时间偏移' },
+  { name: '通知聚合与 SSE', status: 'ready', note: '5 分钟窗口，断线后按游标补拉' },
+  { name: '会话列表与消息视图', status: 'partial', note: '组件已就绪，尚未接入数据源' },
   { name: '第二验证因素与恢复', status: 'not_implemented', note: '属 P0-b 关口' },
   { name: '在线状态', status: 'not_implemented', note: '属 P0-b 关口' },
   { name: '群聊与附件', status: 'not_implemented', note: '属 P1 及之后' },
@@ -94,3 +97,7 @@ export function apply(ctx: Context, config: ClientConfig = {}): void {
 
 export { StatusSection } from './StatusSection.js'
 export type { CapabilityRow, CapabilityStatus, StatusSectionProps } from './StatusSection.js'
+export { ConversationList } from './ConversationList.js'
+export type { ConversationSummary, ConversationListProps } from './ConversationList.js'
+export { MessageView, REVOKED_PLACEHOLDER } from './MessageView.js'
+export type { DisplayMessage, MessageViewProps } from './MessageView.js'

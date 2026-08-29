@@ -1,0 +1,111 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 8px;
+}
+
+/* 事件流状态条。§5 要求断开、组织切换、权限变更、sync_diverged 必须显式呈现，
+   所以它占据布局空间而不是浮层 —— 浮层会被忽略，也会被其他元素盖住 */
+.streamBanner {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--dsh-color-bg-warning, #fff6e5);
+  color: var(--dsh-color-text-warning, #8a5a00);
+  font-size: 12px;
+}
+
+.streamBannerHalted {
+  background: var(--dsh-color-bg-danger, #fdecec);
+  color: var(--dsh-color-text-danger, #a02020);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px;
+  color: var(--dsh-color-text-secondary, #666);
+  font-size: 13px;
+  text-align: center;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 70%;
+  align-self: flex-start;
+}
+
+.outgoing {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.body {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--dsh-color-bg-subtle, #f2f2f2);
+  /* 正文是不可信内容（§18）；保留换行但绝不解释为标记 */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.outgoing .body {
+  background: var(--dsh-color-bg-accent-subtle, #e8f0fc);
+}
+
+/* 撤回占位与正文视觉上必须不同，否则「[已撤回]」看起来像是有人真的这么说了 */
+.revoked {
+  font-style: italic;
+  color: var(--dsh-color-text-secondary, #666);
+  background: transparent;
+  border: 1px dashed var(--dsh-color-border, #e0e0e0);
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 11px;
+  color: var(--dsh-color-text-secondary, #666);
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+}
+
+.edited {
+  font-style: italic;
+}
+
+/* 投递状态。三态各有措辞，且没有一态说「已送达」（§5） */
+.deliveryFailed {
+  color: var(--dsh-color-text-danger, #a02020);
+}
+
+.retry {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--dsh-color-accent, #3574d6);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  text-decoration: underline;
+}
