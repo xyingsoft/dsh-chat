@@ -139,6 +139,7 @@ $sidebar = @'
 **元文档**
 - [文档维护规范](meta-documentation-workflow)
 - [原文档映射表](meta-source-mapping)
+- [实现记录](meta-implementation-log)
 '@
 [System.IO.File]::WriteAllText((Join-Path $OutDir '_Sidebar.md'), $sidebar, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "  _Sidebar.md 已生成"
