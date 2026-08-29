@@ -73,7 +73,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dsh-chat/host@workspace:packages/chat/host":
+"@dsh-chat/host@workspace:^, @dsh-chat/host@workspace:packages/chat/host":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/host@workspace:packages/chat/host"
   dependencies:
@@ -86,6 +86,17 @@ __metadata:
     "@deepseek-ai/cordis": ^4.0.1
     "@deepseek-ai/dsh-host-webserver": 0.1.2-alpha.1
     "@deepseek-ai/dsh-invariants": 0.1.2-alpha.1
+  languageName: unknown
+  linkType: soft
+
+"@dsh-chat/kernel@workspace:packages/chat/kernel":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/kernel@workspace:packages/chat/kernel"
+  dependencies:
+    "@dsh-chat/host": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-host-webserver": 0.1.2-alpha.1
   languageName: unknown
   linkType: soft
 
@@ -442,6 +453,7 @@ __metadata:
     "@types/node": "npm:^24"
     typescript: "npm:~5.9.2"
     vitest: "npm:^4"
+    yaml: "npm:^2"
   languageName: unknown
   linkType: soft
 
@@ -1134,5 +1146,14 @@ __metadata:
   version: 5.0.0
   resolution: "yallist@npm:5.0.0"
   checksum: 10/1884d272d485845ad04759a255c71775db0fac56308764b4c77ea56a20d56679fad340213054c8c9c9c26fcfd4c4b2a90df993b7e0aaf3cdb73c618d1d1a802a
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2":
+  version: 2.9.0
+  resolution: "yaml@npm:2.9.0"
+  bin:
+    yaml: bin.mjs
+  checksum: 10/9a95e8e08651c3d292ab6a5befeb5f57b76801caa097c75bb45c9a70ce19c1b11f57e87a6ef84a579ea070ed2c2c8ac541c88c0ae684d544d5f42c7e77d11b7b
   languageName: node
   linkType: hard
