@@ -1,4 +1,5 @@
-﻿# build-wiki.ps1
+﻿#Requires -Version 5.1
+# build-wiki.ps1
 # 从 docs/ 生成 GitHub Wiki 扁平页面副本。
 #
 # GitHub Wiki 是独立仓库且不支持子目录，因此本脚本：
@@ -167,31 +168,48 @@ function Invoke-Git {
     }
     finally { $ErrorActionPreference = $previous }
     if ($code -ne 0) {
-        throw "git $($Arguments -join ' ') 失败（退出码 $code）：`n$($output -join "`n")"
+        # 2>&1 产生的是 ErrorRecord；直接字符串化会把空的 stderr 行渲染成类型名，
+        # 在多段 git 错误中间插入无意义噪声。取 Exception.Message 才是原始文本。
+        $text = ($output | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { [string]$_ }
+        }) -join "`n"
+        throw "git $($Arguments -join ' ') 失败（退出码 $code）：`n$text"
     }
     if ($PassThru) { return $output }
 }
 $work = Join-Path ([System.IO.Path]::GetTempPath()) ("dshwiki-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
-Write-Host "`n克隆 wiki 仓库..."
-Invoke-Git -Arguments @('clone', '--quiet', $Remote, $work)
 
-if (-not (Test-Path $work)) {
-    # wiki 尚未初始化：需先在网页端创建首个页面
-    throw "克隆 wiki 失败。若 wiki 从未创建过，请先在 GitHub 网页端创建任意一个页面以初始化 wiki 仓库，然后重试。"
-}
-
-Get-ChildItem $work -File -Filter *.md | Remove-Item -Force
-Copy-Item (Join-Path $OutDir '*.md') $work -Force
-
-Push-Location $work
+# $work 从创建起就纳入 finally，否则 clone 之后、Push-Location 之前的任何失败
+# （只读文件、$OutDir 为空、Ctrl-C）都会在 %TEMP% 里留下完整的 wiki 克隆。
 try {
-    Invoke-Git -Arguments @('add', '-A')
-    $status = Invoke-Git -Arguments @('status', '--porcelain') -PassThru
-    if (-not $status) { Write-Host "无变更，跳过推送。"; return }
-    Invoke-Git -Arguments @('commit', '-q', '-m', $CommitMessage)
-    Invoke-Git -Arguments @('push', 'origin', 'HEAD')
-    Write-Host "`n推送完成。"
-} finally {
-    Pop-Location
+    Write-Host "`n克隆 wiki 仓库..."
+    try {
+        Invoke-Git -Arguments @('clone', '--quiet', $Remote, $work)
+    }
+    catch {
+        # 最常见的首次运行失败是 wiki 从未初始化过，此时远端不存在。
+        # 保留可操作的指引，不要只甩出 git 的原始 fatal。
+        throw "克隆 wiki 失败。若 wiki 从未创建过，请先在 GitHub 网页端创建任意一个页面以初始化 wiki 仓库，然后重试。`n`n原始错误：`n$_"
+    }
+
+    Get-ChildItem $work -File -Filter *.md | Remove-Item -Force
+    Copy-Item (Join-Path $OutDir '*.md') $work -Force
+
+    Push-Location $work
+    try {
+        Invoke-Git -Arguments @('add', '-A')
+        $status = Invoke-Git -Arguments @('status', '--porcelain') -PassThru
+        if (-not $status) { Write-Host "无变更，跳过推送。"; return }
+        Invoke-Git -Arguments @('commit', '-q', '-m', $CommitMessage)
+        $pushed = Invoke-Git -Arguments @('push', 'origin', 'HEAD') -PassThru
+        Write-Host "`n推送完成。"
+        # 打印 git 报告的引用变化，让「推送完成」有据可查
+        if ($pushed) { $pushed | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" } }
+    }
+    finally {
+        Pop-Location
+    }
+}
+finally {
     Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 }
