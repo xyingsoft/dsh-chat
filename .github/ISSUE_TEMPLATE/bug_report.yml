@@ -1,0 +1,60 @@
+name: 缺陷报告 / Bug report
+description: 报告一个与文档声明行为不符的缺陷 / Report behaviour that contradicts the documented contract
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本项目以 [`docs/`](https://github.com/xyingsoft/dsh-chat/blob/main/docs/README.md) 为唯一依据。
+        请先确认这确实是**实现偏离了文档**，而不是文档本身需要变更 —— 后者请用「文档变更」模板。
+
+  - type: input
+    id: component
+    attributes:
+      label: 受影响的组件 / Affected component
+      description: 例如 `messaging` 插件、`@dsh-chat/contract`、host 路由、client slot
+      placeholder: messaging
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 文档声明的行为 / Documented behaviour
+      description: 请引用具体文档与小节，例如「§28 步骤 5 要求接收方在一个本地事务中写入」
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为 / Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤 / Reproduction steps
+      description: 尽量给出最小复现；涉及多实例的请说明 host / relay 的数量与配置
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境 / Environment
+      description: Node 版本、操作系统、`@deepseek-ai/dsh-*` 版本、部署层（L0/L1/L2/L3）
+      render: text
+
+  - type: checkboxes
+    id: security
+    attributes:
+      label: 安全确认 / Security check
+      options:
+        - label: 这**不是**安全漏洞（安全问题请走私密报告通道，不要提公开 Issue）
+          required: true

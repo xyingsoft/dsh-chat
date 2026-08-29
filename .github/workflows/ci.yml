@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: 文档一致性 / Documentation consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 内部链接可解析 / Internal links resolve
+        run: bash scripts/check-links.sh
+
+      - name: 双语文档成对 / Bilingual documents are paired
+        run: |
+          set -euo pipefail
+          fail=0
+          for base in README CONTRIBUTING CODE_OF_CONDUCT; do
+            if [ -f "$base.md" ] && [ ! -f "$base.en.md" ]; then
+              echo "::error::$base.md 存在但缺少 $base.en.md"
+              fail=1
+            fi
+            if [ -f "$base.en.md" ] && [ ! -f "$base.md" ]; then
+              echo "::error::$base.en.md 存在但缺少 $base.md"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "双语文档成对完整。/ Bilingual documents are paired."
+          exit "$fail"
+
+  check:
+    name: 构建与测试 / Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检测工程是否已初始化 / Detect whether the workspace exists
+        id: probe
+        run: |
+          if [ -f package.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "工程尚未初始化（无 package.json），跳过构建与测试。"
+            echo "Workspace not initialized yet (no package.json); skipping build and test."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.probe.outputs.ready == 'true'
+        with:
+          node-version: '24'
+
+      - name: 启用 corepack / Enable corepack
+        if: steps.probe.outputs.ready == 'true'
+        run: corepack enable
+
+      - name: 安装依赖 / Install dependencies
+        if: steps.probe.outputs.ready == 'true'
+        run: yarn install --immutable
+
+      - name: 检查 / Check
+        if: steps.probe.outputs.ready == 'true'
+        run: yarn check

@@ -1,0 +1,57 @@
+name: 能力需求 / Feature request
+description: 提出一项新的用户可见能力 / Propose a new user-visible capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本项目强制**文档先行**：新增用户可见能力必须先更新[协作能力需求](https://github.com/xyingsoft/dsh-chat/blob/main/docs/01-requirements/02-collaboration-requirements.md)，
+        并在[迭代计划](https://github.com/xyingsoft/dsh-chat/blob/main/docs/04-roadmap/03-iteration-plan.md)中定级（P0–P4 或延后／不做），然后才能写代码。
+        本 Issue 用于讨论是否接受该需求以及定级，**不是**实现工单。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题 / The problem
+      description: 描述真实场景与当前的阻碍，而不是直接描述你想要的实现
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议的能力 / Proposed capability
+      description: 用户能做什么、在哪里做、产生什么可见结果
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: 建议定级 / Suggested stage
+      options:
+        - P0（身份、组织与文本私聊）
+        - P1（团队运行基础、群聊与资源）
+        - P2（协作会话、群 Bot 与富文件）
+        - P3（团队版、治理、公共工具与分析）
+        - P4（企业版、安全、分片与 E2EE）
+        - 延后 / Deferred
+        - 不确定 / Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: boundary
+    attributes:
+      label: 与既有边界的关系 / Relationship to existing boundaries
+      description: |
+        [产品定位与边界](https://github.com/xyingsoft/dsh-chat/blob/main/docs/01-requirements/01-positioning-and-boundaries.md)有八条边界声明与一份不做清单。
+        本需求是否触碰其中任何一条？若触碰，说明为何应当调整边界 —— 这属于需求变更，需要产品、架构、安全三方评审。
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: 授权与安全影响 / Authorization and security impact
+      description: 是否触及授权、内容授权、出站或执行路径？若是，需要哪些拒绝路径？

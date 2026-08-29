@@ -1,0 +1,60 @@
+# dsh-chat
+
+> 面向自建团队、受管团队与企业组织的 DSH Web 协作平台。
+
+[English](./README.en.md) · [设计 Wiki](./docs/README.md) · [参与贡献](./CONTRIBUTING.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
+---
+
+## 这是什么
+
+dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）插件，在 DSH Web 上提供组织化的团队协作：身份与设备、组织与权限、文本私聊、工作项与评审、通知收件箱与审计。
+
+它遵循 DSH 的「一切皆插件」模型 —— **没有特权聊天内核**。除纯类型包 `@dsh-chat/contract` 外，所有能力都是可独立装载、可独立卸载的 Cordis 插件。
+
+## 当前状态
+
+**尚未发布，处于 `P0-a` 实现阶段。**
+
+| 阶段 | 范围 | 状态 |
+|---|---|---|
+| `P0-a` | 写入协议、投递语义、审计同事务三项架构承诺 | 进行中 |
+| `P0-b` | 第二因素、恢复、在线可见范围、本地搜索、协议协商 | 未开始 |
+| `P1`–`P4` | 群聊与资源、协作会话与 Bot、治理与分析、企业与 E2EE | 未开始 |
+
+阶段划分与验收条件见[迭代计划](./docs/04-roadmap/03-iteration-plan.md)。
+
+## 文档
+
+**本仓库的 [`docs/`](./docs/README.md) 是实现、评审与验收的唯一依据。**
+
+文档按「需求 → 架构 → 细节 → 排期」四层组织，约束只能自上而下传递：
+
+| 层 | 目录 | 回答什么问题 |
+|---|---|---|
+| 需求说明 | [`01-requirements/`](./docs/01-requirements/) | 做什么、给谁做、明确不做什么 |
+| 整体架构 | [`02-architecture/`](./docs/02-architecture/) | 用什么结构做、组件如何切分 |
+| 技术细节 | [`03-details/`](./docs/03-details/) | 每个机制具体如何实现 |
+| 项目排期 | [`04-roadmap/`](./docs/04-roadmap/) | 什么时候交付、如何验收 |
+
+> **本项目强制「文档先行」**：任何涉及需求变更或架构调整的修改，必须先更新文档再写代码。详见[文档维护规范](./docs/_meta/documentation-workflow.md)。
+
+根目录的 `DESIGN.md` 是重构前的单文件原稿，仅作历史归档，**不再作为实现依据**。
+
+## 技术栈
+
+| | |
+|---|---|
+| 插件框架 | [`@deepseek-ai/cordis`](https://www.npmjs.com/package/@deepseek-ai/cordis) 4.0.1 |
+| DSH 运行时 | `@deepseek-ai/dsh-*` 0.1.1-rc.1 |
+| 语言 | TypeScript，ESM-only |
+| Node | `^22.19.0 \|\| >=24.0.0` |
+| 客户端 | React 18 + CSS Modules |
+| 配置校验 | [`@deepseek-ai/schemastery`](https://www.npmjs.com/package/@deepseek-ai/schemastery) |
+| 持久化 | `P0` SQLite（L1），`P1` 起 PostgreSQL + Redis + 对象存储（L2） |
+
+## 许可
+
+[MIT](./LICENSE)

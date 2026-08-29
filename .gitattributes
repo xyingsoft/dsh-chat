@@ -1,0 +1,26 @@
+# 仓库内统一以 LF 存储，避免跨平台协作产生大量无意义 diff
+* text=auto eol=lf
+
+# 明确以 LF 结尾：在 Linux CI 上执行，含 \r 会直接报错
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.md        text eol=lf
+
+# PowerShell 脚本在 Windows 上使用，保留 CRLF
+*.ps1       text eol=crlf
+
+# 二进制文件不做行尾转换
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.zip       binary
+*.tgz       binary
