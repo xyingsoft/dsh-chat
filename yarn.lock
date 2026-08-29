@@ -111,6 +111,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dsh-chat/messaging@workspace:packages/chat/messaging":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/messaging@workspace:packages/chat/messaging"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
 "@dsh-chat/organization@workspace:packages/chat/organization":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/organization@workspace:packages/chat/organization"
