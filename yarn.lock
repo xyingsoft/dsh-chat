@@ -102,7 +102,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dsh-chat/audit@workspace:packages/chat/audit":
+"@dsh-chat/audit@workspace:^, @dsh-chat/audit@workspace:packages/chat/audit":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/audit@workspace:packages/chat/audit"
   dependencies:
@@ -146,7 +146,9 @@ __metadata:
     "@deepseek-ai/dsh-host-webserver": "npm:0.1.2-alpha.1"
     "@deepseek-ai/dsh-invariants": "npm:0.1.2-alpha.1"
     "@deepseek-ai/schemastery": "npm:^3.18.1"
+    "@dsh-chat/audit": "workspace:^"
     "@dsh-chat/contract": "workspace:^"
+    "@dsh-chat/messaging": "workspace:^"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.1
     "@deepseek-ai/dsh-host-webserver": 0.1.2-alpha.1
@@ -176,7 +178,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dsh-chat/messaging@workspace:packages/chat/messaging":
+"@dsh-chat/messaging@workspace:^, @dsh-chat/messaging@workspace:packages/chat/messaging":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/messaging@workspace:packages/chat/messaging"
   dependencies:

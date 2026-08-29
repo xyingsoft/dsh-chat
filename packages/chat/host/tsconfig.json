@@ -10,6 +10,12 @@
   "references": [
     {
       "path": "../contract"
+    },
+    {
+      "path": "../audit"
+    },
+    {
+      "path": "../messaging"
     }
   ],
   "exclude": [
