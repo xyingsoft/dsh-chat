@@ -53,3 +53,4 @@ export interface HealthResponse {
 
 export * from './errors.js'
 export * from './states.js'
+export * from './persistence.js'
