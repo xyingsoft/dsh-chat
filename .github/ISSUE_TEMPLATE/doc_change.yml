@@ -1,0 +1,63 @@
+name: 文档变更 / Documentation change
+description: 提出文档修正、补充或开放决策的关闭 / Propose a documentation fix, addition, or closing an open decision
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        [`docs/`](https://github.com/xyingsoft/dsh-chat/blob/main/docs/README.md) 是实现、评审与验收的唯一依据。
+        实现中发现文档有误是**正常情况**，处理方式是暂停实现、修正文档，而不是在代码里留 `// TODO: 文档待更新`。
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 变更类型 / Change type
+      options:
+        - 文档描述有误 / Documentation is wrong
+        - 文档遗漏 / Documentation is missing something
+        - 需求本身需要调整 / The requirement itself needs to change
+        - 关闭一条开放决策 / Closing an open decision (§50)
+        - 交叉引用或链接修复 / Cross-reference or link fix
+    validations:
+      required: true
+
+  - type: input
+    id: target
+    attributes:
+      label: 涉及的文档与小节 / Affected document and section
+      placeholder: docs/03-details/06-contracts-and-conventions.md §46 错误码目录
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: 现状 / Current text
+      description: 引用原文，便于比对
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: 建议改为 / Proposed text
+    validations:
+      required: true
+
+  - type: textarea
+    id: downstream
+    attributes:
+      label: 下游影响 / Downstream impact
+      description: |
+        约束只能自上而下传递。若改动位于需求层或架构层，请列出需要同步更新的下层文档。
+        对照[文档维护规范第 2 节](https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/documentation-workflow.md)的变更分类表。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: strength
+    attributes:
+      label: 强约束确认 / Strong-constraint check
+      options:
+        - label: 本变更**没有**把「必须」「不得」「绝不」弱化为「建议」「尽量」；若有，我已在上方说明理由并知晓这属于需求变更
+          required: true

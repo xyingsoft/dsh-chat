@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞报告 / Report a security vulnerability
+    url: https://github.com/xyingsoft/dsh-chat/security/advisories/new
+    about: 安全问题请勿提交公开 Issue，请使用私密报告通道。Do not open a public Issue for security problems.
+  - name: 设计 Wiki / Design Wiki
+    url: https://github.com/xyingsoft/dsh-chat/blob/main/docs/README.md
+    about: 实现、评审与验收的唯一依据。The single source of truth for implementation and acceptance.
+  - name: 文档维护规范 / Documentation workflow
+    url: https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/documentation-workflow.md
+    about: 本项目强制文档先行，提 PR 前请先读这份。This project mandates documentation-first development.
