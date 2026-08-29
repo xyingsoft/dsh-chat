@@ -28,7 +28,9 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ### What works today
 
-Only the health-check route registered by the host plugin: `GET /api/chat/health`. Identity, organizations, messaging, work items, and the UI are all unimplemented — as the documents require, capabilities that are not loaded return `NOT_IMPLEMENTED` rather than pretending to be available.
+Direct messaging and work items run **over real HTTP**: send, lease-based pull, acknowledge; create a work item, assign it with a notification, add dependencies (with cycle detection), read the inbox. Every write endpoint has cross-origin protection, injected authentication, and same-transaction audit.
+
+**The UI is not usable yet** — the client component exists, but slot registration is blocked by a type dependency; see [TODO stage 10](./TODO.md). Second factor, recovery, presence, groups, and attachments belong to later gates; their entry points are explicitly absent rather than pretending to work.
 
 ## Documentation
 
