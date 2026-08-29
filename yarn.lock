@@ -32,6 +32,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@deepseek-ai/dsh-client-store@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-store-0.1.2-alpha.1.tgz::locator=dsh-chat%40workspace%3A.":
+  version: 0.1.2-alpha.1
+  resolution: "@deepseek-ai/dsh-client-store@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-store-0.1.2-alpha.1.tgz#./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-store-0.1.2-alpha.1.tgz::hash=e87169&locator=dsh-chat%40workspace%3A."
+  dependencies:
+    immer: "npm:^10.1.1"
+    zustand: "npm:~4.4.7"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.1
+  checksum: 10/104eae522774eee43851c6654ca4a1ec47628b4004af2292e17a26612b23f8ed62b8d352193463b3b326b0cda890c8391d7471c9c7f6d2c16500db1817648828
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-client-ui-renderer@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz::locator=dsh-chat%40workspace%3A.":
+  version: 0.1.2-alpha.1
+  resolution: "@deepseek-ai/dsh-client-ui-renderer@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz#./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz::hash=f223d1&locator=dsh-chat%40workspace%3A."
+  dependencies:
+    use-sync-external-store: "npm:1.2.0"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.1
+  checksum: 10/6b4330e0c1b25973dd1dd3cace99928a6ab66a6affbd313744e10f1b5b6e7ddad869e21dc3637194164d653666f2bd1e373019419e4db98a40a67bc931099b4a
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-client-ui-slots@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz::locator=dsh-chat%40workspace%3A.":
+  version: 0.1.2-alpha.1
+  resolution: "@deepseek-ai/dsh-client-ui-slots@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz#./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz::hash=d0ba91&locator=dsh-chat%40workspace%3A."
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.1
+  checksum: 10/3c666fa21d31518694beaf76d632d83393188cc3ef6d264581bab2727e9d28d150ec7a95283cc9a8c99c37fd56a84369334853c3db3517fd69010a552f02f509
+  languageName: node
+  linkType: hard
+
 "@deepseek-ai/dsh-host-webserver@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz::locator=dsh-chat%40workspace%3A.":
   version: 0.1.2-alpha.1
   resolution: "@deepseek-ai/dsh-host-webserver@file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz#./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz::hash=44d26e&locator=dsh-chat%40workspace%3A."
@@ -75,6 +110,24 @@ __metadata:
     "@dsh-chat/contract": "workspace:^"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
+"@dsh-chat/client@workspace:packages/chat/client":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/client@workspace:packages/chat/client"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@deepseek-ai/dsh-client-store": "npm:0.1.2-alpha.1"
+    "@deepseek-ai/dsh-client-ui-renderer": "npm:0.1.2-alpha.1"
+    "@deepseek-ai/dsh-client-ui-slots": "npm:0.1.2-alpha.1"
+    "@dsh-chat/contract": "workspace:^"
+    react: "npm:^18.3.1"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-client-ui-renderer": 0.1.2-alpha.1
+    "@deepseek-ai/dsh-client-ui-slots": 0.1.2-alpha.1
+    react: ^18.2.0
   languageName: unknown
   linkType: soft
 
@@ -598,10 +651,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"immer@npm:^10.1.1":
+  version: 10.2.0
+  resolution: "immer@npm:10.2.0"
+  checksum: 10/d73e218c8f8ffbb39f9290dfafa478b94af73403dcf26b5672eef35233bb30f09ffe231f8a78a6c9cb442968510edd89e851776ec90a5ddfa82cee6db6b35137
+  languageName: node
+  linkType: hard
+
 "isexe@npm:^4.0.0":
   version: 4.0.0
   resolution: "isexe@npm:4.0.0"
   checksum: 10/2ead327ef596042ef9c9ec5f236b316acfaedb87f4bb61b3c3d574fb2e9c8a04b67305e04733bde52c24d9622fdebd3270aadb632adfbf9cadef88fe30f479e5
+  languageName: node
+  linkType: hard
+
+"js-tokens@npm:^3.0.0 || ^4.0.0":
+  version: 4.0.0
+  resolution: "js-tokens@npm:4.0.0"
+  checksum: 10/af37d0d913fb56aec6dc0074c163cc71cd23c0b8aad5c2350747b6721d37ba118af35abdd8b33c47ec2800de07dedb16a527ca9c530ee004093e04958bd0cbf2
   languageName: node
   linkType: hard
 
@@ -722,6 +789,17 @@ __metadata:
     lightningcss-win32-x64-msvc:
       optional: true
   checksum: 10/9b3b5db404af352fe5861926b9909281d29bede175539035c1a01e1ad4dcee8bb6f871e8e3d01a67a85e9e1cd18a63e52871a48cf62feab4d1aa868d4f2c3c2e
+  languageName: node
+  linkType: hard
+
+"loose-envify@npm:^1.1.0":
+  version: 1.4.0
+  resolution: "loose-envify@npm:1.4.0"
+  dependencies:
+    js-tokens: "npm:^3.0.0 || ^4.0.0"
+  bin:
+    loose-envify: cli.js
+  checksum: 10/6517e24e0cad87ec9888f500c5b5947032cdfe6ef65e1c1936a0c48a524b81e65542c9c3edc91c97d5bddc806ee2a985dbc79be89215d613b1de5db6d1cfe6f4
   languageName: node
   linkType: hard
 
@@ -870,6 +948,15 @@ __metadata:
   version: 7.0.0
   resolution: "proc-log@npm:7.0.0"
   checksum: 10/97cd9f4a8a0d84e42ee91e106e5ba5edcb954521e8dbe26ee6ad31396e5c12cc2be5e5b6be7b53fa5a69959afbacd32719106e2d6f45802e34b31d9a3a01ec20
+  languageName: node
+  linkType: hard
+
+"react@npm:^18.3.1":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+  dependencies:
+    loose-envify: "npm:^1.1.0"
+  checksum: 10/261137d3f3993eaa2368a83110466fc0e558bc2c7f7ae7ca52d94f03aac945f45146bd85e5f481044db1758a1dbb57879e2fcdd33924e2dde1bdc550ce73f7bf
   languageName: node
   linkType: hard
 
@@ -1053,6 +1140,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"use-sync-external-store@npm:1.2.0":
+  version: 1.2.0
+  resolution: "use-sync-external-store@npm:1.2.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 10/a676216affc203876bd47981103f201f28c2731361bb186367e12d287a7566763213a8816910c6eb88265eccd4c230426eb783d64c373c4a180905be8820ed8e
+  languageName: node
+  linkType: hard
+
 "vary@npm:~1.1.2":
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
@@ -1221,5 +1317,25 @@ __metadata:
   bin:
     yaml: bin.mjs
   checksum: 10/9a95e8e08651c3d292ab6a5befeb5f57b76801caa097c75bb45c9a70ce19c1b11f57e87a6ef84a579ea070ed2c2c8ac541c88c0ae684d544d5f42c7e77d11b7b
+  languageName: node
+  linkType: hard
+
+"zustand@npm:~4.4.7":
+  version: 4.4.7
+  resolution: "zustand@npm:4.4.7"
+  dependencies:
+    use-sync-external-store: "npm:1.2.0"
+  peerDependencies:
+    "@types/react": ">=16.8"
+    immer: ">=9.0"
+    react: ">=16.8"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    immer:
+      optional: true
+    react:
+      optional: true
+  checksum: 10/572e42d912362eb3aabde9a37bca47caa547391fc4563e41444d9aef7ca453ca730ee1f00aae4b25c2635ca293d69c23ab0a41688cd4db8394545732a2d9c236
   languageName: node
   linkType: hard
