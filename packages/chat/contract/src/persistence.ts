@@ -104,12 +104,15 @@ export interface DeviceSyncState {
 }
 
 /**
- * host 与 relay 协商的协议版本。
+ * 本次构建实现的协议版本。
  *
- * §41：不兼容时返回 `PROTOCOL_VERSION_UNSUPPORTED` 并**停止组织写入**，
- * 不得静默降级。升级顺序固定为 relay 先升、host 后升。
+ * §41 规定它是**单调递增整数**。早先这里写的是 `'1.0'` 字符串 —— 那与文档不符，
+ * 且字符串比较下 `'1.10' < '1.9'`，正是版本号最经典的排序错误。
+ *
+ * 不兼容时返回 `PROTOCOL_VERSION_UNSUPPORTED` 并**停止组织写入**，不得静默降级。
+ * 升级顺序固定为 relay 先升、host 后升。
  */
-export const PROTOCOL_VERSION = '1.0' as Branded<string, 'ProtocolVersion'>
+export const PROTOCOL_VERSION = 1 as Branded<number, 'ProtocolVersion'>
 
 /**
  * 数据库 schema 版本。

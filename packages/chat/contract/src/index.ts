@@ -6,8 +6,9 @@
  * 浏览器与 Node 均可引用。错误码目录、`AuditEvent` 结构、`ProtocolVersion` 与术语表
  * 都只在这里定义，其他插件不得自定义同名概念或私有错误码。
  *
- * 本文件当前只包含品牌化标识符的基础设施与协议版本；命令、事件、错误码目录与状态机
- * 随对应实现阶段逐步加入。
+ * 本文件是聚合入口，各部分分文件维护：错误码目录（`errors`）、领域状态集合（`states`）、
+ * 持久化与品牌化标识符（`persistence`）、命令与事件（`commands`）、审计结构（`audit`）、
+ * 协议版本协商（`protocol`）。
  */
 
 declare const brand: unique symbol
@@ -26,8 +27,13 @@ export type ProjectId = Branded<string, 'ProjectId'>
 export type AccountId = Branded<string, 'AccountId'>
 export type DeviceId = Branded<string, 'DeviceId'>
 
-/** host 与 relay 在建立设备会话时协商的协议版本。 */
-export type ProtocolVersion = Branded<string, 'ProtocolVersion'>
+/**
+ * host 与 relay 在建立设备会话时协商的协议版本。
+ *
+ * §41 明确其为「**单调递增整数**」，不是 `major.minor` 字符串 —— 这样版本比较
+ * 就是整数比较，不需要解析，也不存在 `1.10 < 1.9` 这类字符串序陷阱。
+ */
+export type ProtocolVersion = Branded<number, 'ProtocolVersion'>
 
 /**
  * 穷尽性检查。
@@ -54,3 +60,6 @@ export interface HealthResponse {
 export * from './errors.js'
 export * from './states.js'
 export * from './persistence.js'
+export * from './commands.js'
+export * from './audit.js'
+export * from './protocol.js'
