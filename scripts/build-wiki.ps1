@@ -154,9 +154,26 @@ if (-not $Push) {
     return
 }
 
+# Windows PowerShell 5.1 会把原生命令写入 stderr 的每一行包装成 ErrorRecord，
+# 在 $ErrorActionPreference = 'Stop' 下变成终止性错误。git 把进度信息写到
+# stderr 属于正常行为，因此调用 git 时局部放宽，改为按 $LASTEXITCODE 判定成败。
+function Invoke-Git {
+    param([Parameter(Mandatory)][string[]]$Arguments, [switch]$PassThru)
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & git @Arguments 2>&1
+        $code = $LASTEXITCODE
+    }
+    finally { $ErrorActionPreference = $previous }
+    if ($code -ne 0) {
+        throw "git $($Arguments -join ' ') 失败（退出码 $code）：`n$($output -join "`n")"
+    }
+    if ($PassThru) { return $output }
+}
 $work = Join-Path ([System.IO.Path]::GetTempPath()) ("dshwiki-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 Write-Host "`n克隆 wiki 仓库..."
-git clone $Remote $work 2>&1 | Out-Null
+Invoke-Git -Arguments @('clone', '--quiet', $Remote, $work)
 
 if (-not (Test-Path $work)) {
     # wiki 尚未初始化：需先在网页端创建首个页面
@@ -168,11 +185,11 @@ Copy-Item (Join-Path $OutDir '*.md') $work -Force
 
 Push-Location $work
 try {
-    git add -A
-    $status = git status --porcelain
+    Invoke-Git -Arguments @('add', '-A')
+    $status = Invoke-Git -Arguments @('status', '--porcelain') -PassThru
     if (-not $status) { Write-Host "无变更，跳过推送。"; return }
-    git commit -q -m $CommitMessage
-    git push origin HEAD 2>&1 | Select-Object -Last 3
+    Invoke-Git -Arguments @('commit', '-q', '-m', $CommitMessage)
+    Invoke-Git -Arguments @('push', 'origin', 'HEAD')
     Write-Host "`n推送完成。"
 } finally {
     Pop-Location
