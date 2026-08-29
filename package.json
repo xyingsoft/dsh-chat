@@ -24,8 +24,6 @@
   },
   "resolutions": {
     "@deepseek-ai/dsh-host-webserver": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz",
-    "@deepseek-ai/dsh-client-ui-slots": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz",
-    "@deepseek-ai/dsh-client-ui-renderer": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz",
     "@deepseek-ai/dsh-invariants": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-invariants-0.1.2-alpha.1.tgz"
   },
   "devDependencies": {
