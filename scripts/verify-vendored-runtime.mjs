@@ -42,6 +42,12 @@ const EXPECTED = Object.freeze({
   sourceVersion: '0.1.2-alpha.1',
   commit: 'cd5ef8148158c3a752a658978873241fdf8e2bbc',
   packages: Object.freeze({
+    '@deepseek-ai/dsh-client-store':
+      '32b1c4da110888f6dcae69bc80f94182a717c4d2feb1dcb2d6891052cac8ff0e',
+    '@deepseek-ai/dsh-client-ui-renderer':
+      'abcb7598964865e2a8b4008cc1d62702a88c6d3eea9a4c1e2677e8935b8934ae',
+    '@deepseek-ai/dsh-client-ui-slots':
+      '29c16a338bd9dfa89472bad327bd4ccb902639b1c58e237377575b9cf821dd7e',
     '@deepseek-ai/dsh-host-webserver':
       '4f44014657a503297470410b2249f9765cc4ef640541d1412e4f7eeec9997508',
     '@deepseek-ai/dsh-invariants':

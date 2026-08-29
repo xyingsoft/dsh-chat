@@ -2,8 +2,29 @@
   "repository": "https://github.com/deepseek-ai/deepseek-harness.git",
   "commit": "cd5ef8148158c3a752a658978873241fdf8e2bbc",
   "sourceVersion": "0.1.2-alpha.1",
-  "note": "仅收录 host 入口点的依赖闭包；上游完整集合为 241 个包。sha256 与上游 manifest 逐个核对一致。客户端所需的 dsh-client-ui-slots / dsh-client-ui-renderer 及其闭包（含未发布到 npm 的 dsh-client-store 与 react）随 packages/chat/client 一并加入，不在此提前收录。",
+  "note": "收录 host 与 client 两侧入口点的依赖闭包；上游完整集合为 241 个包。sha256 与上游 manifest 逐个核对一致。",
   "packages": [
+    {
+      "name": "@deepseek-ai/dsh-client-store",
+      "version": "0.1.2-alpha.1",
+      "filename": "deepseek-ai-dsh-client-store-0.1.2-alpha.1.tgz",
+      "size": 9059,
+      "sha256": "32b1c4da110888f6dcae69bc80f94182a717c4d2feb1dcb2d6891052cac8ff0e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-renderer",
+      "version": "0.1.2-alpha.1",
+      "filename": "deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.1.tgz",
+      "size": 27249,
+      "sha256": "abcb7598964865e2a8b4008cc1d62702a88c6d3eea9a4c1e2677e8935b8934ae"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-slots",
+      "version": "0.1.2-alpha.1",
+      "filename": "deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.1.tgz",
+      "size": 26474,
+      "sha256": "29c16a338bd9dfa89472bad327bd4ccb902639b1c58e237377575b9cf821dd7e"
+    },
     {
       "name": "@deepseek-ai/dsh-host-webserver",
       "version": "0.1.2-alpha.1",
