@@ -122,9 +122,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dsh-chat/notification@workspace:packages/chat/notification":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/notification@workspace:packages/chat/notification"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
 "@dsh-chat/organization@workspace:packages/chat/organization":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/organization@workspace:packages/chat/organization"
+  dependencies:
+    "@deepseek-ai/cordis": "npm:^4.0.1"
+    "@dsh-chat/contract": "workspace:^"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+  languageName: unknown
+  linkType: soft
+
+"@dsh-chat/workitem@workspace:packages/chat/workitem":
+  version: 0.0.0-use.local
+  resolution: "@dsh-chat/workitem@workspace:packages/chat/workitem"
   dependencies:
     "@deepseek-ai/cordis": "npm:^4.0.1"
     "@dsh-chat/contract": "workspace:^"
