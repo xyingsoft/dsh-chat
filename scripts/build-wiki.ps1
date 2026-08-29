@@ -98,7 +98,7 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 foreach ($f in $files) {
     $page    = $map[$f.FullName.ToLower()]
-    $content = Get-Content $f.FullName -Raw
+    $content = Get-Content $f.FullName -Raw -Encoding UTF8
     $content = Convert-Links $content $f.DirectoryName
     $outFile = Join-Path $OutDir "$page.md"
     # Wiki 页面统一 UTF-8 无 BOM
