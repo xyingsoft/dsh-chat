@@ -461,7 +461,12 @@ const migration004: Migration = {
                               window_started_at)`,
 
     // 组成员。展开时逐条跳转靠它。
+    //
+    // 带 organization_id 是冗余的（group_id 已经决定了组织），但 §48 要求
+    // **每个**数据库查询携带 OrganizationId。靠「查这张表前先查父表」是靠自觉，
+    // 而 schema 层强制是结构性的 —— 多一列换掉一条需要人记住的规则。
     `CREATE TABLE notification_group_members (
+       organization_id TEXT NOT NULL,
        group_id        TEXT NOT NULL,
        notification_id TEXT NOT NULL,
        created_at      TEXT NOT NULL,
@@ -490,6 +495,7 @@ const migration004: Migration = {
     // comments 表刻意没有 body 列 —— 有的话就会有人去 UPDATE 它，
     // 「编辑追加修订」的约束当场破掉
     `CREATE TABLE comment_revisions (
+       organization_id TEXT NOT NULL,
        comment_id      TEXT NOT NULL,
        revision        INTEGER NOT NULL,
        body            TEXT NOT NULL,

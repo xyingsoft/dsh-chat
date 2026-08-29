@@ -47,6 +47,7 @@ export interface Comment {
 }
 
 export interface CommentRevision {
+  readonly organizationId: string
   readonly commentId: string
   readonly revision: number
   readonly body: string
@@ -127,6 +128,7 @@ export function createComment(
     iso,
   )
   appendRevision(db, {
+    organizationId: input.organizationId,
     commentId: input.commentId,
     revision: 1,
     body: input.body,
@@ -171,6 +173,7 @@ export function editComment(
 
   const revision = comment.revision + 1
   appendRevision(db, {
+    organizationId: comment.organizationId,
     commentId: input.commentId,
     revision,
     body: input.body,
@@ -280,6 +283,7 @@ function revisionOf(
 
 function toRevision(row: Record<string, string | number>): CommentRevision {
   return {
+    organizationId: row['organization_id'] as string,
     commentId: row['comment_id'] as string,
     revision: row['revision'] as number,
     body: row['body'] as string,
@@ -290,9 +294,11 @@ function toRevision(row: Record<string, string | number>): CommentRevision {
 
 function appendRevision(db: DatabaseSync, revision: CommentRevision): void {
   db.prepare(
-    `INSERT INTO comment_revisions (comment_id, revision, body, editor_id, occurred_at)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO comment_revisions
+       (organization_id, comment_id, revision, body, editor_id, occurred_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
   ).run(
+    revision.organizationId,
     revision.commentId,
     revision.revision,
     revision.body,

@@ -43,6 +43,7 @@ beforeEach(() => {
       deleted_at TEXT
     ) STRICT;
     CREATE TABLE comment_revisions (
+      organization_id TEXT NOT NULL,
       comment_id TEXT NOT NULL,
       revision INTEGER NOT NULL,
       body TEXT NOT NULL,

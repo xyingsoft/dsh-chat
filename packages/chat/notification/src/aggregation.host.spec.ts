@@ -58,6 +58,7 @@ beforeEach(() => {
       updated_at TEXT NOT NULL
     ) STRICT;
     CREATE TABLE notification_group_members (
+      organization_id TEXT NOT NULL,
       group_id TEXT NOT NULL,
       notification_id TEXT NOT NULL,
       created_at TEXT NOT NULL,

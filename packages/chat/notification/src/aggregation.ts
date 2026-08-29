@@ -140,9 +140,15 @@ export function aggregateNotification(
 
 function addMember(db: DatabaseSync, groupId: string, notification: Notification): void {
   db.prepare(
-    `INSERT OR IGNORE INTO notification_group_members (group_id, notification_id, created_at)
-     VALUES (?, ?, ?)`,
-  ).run(groupId, notification.notificationId, notification.createdAt)
+    `INSERT OR IGNORE INTO notification_group_members
+       (organization_id, group_id, notification_id, created_at)
+     VALUES (?, ?, ?, ?)`,
+  ).run(
+    notification.organizationId,
+    groupId,
+    notification.notificationId,
+    notification.createdAt,
+  )
 }
 
 export function groupOf(db: DatabaseSync, groupId: string): NotificationGroup | undefined {
