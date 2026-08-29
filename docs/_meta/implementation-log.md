@@ -21,38 +21,41 @@
 
 **核对日期：2026-08-29**
 
-dsh-chat 是一组 DSH 插件，运行在 DeepSeek Harness 之上。相关包发布在公共 npm。
+dsh-chat 是一组 DSH 插件，运行在 DeepSeek Harness 之上。运行时依赖的获取方式见 1.1 —— 它不是普通的 npm 安装。
 
-### 1.1 一个需要先说清楚的矛盾
+### 1.1 运行时通过 vendored tarball 消费，不走 npm
 
-DSH Desktop 的最新发行版是 `v2.0.4`（2026-08-28），但**它依赖的运行时 `0.1.2-alpha.1` 没有发布到 npm** —— 该版本只以本地 tarball 形式存在于 DSH Desktop 的检出中（`resolutions` 指向 `file:vendor/dsh-runtime/0.1.2-alpha.1/*.tgz`）。
+DSH 运行时在 `0.1.2-alpha.1` 起改为**全量 vendor 化**：上游 DSH Desktop 的根 `package.json` 把每一个 `@deepseek-ai/dsh-*` 的 `resolutions` 都指向本地 tarball，并提供同步脚本从 harness 源码仓库的构建产物中取包、把 sha256 写入 manifest。
 
-| DSH Desktop | 运行时 | 能否从 npm 获取 |
-|---|---|---|
-| `v2.0.4` | `0.1.2-alpha.1` | **否** |
-| `v2.0.2` | `0.1.1-rc.1` | 是 |
+这不是「尚未发布」，而是上游当前的消费方式。因此本项目采用相同机制对齐最新版：
 
-结论：**在 `0.1.2` 发布前，仓库外的插件项目无法对齐 `v2.0.4` 的运行时。** 本项目按可从 npm 获取的版本开发，对应的 DSH Desktop 参照版本是 `v2.0.2`，而不是最新的 `v2.0.4`。等 `0.1.2` 发布后再评估升级并同步更新本节。
+| | |
+|---|---|
+| 运行时版本 | `0.1.2-alpha.1`（2026-08-28 发布，upstream master 即此 tag） |
+| 对应 DSH Desktop | `v2.0.4` |
+| 来源仓库 | `https://github.com/deepseek-ai/deepseek-harness.git` |
+| 来源 commit | `cd5ef8148158c3a752a658978873241fdf8e2bbc` |
+| 完整性校验 | manifest 中逐包记录 sha256 |
 
-> 注：本地检出目录 `DSH-desktop/deepseek-harness-desktop-latest/` 的名称有误导性 —— 它是 `v2.0.2`，不是最新版。最新版在 `DSH-desktop-master-fast/`。
+上游完整 vendor 目录为 241 个包 / 8.2 MB；本项目只需其中被实际依赖的子集。
+
+> **npm 上的版本不能作为依据。** `@deepseek-ai/dsh-*` 在 npm 的 `latest` dist-tag 指向 `0.0.1-rc.1`（远早于当前），`next` 指向 `0.1.1-rc.2`，而 `0.1.2-alpha.1` 未上传。任何 `npm i @deepseek-ai/dsh-...` 不带精确版本的写法都会装到错误的版本。
+
+> 注：本地检出目录 `DSH-desktop/deepseek-harness-desktop-latest/` 的名称有误导性 —— 它是 `v2.0.2`（运行时 `0.1.1-rc.1`），不是最新版。最新版在 `DSH-desktop-master-fast/`（`v2.0.4`）。
 
 ### 1.2 版本
 
-| 依赖 | 采用版本 | 说明 |
-|---|---|---|
-| `@deepseek-ai/cordis` | `4.0.1` | 插件框架。**不是**社区版 `cordis` / `@cordisjs/*`，是 `@deepseek-ai` scope 下的独立发布版本。npm 上 `latest` 即 `4.0.1` |
-| `@deepseek-ai/dsh-host-webserver` | `0.1.1-rc.2` | host 路由注册 |
-| `@deepseek-ai/dsh-client-ui-slots` | `0.1.1-rc.2` | 客户端 slot 注册 |
-| `@deepseek-ai/schemastery` | `^3.18.1` | 配置 schema 校验 |
-| Node | `^22.19.0 \|\| >=24.0.0` | 与 harness 的 `engines` 一致 |
-| React | 见 1.3 | 客户端插件 |
+| 依赖 | 采用版本 | 来源 | 说明 |
+|---|---|---|---|
+| `@deepseek-ai/cordis` | `4.0.1` | npm | 插件框架。**不是**社区版 `cordis` / `@cordisjs/*`。npm `latest` 即 `4.0.1`，与上游锁定一致 |
+| `@deepseek-ai/dsh-host-webserver` | `0.1.2-alpha.1` | vendor tarball | host 路由注册 |
+| `@deepseek-ai/dsh-client-ui-slots` | `0.1.2-alpha.1` | vendor tarball | 客户端 slot 注册 |
+| `@deepseek-ai/dsh-client-ui-renderer` | `0.1.2-alpha.1` | vendor tarball | slot 服务的 Cordis 封装 |
+| `@deepseek-ai/schemastery` | `^3.18.1` | npm | 配置 schema 校验 |
+| Node | `^22.19.0 \|\| >=24.0.0` | — | 与 harness 的 `engines` 一致 |
+| React | 见 1.3 | npm | 客户端插件 |
 
-选 `0.1.1-rc.2` 而非 `v2.0.2` 所用的 `0.1.1-rc.1`：`rc.2` 是当前 npm 上最新的已发布版本，且是 `next` dist-tag 所指。
-
-> **npm 的 `latest` dist-tag 指向 `0.0.1-rc.1`，是个远早于当前的版本。**
-> 即 `npm i @deepseek-ai/dsh-host-webserver` 不带版本号会装到 `0.0.1-rc.1`。所有 DSH 依赖都要写死精确版本，不能依赖 `latest`。
-
-具体包名要按实际需要逐个列出，不能用 `@deepseek-ai/dsh-*` 通配 —— **不同版本之间包的集合本身就不同**。例如 `@deepseek-ai/dsh-client-store` 与 `@deepseek-ai/dsh-util-crypto` 在 npm 上返回 404，它们只存在于未发布的 `0.1.2-alpha.1` 中。
+具体包名按实际依赖逐个列出，不用 `@deepseek-ai/dsh-*` 通配 —— **不同版本之间包的集合本身就不同**。例如 `@deepseek-ai/dsh-client-store` 与 `@deepseek-ai/dsh-util-crypto` 只存在于 `0.1.2-alpha.1`，在 npm 上返回 404。传递依赖的完整闭包在工程初始化时确定并记入本表。
 
 ### 1.3 React 版本的两个口径
 
