@@ -17,10 +17,11 @@
     "packages/chat/*"
   ],
   "scripts": {
-    "check": "yarn check:vendor && yarn check:links && yarn check:types",
+    "check": "yarn check:vendor && yarn check:links && yarn check:types && yarn check:test",
     "check:vendor": "node scripts/verify-vendored-runtime.mjs",
     "check:links": "bash scripts/check-links.sh",
-    "check:types": "tsc --build --verbose"
+    "check:types": "tsc --build --verbose",
+    "check:test": "vitest run"
   },
   "resolutions": {
     "@deepseek-ai/dsh-host-webserver": "file:./vendor/dsh-runtime/0.1.2-alpha.1/deepseek-ai-dsh-host-webserver-0.1.2-alpha.1.tgz",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^24",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4"
   }
 }
