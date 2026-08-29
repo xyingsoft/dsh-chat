@@ -506,10 +506,51 @@ const migration004: Migration = {
   ],
 }
 
+/**
+ * 版本 5：评审。
+ *
+ * §18：「`approved` **只对评审时锁定的产物版本生效**。关联产物或提交在评审后
+ * 发生变化时，评审自动转为 `superseded` 并要求重新评审，**不允许「批准一个版本、
+ * 合入另一个版本」**。」
+ *
+ * 因此 `artifact_version` 是这张表的核心列，不是附加信息 —— 没有它，
+ * 「批准的是哪一版」就无从谈起，上面那条约束也就无法执行。
+ */
+const migration005: Migration = {
+  version: 5,
+  name: 'reviews',
+  statements: [
+    `CREATE TABLE reviews (
+       review_id       TEXT PRIMARY KEY,
+       organization_id TEXT NOT NULL,
+       work_item_id    TEXT NOT NULL,
+       requester_id    TEXT NOT NULL,
+       reviewer_id     TEXT NOT NULL,
+       -- 评审时锁定的产物版本（§18）。批准只对这一版生效
+       artifact_ref     TEXT NOT NULL,
+       artifact_version INTEGER NOT NULL,
+       -- requested / in_progress / approved / changes_requested /
+       -- declined / expired / superseded
+       state           TEXT NOT NULL,
+       note            TEXT,
+       due_at          TEXT,
+       created_at      TEXT NOT NULL,
+       updated_at      TEXT NOT NULL,
+       -- 转为 superseded 时记下当时看到的新版本，便于事后核对
+       superseded_by_version INTEGER
+     ) STRICT`,
+    `CREATE INDEX idx_reviews_work_item
+       ON reviews(organization_id, work_item_id, state)`,
+    `CREATE INDEX idx_reviews_artifact
+       ON reviews(organization_id, artifact_ref, state)`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
 export const MIGRATIONS: readonly Migration[] = [
   migration001,
   migration002,
   migration003,
   migration004,
+  migration005,
 ]

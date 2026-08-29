@@ -70,3 +70,4 @@ export function apply(ctx: Context, _config: Config = {}): void {
     `${name}: health route`,
   )
 }
+export * from './rate-limit.js'
