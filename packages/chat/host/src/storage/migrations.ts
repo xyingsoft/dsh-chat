@@ -322,5 +322,32 @@ const migration001: Migration = {
   ],
 }
 
+/**
+ * 版本 2：请求签名的 nonce 账本。
+ *
+ * §7.1 要求 relay「拒绝过期时间戳、**重复 nonce**、未注册或被限制设备」。
+ * 拒绝重复 nonce 需要记住已见过的 nonce —— 这是唯一必须新增的状态。
+ *
+ * 按 §29.1 只做扩展：新表，不动既有列。
+ */
+const migration002: Migration = {
+  version: 2,
+  name: 'request-signing-nonces',
+  statements: [
+    // 主键是 (device_id, nonce) 而不是 nonce 单列：nonce 由各设备自行生成，
+    // 两台设备偶然生成同一个值不该让后者的请求被判为重放。
+    //
+    // seen_at 用于按容忍窗口清理 —— 账本无限增长的话，一台设备跑一年就是
+    // 几千万行，而窗口外的 nonce 早已因时间戳检查而无法使用，留着没有意义。
+    `CREATE TABLE request_nonces (
+       device_id TEXT NOT NULL,
+       nonce     TEXT NOT NULL,
+       seen_at   TEXT NOT NULL,
+       PRIMARY KEY (device_id, nonce)
+     ) STRICT`,
+    `CREATE INDEX idx_request_nonces_expiry ON request_nonces(seen_at)`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
-export const MIGRATIONS: readonly Migration[] = [migration001]
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002]

@@ -99,8 +99,19 @@ describe('§27 要求第一版即存在的字段', () => {
     )
 
   it('每张业务表都带 organization_id', () => {
-    // accounts / devices / recovery_kits 属账号维度，跨组织存在，不带 organization_id
-    const accountScoped = new Set(['accounts', 'devices', 'recovery_kits', 'schema_migrations'])
+    // accounts / devices / recovery_kits 属账号维度，跨组织存在，不带 organization_id。
+    //
+    // request_nonces 属**设备**维度，刻意不按组织分区：一个 nonce 一旦被某设备
+    // 用过就应在全局作废。按组织分区的话，同一 nonce 在每个组织里各能用一次，
+    // 重放窗口凭空放大到组织数量倍。签名本身已覆盖 organizationId，
+    // 跨组织重放另有那一层挡着。
+    const accountScoped = new Set([
+      'accounts',
+      'devices',
+      'recovery_kits',
+      'request_nonces',
+      'schema_migrations',
+    ])
     const tables = (
       db.readonlyHandle
         .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`)
