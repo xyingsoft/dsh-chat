@@ -24,6 +24,9 @@
     },
     {
       "path": "./packages/chat/audit"
+    },
+    {
+      "path": "./packages/chat/client"
     }
   ]
 }
