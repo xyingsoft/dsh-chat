@@ -16,15 +16,19 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ## Status
 
-**Not released. The project scaffolding is not initialized yet — the repository currently contains documentation only.**
+**Not released. `P0-a` is under implementation.** The plugin already installs into DSH and loads correctly, but no chat functionality exists yet.
 
 | Stage | Scope | Status |
 |---|---|---|
-| `P0-a` | Write protocol, delivery semantics, same-transaction audit | Preparing (documentation-first phase) |
+| `P0-a` | Write protocol, delivery semantics, same-transaction audit | In progress (4 of 11 implementation stages) |
 | `P0-b` | Second factor, recovery, presence visibility, local search, protocol negotiation | Not started |
 | `P1`–`P4` | Groups and resources, collaboration sessions and bots, governance and analytics, enterprise and E2EE | Not started |
 
-See the [iteration plan](./docs/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
+**Per-stage progress, completed items, and blockers are tracked in [TODO.md](./TODO.md).** See the [iteration plan](./docs/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
+
+### What works today
+
+Only the health-check route registered by the host plugin: `GET /api/chat/health`. Identity, organizations, messaging, work items, and the UI are all unimplemented — as the documents require, capabilities that are not loaded return `NOT_IMPLEMENTED` rather than pretending to be available.
 
 ## Documentation
 
