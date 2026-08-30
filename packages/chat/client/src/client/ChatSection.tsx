@@ -33,6 +33,7 @@ import { presentError, type LocalDeliveryState, type StreamState } from '../pres
 import styles from './ChatSection.module.css'
 import { Composer } from './Composer.js'
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
+import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage } from './MessageView.js'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
@@ -116,6 +117,13 @@ async function callHost<T>(path: string, body: unknown): Promise<T> {
 type LoadState =
   | { readonly kind: 'loading' }
   | { readonly kind: 'ready' }
+  /**
+   * 配了 relay 但本机还没开户。
+   *
+   * 与「没有会话」是两回事，所以是一个独立状态而不是空列表 —— 空列表长得像
+   * 「你还没有会话」，而实际情况是「你还没有账号」，下一步动作完全不同。
+   */
+  | { readonly kind: 'unenrolled' }
   /** 加载失败。**必须显式呈现**，不能表现为一直空着（§5）。 */
   | { readonly kind: 'failed'; readonly errorCode: string }
 
@@ -145,6 +153,17 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
 
   const loadConversations = useCallback(async () => {
     try {
+      // 先问开户状态。跳过这一步直接拉会话的话，未开户时拿到的是一个
+      // 认证错误 —— 界面会显示「出错了，重试」，而重试一百次也不会成功，
+      // 真正要做的是开户
+      const status = await callHost<{ mode: 'local' | 'enrolled' | 'unenrolled' }>(
+        '/api/chat/identity/status',
+        {},
+      )
+      if (status.mode === 'unenrolled') {
+        setState({ kind: 'unenrolled' })
+        return
+      }
       const data = await callHost<{ conversations: RemoteConversation[] }>(
         '/api/chat/conversations',
         {},
@@ -245,6 +264,17 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
       { className: styles['status'] },
       createElement('p', { className: styles['statusText'] }, '正在加载会话…'),
     )
+  }
+
+  if (state.kind === 'unenrolled') {
+    return createElement(EnrollmentPanel, {
+      onEnrolled: () => {
+        // 开完户重走一遍加载。不直接切 ready —— 会话列表还没拉过，
+        // 切过去会是一个空列表，看起来像开户没生效
+        setState({ kind: 'loading' })
+        void loadConversations()
+      },
+    })
   }
 
   if (state.kind === 'failed') {
