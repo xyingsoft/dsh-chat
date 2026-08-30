@@ -618,6 +618,8 @@ __metadata:
   resolution: "dsh-chat@workspace:."
   dependencies:
     "@types/node": "npm:^24"
+    lightningcss: "npm:^1.33.0"
+    rolldown: "npm:^1.2.6"
     typescript: "npm:~5.9.2"
     vitest: "npm:^4"
     yaml: "npm:^2"
@@ -1008,7 +1010,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rolldown@npm:~1.2.4":
+"rolldown@npm:^1.2.6, rolldown@npm:~1.2.4":
   version: 1.2.6
   resolution: "rolldown@npm:1.2.6"
   dependencies:

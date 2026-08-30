@@ -113,15 +113,52 @@ CSS 以字符串内联在 `NUL 前缀的 dsh-css:` 区段里。
 那个预设是 monorepo 内的相对导入，**没有发布**；`dshmarket` 是自己用
 tsdown + lightningcss 重新实现了同一套约定。我们要做同样的事。
 
-### 结论：暂不声明 `dsh.client`
+### 处置：自建打包，然后声明 `dsh.client`
 
-声明了 DSH 就会去装载一个当前必然失败的入口，那比没有入口更糟。
-缺口登记在 [TODO 的「已知未完成项」](../../TODO.md#已知未完成项)。
+按上游预设的约定自己实现了打包（`scripts/build-client-bundle.mjs`），
+只用 `rolldown` 与 `lightningcss` —— 两者本来就在依赖里（tsdown 是 rolldown
+的薄封装），没有引入新的构建工具链。
+
+约定的取值逐条抄自上游预设并在脚本里标了出处：
+
+| 项 | 取值 |
+|---|---|
+| banner | `window.__ModuleLoader__.load({ id: "@dsh-chat/host", factory: (require) => {` |
+| intro | `var module = { exports: {} }; var exports = module.exports;` |
+| footer | `return module.exports; } });` |
+| 保持 external | `PLATFORM_MODULES` 加本包 `dsh.client.inject` 声明的服务 |
+| 其余依赖 | 一律打进 bundle |
+
+打包脚本自带产物校验，不是形式主义：产物是给另一个进程加载的，**构建成功不等于
+它能跑**，上一轮界面出不来正是因为没人检查过产物长什么样。校验四条：闭包工厂
+形态、结尾的 `return module.exports`、无残留 `.css` require、以及**每个
+`require()` 的目标都在模块表里**（模块表答不上来的 require 是必然的运行时抛错）。
+
+## 验证五：界面在真实 DSH 上渲染（2026-08-30）
+
+打包接上后重启 DSH Desktop v2.0.4，设置侧栏出现 `dsh-chat` 分区，
+能力表完整渲染：
+
+![dsh-chat 在 DSH 设置面板中的能力表](./images/settings-panel-capabilities.png)
+
+这张图同时证明了几件事：
+
+- **闭包工厂被 loader 接受** —— 分区出现即 `__ModuleLoader__.load` 注册成功
+- **slot 注册在真实宿主里生效** —— 不再只是单元测试里的 `ctx.slots.register`
+- **CSS Modules 内联可用** —— 卡片边框、三色徽标都来自 `.module.css`，
+  说明 lightningcss 编译出的类名映射与注入的 `<style>` 都到位了
+- **能力表如实呈现三种状态** —— 已就绪（绿）、部分实现（橙）、未装载（灰）。
+  §6 要求可选能力必须显式显示为未安装、不得伪装为可用，这里能看到
+  「第二验证因素与恢复」「在线状态」「群聊与附件」都标着未装载
+
+截图只保留设置弹窗：窗口左侧的会话列表含用户的会话标题与工作区名，
+不进公开仓库。完整窗口截图留在 gitignore 的 `build/evidence/`。
 
 ## 未验证的部分
 
-- **界面**。见上方验证四。DSH 界面上目前看不到 dsh-chat 的任何 UI，
-  且这一点在插件自己的能力表里如实标为 `not_implemented`。
+- **会话列表与消息视图的真实数据**。组件已就绪并测过，但 host 还没有
+  「按会话聚合最后一条消息与未读数」的查询端点，因此界面上只有状态面板。
+  能力表里标为「部分实现」。
 - **经 DSH 的端到端聊天**。host 的命令路由已接通并有 HTTP 端点测试
   （发送、拉取、ACK、编辑、撤回、组织、工作项、通知、SSE），
   但那些测试起的是独立的 `WebServer` 实例，不是 DSH 进程内的那一个。
