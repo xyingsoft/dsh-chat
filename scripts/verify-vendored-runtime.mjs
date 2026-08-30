@@ -46,6 +46,8 @@ const EXPECTED = Object.freeze({
       '32b1c4da110888f6dcae69bc80f94182a717c4d2feb1dcb2d6891052cac8ff0e',
     '@deepseek-ai/dsh-client-ui-renderer':
       'abcb7598964865e2a8b4008cc1d62702a88c6d3eea9a4c1e2677e8935b8934ae',
+    '@deepseek-ai/dsh-client-ui-conversation':
+      'f5b27ec4d7131387ac480e3577da4984b9135e86cc85b289b373fa7073bf263a',
     '@deepseek-ai/dsh-client-ui-settings':
       'a1ce120040e96e1f4795ba1684b4c83bec52995876a102b939a81a43495a76c6',
     '@deepseek-ai/dsh-client-ui-slots':
