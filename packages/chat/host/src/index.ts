@@ -40,11 +40,14 @@ import {
 } from './routes/message-commands.js'
 import {
   acceptMembershipHandler,
+  changeMemberRoleHandler,
   createOrganizationHandler,
   createProjectHandler,
   createWorkspaceHandler,
   inviteMemberHandler,
+  listMembersHandler,
   myMembershipsHandler,
+  removeMemberHandler,
   type OrganizationCommandDeps,
 } from './routes/organization-commands.js'
 import {
@@ -206,6 +209,9 @@ export const ROUTE_PATHS: readonly string[] = [
   `${ORGANIZATION_API_PREFIX}/members/invite`,
   `${ORGANIZATION_API_PREFIX}/members/accept`,
   `${ORGANIZATION_API_PREFIX}/members/me`,
+  `${ORGANIZATION_API_PREFIX}/members`,
+  `${ORGANIZATION_API_PREFIX}/members/role`,
+  `${ORGANIZATION_API_PREFIX}/members/remove`,
 ]
 
 /**
@@ -313,6 +319,9 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${ORGANIZATION_API_PREFIX}/members/invite`]: inviteMemberHandler(organizationDeps),
     [`${ORGANIZATION_API_PREFIX}/members/accept`]: acceptMembershipHandler(organizationDeps),
     [`${ORGANIZATION_API_PREFIX}/members/me`]: myMembershipsHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members`]: listMembersHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members/role`]: changeMemberRoleHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members/remove`]: removeMemberHandler(organizationDeps),
   }
 
   // relay 模式：配了地址就把业务路由换成转发。转发的例外见 LOCAL_ONLY_PATHS。

@@ -24,7 +24,9 @@ import {
   SCOPE_KINDS,
   VersionConflictError,
   acceptMembership,
+  activeOwnerCount,
   authorize,
+  changeMembershipRole,
   createOrganization,
   createProject,
   createWorkspace,
@@ -32,6 +34,8 @@ import {
   findOrganization,
   inviteMember,
   membershipsOf,
+  organizationMemberships,
+  removeMembership,
   type Capability,
   type MembershipSnapshot,
   type Role,
@@ -475,6 +479,211 @@ export function myMembershipsHandler(deps: OrganizationCommandDeps) {
       })
     },
   })
+}
+
+/**
+ * 列出全组织的成员。
+ *
+ * 需要 `organization.manage` —— 完整通讯录是敏感信息，§46 也要求不泄露
+ * 其他成员的存在性。无权限时返回 `NOT_FOUND_OR_FORBIDDEN` 而不是空列表：
+ * 空列表会让调用方以为组织里真的没人。
+ *
+ * 返回包含 `invited` 与 `removed`。管理界面要能看到「邀了还没接受」的人
+ * （否则会重复邀请）和已移除的记录（那是审计线索），过滤交给界面。
+ */
+export function listMembersHandler(deps: OrganizationCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (_raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      return deps.database.transaction((db) => {
+        const target = { scopeKind: 'organization' as ScopeKind, scopeId: principal.organizationId }
+        if (!authorizeInScope(db, principal, target, [], 'organization.manage')) {
+          return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+        }
+        return {
+          ok: true as const,
+          value: { memberships: organizationMemberships(db, principal.organizationId) },
+        }
+      })
+    },
+  })
+}
+
+/**
+ * 改成员角色。
+ *
+ * 三道闸，顺序有意义：
+ *
+ * 1. 调用者要有 `organization.manage`
+ * 2. 不能把**最后一个组织所有者**降级 —— 没有所有者的组织谁也管不了，
+ *    改不了成员、建不了工作区、连把所有权交出去都做不到。那是一次误操作
+ *    就能造成的不可逆自锁
+ * 3. 乐观并发：`expectedVersion` 对不上返回 `VERSION_CONFLICT`（§11.2），
+ *    不静默覆盖
+ */
+export function changeMemberRoleHandler(deps: OrganizationCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const body = requireStrings(raw, ['membershipId', 'role', 'operationId'])
+      if (!body) return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      if (!(ROLES as readonly string[]).includes(body.role)) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+      const expectedVersion = (raw as Record<string, unknown>)['expectedVersion']
+      if (typeof expectedVersion !== 'number') {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const now = deps.now()
+      return deps.database.transaction((db) => {
+        const reject = (errorCode: 'NOT_FOUND_OR_FORBIDDEN' | 'VERSION_CONFLICT') => {
+          audit(db, deps, principal, {
+            eventType: 'membership_changed',
+            targetRef: `membership:${body.membershipId}`,
+            outcome: 'rejected',
+            errorCode,
+            operationId: body.operationId,
+            now,
+          })
+          return { ok: false as const, errorCode }
+        }
+
+        const target = { scopeKind: 'organization' as ScopeKind, scopeId: principal.organizationId }
+        if (!authorizeInScope(db, principal, target, [], 'organization.manage')) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+
+        const current = findMembership(db, body.membershipId)
+        // 跨组织的成员关系当作不存在。返回「无权限」与「不存在」是同一个码，
+        // 正是为了不泄露别的组织里有没有这个人（§46）
+        if (current === undefined || current.organizationId !== principal.organizationId) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+
+        if (wouldOrphanOrganization(db, current, body.role as Role)) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+
+        try {
+          const updated = changeMembershipRole(db, {
+            membershipId: body.membershipId,
+            role: body.role as Role,
+            expectedVersion,
+            now,
+          })
+          audit(db, deps, principal, {
+            eventType: 'membership_changed',
+            targetRef: `membership:${body.membershipId}`,
+            outcome: 'succeeded',
+            operationId: body.operationId,
+            now,
+          })
+          return { ok: true as const, value: updated }
+        } catch (error) {
+          if (!(error instanceof VersionConflictError)) throw error
+          return reject('VERSION_CONFLICT')
+        }
+      })
+    },
+  })
+}
+
+/**
+ * 移除成员。
+ *
+ * 与改角色同样的三道闸。移除是**状态变更而不是删行** —— 审计要能回答
+ * 「这个人当时是什么角色、什么时候被谁移除的」，删掉行就永远答不了。
+ */
+export function removeMemberHandler(deps: OrganizationCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const body = requireStrings(raw, ['membershipId', 'operationId'])
+      if (!body) return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      const expectedVersion = (raw as Record<string, unknown>)['expectedVersion']
+      if (typeof expectedVersion !== 'number') {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const now = deps.now()
+      return deps.database.transaction((db) => {
+        const reject = (errorCode: 'NOT_FOUND_OR_FORBIDDEN' | 'VERSION_CONFLICT') => {
+          audit(db, deps, principal, {
+            eventType: 'membership_changed',
+            targetRef: `membership:${body.membershipId}`,
+            outcome: 'rejected',
+            errorCode,
+            operationId: body.operationId,
+            now,
+          })
+          return { ok: false as const, errorCode }
+        }
+
+        const target = { scopeKind: 'organization' as ScopeKind, scopeId: principal.organizationId }
+        if (!authorizeInScope(db, principal, target, [], 'organization.manage')) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+
+        const current = findMembership(db, body.membershipId)
+        if (current === undefined || current.organizationId !== principal.organizationId) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+        // 移除最后一个所有者与降级最后一个所有者是同一个自锁，用同一条判断
+        if (wouldOrphanOrganization(db, current, undefined)) {
+          return reject('NOT_FOUND_OR_FORBIDDEN')
+        }
+
+        try {
+          const removed = removeMembership(db, {
+            membershipId: body.membershipId,
+            expectedVersion,
+            now,
+          })
+          audit(db, deps, principal, {
+            eventType: 'membership_changed',
+            targetRef: `membership:${body.membershipId}`,
+            outcome: 'succeeded',
+            operationId: body.operationId,
+            now,
+          })
+          return { ok: true as const, value: removed }
+        } catch (error) {
+          if (!(error instanceof VersionConflictError)) throw error
+          return reject('VERSION_CONFLICT')
+        }
+      })
+    },
+  })
+}
+
+/**
+ * 这次改动会不会让组织失去最后一个所有者。
+ *
+ * `nextRole` 为 undefined 表示移除。只在被动的那一方**当前就是**组织级
+ * active 所有者时才需要数 —— 改一个开发者的角色不可能造成自锁。
+ */
+function wouldOrphanOrganization(
+  db: DatabaseSync,
+  current: { organizationId: string; scopeKind: ScopeKind; role: Role; state: string },
+  nextRole: Role | undefined,
+): boolean {
+  const isLosingOwnership =
+    current.scopeKind === 'organization' &&
+    current.role === 'organization_owner' &&
+    current.state === 'active' &&
+    nextRole !== 'organization_owner'
+  if (!isLosingOwnership) return false
+  return activeOwnerCount(db, current.organizationId) <= 1
 }
 
 /**
