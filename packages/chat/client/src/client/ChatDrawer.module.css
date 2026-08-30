@@ -1,0 +1,151 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+
+/* 会话头部右侧的触发按钮。做成与相邻工具按钮同尺寸，
+   不抢眼也不难找 —— 它是常驻入口，不是营销位。 */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+}
+
+.trigger:hover {
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  color: var(--dsw-alias-label-primary, #1f2328);
+}
+
+.triggerOpen {
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  color: var(--dsw-alias-brand-primary, #4f6ef7);
+  border-color: var(--dsw-alias-border-l2, #e5e7eb);
+}
+
+/* 未读小圆点。触发按钮收起时也要能看出「有新消息」，
+   否则面板一收起来用户就与消息失联了。 */
+.triggerBadge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--dsw-alias-brand-primary, #4f6ef7);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 右侧抽屉。fixed 定位 + portal 到 body：
+   会话头部可能有 transform 之类的属性，那会把 fixed 变成相对定位的包含块，
+   面板就会跑到奇怪的位置。portal 出去可以完全避开这一类祖先影响。 */
+.drawer {
+  position: fixed;
+  /* top 由组件测量后以内联样式给出 —— DSH 有自绘标题栏，写死 0 会让抽屉
+     钻到标题栏下面，头部被整个盖住。这里留一个兜底值。 */
+  top: 40px;
+  right: 0;
+  bottom: 0;
+  width: var(--dsh-chat-drawer-width, 380px);
+  display: flex;
+  flex-direction: column;
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  border-left: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 6%);
+  z-index: 40;
+  /* 抽屉自己不做进出动画时也要有过渡，否则展开像是闪一下 */
+  animation: slide-in 160ms ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+/* 尊重系统的减弱动效设置 —— 前庭功能障碍用户会被滑动动画影响 */
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #1f2328);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  color: var(--dsw-alias-label-primary, #1f2328);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 拖拽改宽度的手柄。贴在左边缘，命中区比视觉宽度大 ——
+   1px 的手柄理论上能拖，实际谁也抓不住。 */
+.resizer {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.resizer:hover,
+.resizerActive {
+  background: var(--dsw-alias-brand-primary, #4f6ef7);
+  opacity: 0.35;
+}
