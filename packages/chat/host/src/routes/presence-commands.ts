@@ -1,7 +1,7 @@
 /**
  * 在线状态端点（§9.1）。
  *
- * 两个：上报心跳、查一批人的状态。
+ * 四个：上报心跳、查一批人的状态、读/改自己的可见性。
  *
  * ## 心跳由 host 自己发，不是浏览器
  *
@@ -23,6 +23,7 @@ import type { IncomingMessage } from 'node:http'
 import type { DatabaseSync } from 'node:sqlite'
 
 import {
+  PRESENCE_VISIBILITY,
   applyVisibility,
   presenceOf,
   recordHeartbeat,
@@ -41,20 +42,18 @@ export interface PresenceCommandDeps {
   readonly authenticate: (request: IncomingMessage) => Principal | undefined
   readonly now: () => Date
   /**
-   * 读某人的可见性设置。
+   * 读某人的可见性设置。缺省走本地表（见 `visibilityOf`）。
    *
-   * 不提供时一律按 `everyone` —— P0 还没有设置界面，而默认隐藏会让在线状态
-   * 整个看起来是坏的。这是一个**会随设置界面上线而改变的默认值**，不是
-   * 「隐私默认关闭」的立场。
+   * 留这个钩子是为了测试能直接摆出一个档位，不用先写库。
    */
-  readonly visibilityOf?: (db: DatabaseSync, accountId: string) => PresenceVisibility
-  /**
-   * 两人是否共享至少一个项目或群。`shared_scopes` 下用它判定。
-   *
-   * 不提供时视为**不共享** —— 默认收紧而不是默认放开。判不出来的时候
-   * 少给一点信息，而不是多给。
-   */
-  readonly sharesScope?: (db: DatabaseSync, a: string, b: string) => boolean
+  readonly visibilityOf?: (db: DatabaseSync, organizationId: string, accountId: string) => PresenceVisibility
+  /** 两人是否共享至少一个工作区或项目。缺省走本地表（见 `sharesScope`）。 */
+  readonly sharesScope?: (
+    db: DatabaseSync,
+    organizationId: string,
+    a: string,
+    b: string,
+  ) => boolean
 }
 
 /**
@@ -132,9 +131,18 @@ export function presenceQueryHandler(deps: PresenceCommandDeps) {
             now,
           })
           out[accountId] = applyVisibility(actual, {
-            visibility: deps.visibilityOf?.(db, accountId) ?? 'everyone',
+            visibility: (deps.visibilityOf ?? visibilityOf)(
+              db,
+              principal.organizationId,
+              accountId,
+            ),
             isSelf: accountId === principal.accountId,
-            sharesScope: deps.sharesScope?.(db, principal.accountId, accountId) ?? false,
+            sharesScope: (deps.sharesScope ?? sharesScope)(
+              db,
+              principal.organizationId,
+              principal.accountId,
+              accountId,
+            ),
           })
         }
         return out
@@ -143,4 +151,111 @@ export function presenceQueryHandler(deps: PresenceCommandDeps) {
       return { ok: true as const, value: { presence } }
     },
   })
+}
+
+/**
+ * 改自己的可见性。
+ *
+ * 只能改自己的 —— 这不是一项可以被授予的权限，是一条身份等同判断。允许
+ * 管理员代改的话，「隐身」就成了一个可以被别人关掉的开关，那它保护不了
+ * 任何东西。所以请求体里根本不收账号。
+ */
+export function setVisibilityHandler(deps: PresenceCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const value = (raw as { visibility?: unknown }).visibility
+      if (typeof value !== 'string' || !(PRESENCE_VISIBILITY as readonly string[]).includes(value)) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const now = deps.now()
+      deps.database.transaction((db) => {
+        db.prepare(
+          `INSERT INTO presence_visibility (account_id, organization_id, visibility, updated_at)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(account_id, organization_id) DO UPDATE SET
+             visibility = excluded.visibility,
+             updated_at = excluded.updated_at`,
+        ).run(principal.accountId, principal.organizationId, value, now.toISOString())
+      })
+      return { ok: true as const, value: { visibility: value as PresenceVisibility } }
+    },
+  })
+}
+
+/** 读自己的可见性。界面要能显示当前选的是哪一档。 */
+export function getVisibilityHandler(deps: PresenceCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (_raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const visibility = deps.database.transaction<PresenceVisibility>((db) =>
+        (deps.visibilityOf ?? visibilityOf)(db, principal.organizationId, principal.accountId),
+      )
+      return { ok: true as const, value: { visibility } }
+    },
+  })
+}
+
+/**
+ * 某人在某组织的可见性。没设过按 `everyone`。
+ *
+ * 存了一个不认识的值时同样按 `everyone` 而不是抛：那多半是降级部署写进去的
+ * 新档位，而一个查不出在线状态的界面比一个多显示了状态的界面更像坏了。
+ */
+function visibilityOf(
+  db: DatabaseSync,
+  organizationId: string,
+  accountId: string,
+): PresenceVisibility {
+  const row = db
+    .prepare(
+      'SELECT visibility FROM presence_visibility WHERE account_id = ? AND organization_id = ?',
+    )
+    .get(accountId, organizationId) as { visibility: string } | undefined
+  const value = row?.visibility
+  return value !== undefined && (PRESENCE_VISIBILITY as readonly string[]).includes(value)
+    ? (value as PresenceVisibility)
+    : 'everyone'
+}
+
+/**
+ * 两人是否共享至少一个工作区或项目。
+ *
+ * **只看非组织级的作用域。** 同属一个组织不算「共享作用域」—— 若算，
+ * `shared_scopes` 就等同于 `everyone`，那一档就白设了。
+ *
+ * 两边都要求 `active`：被移除的成员关系还留在表里（那是审计线索），
+ * 拿它当共享依据的话，一个已经被踢出项目的人还能继续看到别人的在线状态。
+ */
+function sharesScope(
+  db: DatabaseSync,
+  organizationId: string,
+  a: string,
+  b: string,
+): boolean {
+  const row = db
+    .prepare(
+      `SELECT 1 AS hit
+         FROM memberships ma
+         JOIN memberships mb
+           ON ma.organization_id = mb.organization_id
+          AND ma.scope_kind = mb.scope_kind
+          AND ma.scope_id = mb.scope_id
+        WHERE ma.organization_id = ?
+          AND ma.account_id = ?
+          AND mb.account_id = ?
+          AND ma.scope_kind <> 'organization'
+          AND ma.state = 'active'
+          AND mb.state = 'active'
+        LIMIT 1`,
+    )
+    .get(organizationId, a, b) as { hit: number } | undefined
+  return row !== undefined
 }

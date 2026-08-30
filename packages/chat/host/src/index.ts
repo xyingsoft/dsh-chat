@@ -65,8 +65,10 @@ import {
 } from './routes/identity-commands.js'
 import { EventStreamHub, eventStreamHandler } from './routes/event-stream.js'
 import {
+  getVisibilityHandler,
   heartbeatHandler,
   presenceQueryHandler,
+  setVisibilityHandler,
   type PresenceCommandDeps,
 } from './routes/presence-commands.js'
 import { CredentialStore } from './identity/credentials.js'
@@ -206,6 +208,8 @@ export const ROUTE_PATHS: readonly string[] = [
   `${CHAT_API_PREFIX}/events`,
   `${CHAT_API_PREFIX}/presence`,
   `${CHAT_API_PREFIX}/presence/heartbeat`,
+  `${CHAT_API_PREFIX}/presence/visibility`,
+  `${CHAT_API_PREFIX}/presence/visibility/set`,
   // 身份三件套。**始终由本地处理，永不转发** —— 见 apply 里的说明
   `${CHAT_API_PREFIX}/identity/status`,
   `${CHAT_API_PREFIX}/identity/enroll`,
@@ -311,6 +315,8 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${CHAT_API_PREFIX}/notifications`]: inboxHandler(workspaceDeps),
     [`${CHAT_API_PREFIX}/presence`]: presenceQueryHandler(presenceDeps),
     [`${CHAT_API_PREFIX}/presence/heartbeat`]: heartbeatHandler(presenceDeps),
+    [`${CHAT_API_PREFIX}/presence/visibility`]: getVisibilityHandler(presenceDeps),
+    [`${CHAT_API_PREFIX}/presence/visibility/set`]: setVisibilityHandler(presenceDeps),
     [`${CHAT_API_PREFIX}/events`]: eventStreamHandler({
       hub: events,
       authenticate,

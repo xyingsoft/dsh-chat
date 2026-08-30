@@ -576,6 +576,30 @@ const migration006: Migration = {
   ],
 }
 
+/**
+ * 在线可见性（§9.1 的三档）。
+ *
+ * 一行一「账号 × 组织」：可见性是按组织选的，「在公司组织里隐身、在朋友的
+ * 组织里正常」是一个合理的诉求，而全局设置表达不了。
+ *
+ * 没有行时按 `everyone`。默认隐藏会让在线状态整个看起来是坏的 —— 用户打开
+ * 界面看到所有人都是「状态未知」，第一反应是功能没做完。
+ */
+const migration007: Migration = {
+  version: 7,
+  name: 'presence-visibility',
+  statements: [
+    `CREATE TABLE presence_visibility (
+       account_id      TEXT NOT NULL REFERENCES accounts(account_id),
+       organization_id TEXT NOT NULL,
+       -- everyone / shared_scopes / hidden
+       visibility      TEXT NOT NULL,
+       updated_at      TEXT NOT NULL,
+       PRIMARY KEY (account_id, organization_id)
+     ) STRICT`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
 export const MIGRATIONS: readonly Migration[] = [
   migration001,
@@ -584,4 +608,5 @@ export const MIGRATIONS: readonly Migration[] = [
   migration004,
   migration005,
   migration006,
+  migration007,
 ]
