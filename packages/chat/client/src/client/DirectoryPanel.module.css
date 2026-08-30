@@ -1,0 +1,145 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 8px;
+  /* 待处理请求要一眼看见 —— 埋在通讯录里的话，一条加好友请求可能几天
+     都没人看见 */
+  background: var(--dsw-alias-bg-layer-2, #fafafa);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.search {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  color: var(--dsw-alias-label-primary, #1f2328);
+  font: inherit;
+  font-size: 13px;
+}
+
+.search:focus {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary, #4f6ef7);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  min-width: 0;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary, #1f2328);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.primary,
+.secondary,
+.muted {
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.primary {
+  background: var(--dsw-alias-brand-primary, #4f6ef7);
+  color: #ffffff;
+}
+
+.secondary {
+  background: transparent;
+  border-color: var(--dsw-alias-border-l2, #e5e7eb);
+  color: var(--dsw-alias-brand-primary, #4f6ef7);
+}
+
+.secondary:hover {
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+}
+
+/* 已发出的请求：灰掉而不是隐藏 —— 隐藏的话用户不知道自己已经发过了，
+   会去别处找入口 */
+.muted {
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  cursor: not-allowed;
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hint {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+}
+
+.empty,
+.status {
+  margin: 0;
+  padding: 20px 8px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusText {
+  margin: 0;
+}
+
+.retry {
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  background: transparent;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--dsw-alias-brand-primary, #4f6ef7);
+  cursor: pointer;
+}

@@ -38,6 +38,7 @@ import {
 import styles from './ChatSection.module.css'
 import { Composer } from './Composer.js'
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
+import { DirectoryPanel } from './DirectoryPanel.js'
 import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage } from './MessageView.js'
 import { useEventStream } from './useEventStream.js'
@@ -170,6 +171,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
   const [presence, setPresence] = useState<Readonly<Record<string, PresenceState>>>({})
+  // 「会话」与「通讯录」。在有通讯录之前，界面上没有任何办法开始一段新
+  // 对话 —— 会话列表只显示已有的，而已有的要靠别人先发消息产生
+  const [tab, setTab] = useState<'chats' | 'directory'>('chats')
   const scrollRef = useRef<HTMLDivElement | null>(null)
   // 选中会话放进 ref 供事件回调读。放进依赖数组的话，每切一次会话就会
   // 重建一次 SSE 连接 —— 而重建意味着丢掉订阅并重来
@@ -427,14 +431,53 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
       })),
   ]
 
+  const tabBar = createElement(
+    'div',
+    { className: styles['tabs'], role: 'tablist', 'aria-label': '聊天与通讯录' },
+    ...(
+      [
+        ['chats', '会话'],
+        ['directory', '通讯录'],
+      ] as const
+    ).map(([value, label]) =>
+      createElement(
+        'button',
+        {
+          key: value,
+          type: 'button',
+          role: 'tab',
+          'aria-selected': tab === value,
+          className: [styles['tab'], tab === value ? styles['tabActive'] : '']
+            .filter(Boolean)
+            .join(' '),
+          onClick: () => setTab(value),
+        },
+        label,
+      ),
+    ),
+  )
+
+  const directory = createElement(DirectoryPanel, {
+    onOpenConversation: (accountId: string) => {
+      // 切回会话并选中他。不切的话，用户点了「发消息」还停在通讯录上，
+      // 看不出发生了什么
+      setTab('chats')
+      setSelectedId(accountId)
+      void loadConversations()
+    },
+  })
+
   const list = createElement(
     'div',
     { className: styles['sidebar'] },
-    createElement(ConversationList, {
-      conversations: summaries,
-      ...(selectedId === undefined ? {} : { selectedId }),
-      onSelect: setSelectedId,
-    }),
+    tabBar,
+    tab === 'chats'
+      ? createElement(ConversationList, {
+          conversations: summaries,
+          ...(selectedId === undefined ? {} : { selectedId }),
+          onSelect: setSelectedId,
+        })
+      : directory,
   )
 
   // 单栏钻取：选中后只显示消息，否则只显示列表
