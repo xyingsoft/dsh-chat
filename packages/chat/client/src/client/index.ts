@@ -21,6 +21,8 @@
  * 运行时依赖在 `package.json` 的 `dsh.client.inject` 中声明，由宿主提供。
  */
 
+import { createElement } from 'react'
+
 import type { Context } from '@deepseek-ai/cordis'
 
 // slots 服务由 ui-renderer 增强到 Context 上；settings.section 这个键由
@@ -99,10 +101,17 @@ export function apply(ctx: Context, config: ClientConfig = {}): void {
     'dsh-chat-client: settings section',
   )
 
-  // 会话页右侧的聊天抽屉。挂在头部右对齐的工具区 —— DSH 的 58 个 slot 里
-  // 没有「右侧栏」，这是离右侧最近、语义又对得上的挂载点。
-  // conversation.view 是「rendered one at a time」，挂那儿会把 AI 对话整个
-  // 替换掉，不是并排。
+  // 右侧抽屉：聊天的唯一入口，带输入框。
+  //
+  // 一度想做成「聊天」标签页（conversation.view），指望切过去就只剩一个输入框。
+  // **试了，不行** —— 官方的「轨迹」标签同样保留原生输入框，view 只替换正文区，
+  // 输入框由 ConversationRoot 常驻渲染，没有 opt-out。标签页里两个输入框
+  // 上下紧挨着，比抽屉更糟。
+  //
+  // 抽屉至少把它们在空间上分开：我们的在右侧栏内，原生的在主区域左下。
+  // 这不是理想解 —— 理想解是复用原生输入框，但 conversation.composer 的选择器
+  // 契约要求纯函数、只读 owner props，表达不了「用户切了聊天模式」。
+  // 已登记为需要上游改动的事项。
   ctx.effect(
     () =>
       ctx.slots.inject('conversation.session.header.utilities', () =>
@@ -127,7 +136,12 @@ export function apply(ctx: Context, config: ClientConfig = {}): void {
  * 「显示什么」。混成一个组件的话，改布局要动数据逻辑，反之亦然。
  */
 function ChatDrawerEntry(): ReturnType<typeof ChatDrawer> {
-  return ChatDrawer({ children: ChatSection({}) })
+  // children 传函数：抽屉把当前宽度递进来，内容据此在并排与钻取之间切换。
+  // 传节点的话内容拿不到宽度，只能固定一种布局。
+  //
+  return ChatDrawer({
+    children: (width: number) => createElement(ChatSection, { width }),
+  })
 }
 
 export { ChatDrawer } from './ChatDrawer.js'

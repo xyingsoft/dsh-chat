@@ -40,13 +40,26 @@ import { createPortal } from 'react-dom'
 
 import styles from './ChatDrawer.module.css'
 
-const WIDTH_KEY = 'dsh-chat:drawer-width'
-const OPEN_KEY = 'dsh-chat:drawer-open'
+/*
+ * 存储键带版本后缀。
+ *
+ * 宽度的默认值与上下限改过一轮（380 / 280–720 → 520 / 300–900）。旧值在新区间里
+ * 仍然合法，于是会被原样沿用 —— 用户看到的还是那个太窄的面板，而且完全看不出
+ * 为什么。改键名让旧值失效一次，比静默沿用一个语义已经变了的数字好。
+ */
+const WIDTH_KEY = 'dsh-chat:drawer-width:v2'
+const OPEN_KEY = 'dsh-chat:drawer-open:v2'
 
-/** 宽度上下限。太窄会话列表挤成一条，太宽把 AI 对话逼到角落。 */
-const MIN_WIDTH = 280
-const MAX_WIDTH = 720
-const DEFAULT_WIDTH = 380
+/**
+ * 宽度上下限。
+ *
+ * 默认 520 而不是 380：380 下两栏各自只剩一百多像素，消息气泡挤成一条竖排。
+ * 上限放到 900，让宽屏用户能真的把它拉开 —— 640 以上内容会切成左列表右消息
+ * 的并排布局。
+ */
+const MIN_WIDTH = 300
+const MAX_WIDTH = 900
+const DEFAULT_WIDTH = 520
 
 /**
  * 读写 localStorage 的小状态。
@@ -85,8 +98,13 @@ function usePersistedState<T>(
 }
 
 export interface ChatDrawerProps {
-  /** 抽屉内容。由调用方给，便于单测时不拉网络。 */
-  readonly children: ReactNode
+  /**
+   * 抽屉内容。
+   *
+   * 收函数形式时会把当前宽度传进去 —— 内容要据此在并排与钻取之间切换。
+   * 直接给节点也行，那种情况内容自己不关心宽度。
+   */
+  readonly children: ReactNode | ((width: number) => ReactNode)
   /** 触发按钮上的未读数。收起时也要能看出有新消息。 */
   readonly unreadCount?: number
   readonly label?: string
@@ -230,7 +248,11 @@ export function ChatDrawer(props: ChatDrawerProps): ReactElement {
         ),
       ),
     ),
-    createElement('div', { className: styles['body'] }, props.children),
+    createElement(
+      'div',
+      { className: styles['body'] },
+      typeof props.children === 'function' ? props.children(width) : props.children,
+    ),
   )
 
   return createElement(
