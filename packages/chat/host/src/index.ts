@@ -65,6 +65,15 @@ import {
 } from './routes/identity-commands.js'
 import { EventStreamHub, eventStreamHandler } from './routes/event-stream.js'
 import {
+  acceptContactHandler,
+  directoryHandler,
+  listContactsHandler,
+  rejectContactHandler,
+  removeContactHandler,
+  requestContactHandler,
+  type ContactCommandDeps,
+} from './routes/contact-commands.js'
+import {
   getVisibilityHandler,
   heartbeatHandler,
   presenceQueryHandler,
@@ -210,6 +219,11 @@ export const ROUTE_PATHS: readonly string[] = [
   `${CHAT_API_PREFIX}/presence/heartbeat`,
   `${CHAT_API_PREFIX}/presence/visibility`,
   `${CHAT_API_PREFIX}/presence/visibility/set`,
+  `${CHAT_API_PREFIX}/contacts`,
+  `${CHAT_API_PREFIX}/contacts/request`,
+  `${CHAT_API_PREFIX}/contacts/accept`,
+  `${CHAT_API_PREFIX}/contacts/reject`,
+  `${CHAT_API_PREFIX}/contacts/remove`,
   // 身份三件套。**始终由本地处理，永不转发** —— 见 apply 里的说明
   `${CHAT_API_PREFIX}/identity/status`,
   `${CHAT_API_PREFIX}/identity/enroll`,
@@ -223,6 +237,7 @@ export const ROUTE_PATHS: readonly string[] = [
   `${ORGANIZATION_API_PREFIX}/members`,
   `${ORGANIZATION_API_PREFIX}/members/role`,
   `${ORGANIZATION_API_PREFIX}/members/remove`,
+  `${ORGANIZATION_API_PREFIX}/directory`,
 ]
 
 /**
@@ -288,6 +303,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   }
   const shared = { database, expectedOrigin, authenticate, now, newId }
   const presenceDeps: PresenceCommandDeps = { database, expectedOrigin, authenticate, now }
+  const contactDeps: ContactCommandDeps = { database, expectedOrigin, authenticate, now, newId }
   const workspaceDeps: WorkspaceCommandDeps = shared
   const organizationDeps: OrganizationCommandDeps = shared
 
@@ -317,6 +333,11 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${CHAT_API_PREFIX}/presence/heartbeat`]: heartbeatHandler(presenceDeps),
     [`${CHAT_API_PREFIX}/presence/visibility`]: getVisibilityHandler(presenceDeps),
     [`${CHAT_API_PREFIX}/presence/visibility/set`]: setVisibilityHandler(presenceDeps),
+    [`${CHAT_API_PREFIX}/contacts`]: listContactsHandler(contactDeps),
+    [`${CHAT_API_PREFIX}/contacts/request`]: requestContactHandler(contactDeps),
+    [`${CHAT_API_PREFIX}/contacts/accept`]: acceptContactHandler(contactDeps),
+    [`${CHAT_API_PREFIX}/contacts/reject`]: rejectContactHandler(contactDeps),
+    [`${CHAT_API_PREFIX}/contacts/remove`]: removeContactHandler(contactDeps),
     [`${CHAT_API_PREFIX}/events`]: eventStreamHandler({
       hub: events,
       authenticate,
@@ -338,6 +359,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${ORGANIZATION_API_PREFIX}/members`]: listMembersHandler(organizationDeps),
     [`${ORGANIZATION_API_PREFIX}/members/role`]: changeMemberRoleHandler(organizationDeps),
     [`${ORGANIZATION_API_PREFIX}/members/remove`]: removeMemberHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/directory`]: directoryHandler(contactDeps),
   }
 
   // relay 模式：配了地址就把业务路由换成转发。转发的例外见 LOCAL_ONLY_PATHS。
