@@ -152,9 +152,13 @@ export const Config: Schema<Config> = Schema.object({
  *
  * **两个来源都没有就一律未认证** —— 默认拒绝，不是默认放行。
  *
- * §7.1 的请求签名尚未接入：凭据只回答「是谁」，不回答「这次请求是不是真的
- * 来自那台设备」。桌面端 host 与浏览器同机同源，这一层缺口的实际暴露面比
- * relay 那边小，但它仍然是缺口。
+ * §7.1 的请求签名管的是 **host → relay** 那一跳，已经接上（见
+ * `identity/request-proof.ts`）。**browser → host 这一跳仍然没有签名**：
+ * 凭据只回答「是谁」，不回答「这个请求是不是真的来自那个渲染进程」。
+ *
+ * 桌面端 host 与浏览器同机同源，跨源写请求已被 `isSameOriginWrite` 挡掉，
+ * 所以这一层缺口的实际暴露面比 relay 那边小 —— 但它仍然是缺口，别把
+ * 「远端那一跳签了」当成「整条链路都签了」。
  */
 function authenticateFrom(
   config: Config,
