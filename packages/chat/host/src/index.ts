@@ -64,6 +64,11 @@ import {
   type IdentityRouteDeps,
 } from './routes/identity-commands.js'
 import { EventStreamHub, eventStreamHandler } from './routes/event-stream.js'
+import {
+  heartbeatHandler,
+  presenceQueryHandler,
+  type PresenceCommandDeps,
+} from './routes/presence-commands.js'
 import { CredentialStore } from './identity/credentials.js'
 import { RelayClient } from './relay/client.js'
 import { relayProxyHandler } from './relay/proxy.js'
@@ -199,6 +204,8 @@ export const ROUTE_PATHS: readonly string[] = [
   `${CHAT_API_PREFIX}/work-items/dependencies`,
   `${CHAT_API_PREFIX}/notifications`,
   `${CHAT_API_PREFIX}/events`,
+  `${CHAT_API_PREFIX}/presence`,
+  `${CHAT_API_PREFIX}/presence/heartbeat`,
   // 身份三件套。**始终由本地处理，永不转发** —— 见 apply 里的说明
   `${CHAT_API_PREFIX}/identity/status`,
   `${CHAT_API_PREFIX}/identity/enroll`,
@@ -276,6 +283,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     events,
   }
   const shared = { database, expectedOrigin, authenticate, now, newId }
+  const presenceDeps: PresenceCommandDeps = { database, expectedOrigin, authenticate, now }
   const workspaceDeps: WorkspaceCommandDeps = shared
   const organizationDeps: OrganizationCommandDeps = shared
 
@@ -301,6 +309,8 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${CHAT_API_PREFIX}/work-items/assign`]: assignWorkItemHandler(workspaceDeps),
     [`${CHAT_API_PREFIX}/work-items/dependencies`]: addDependencyHandler(workspaceDeps),
     [`${CHAT_API_PREFIX}/notifications`]: inboxHandler(workspaceDeps),
+    [`${CHAT_API_PREFIX}/presence`]: presenceQueryHandler(presenceDeps),
+    [`${CHAT_API_PREFIX}/presence/heartbeat`]: heartbeatHandler(presenceDeps),
     [`${CHAT_API_PREFIX}/events`]: eventStreamHandler({
       hub: events,
       authenticate,
