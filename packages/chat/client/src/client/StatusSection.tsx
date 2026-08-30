@@ -55,7 +55,7 @@ export function StatusSection(props: StatusSectionProps): ReactElement {
     ),
     // 会话界面放在能力表之前 —— 用户来这个分区是为了聊天，
     // 能力表是给开发者看的诊断信息，不该占据第一屏
-    createElement(ChatSection, {}),
+    createElement('div', { className: styles['chatBox'] }, createElement(ChatSection, {})),
     createElement(
       'ul',
       { className: styles['list'] },

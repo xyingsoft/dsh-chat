@@ -27,7 +27,11 @@ import type { Context } from '@deepseek-ai/cordis'
 // ui-settings 增强到 SlotMap 上。两者都是类型层面的副作用导入。
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+// 会话头部的 slot 键由 ui-conversation 声明。同样是类型层面的副作用导入
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 
+import { ChatDrawer } from './ChatDrawer.js'
+import { ChatSection } from './ChatSection.js'
 import { StatusSection, type CapabilityRow } from './StatusSection.js'
 
 export const name = 'dsh-chat-client'
@@ -94,8 +98,40 @@ export function apply(ctx: Context, config: ClientConfig = {}): void {
       ),
     'dsh-chat-client: settings section',
   )
+
+  // 会话页右侧的聊天抽屉。挂在头部右对齐的工具区 —— DSH 的 58 个 slot 里
+  // 没有「右侧栏」，这是离右侧最近、语义又对得上的挂载点。
+  // conversation.view 是「rendered one at a time」，挂那儿会把 AI 对话整个
+  // 替换掉，不是并排。
+  ctx.effect(
+    () =>
+      ctx.slots.inject('conversation.session.header.utilities', () =>
+        ctx.slots.register(
+          {
+            name: 'conversation.session.header.utilities',
+            id: 'dsh-chat-drawer',
+            order: 100,
+          },
+          ChatDrawerEntry,
+        ),
+      ),
+    'dsh-chat-client: conversation drawer',
+  )
 }
 
+/**
+ * 抽屉入口。
+ *
+ * 把 `ChatSection`（真实数据）塞进 `ChatDrawer`（开合与宽度）。拆成两层是因为
+ * 它们变化的原因不同：抽屉管的是「摆在哪、多宽、开没开」，内容管的是
+ * 「显示什么」。混成一个组件的话，改布局要动数据逻辑，反之亦然。
+ */
+function ChatDrawerEntry(): ReturnType<typeof ChatDrawer> {
+  return ChatDrawer({ children: ChatSection({}) })
+}
+
+export { ChatDrawer } from './ChatDrawer.js'
+export type { ChatDrawerProps } from './ChatDrawer.js'
 export { StatusSection } from './StatusSection.js'
 export type { CapabilityRow, CapabilityStatus, StatusSectionProps } from './StatusSection.js'
 export { ChatSection } from './ChatSection.js'
