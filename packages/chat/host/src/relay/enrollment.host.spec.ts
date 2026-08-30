@@ -295,6 +295,63 @@ describe('401 自动刷新', () => {
   })
 })
 
+describe('指纹钉住（带外配置）', () => {
+  function pinned(expected: string, declared: string | undefined): RelayClient {
+    return new RelayClient({
+      baseUrl: 'https://relay.test',
+      sharedSecret: 'deployment-secret',
+      credentials: store,
+      expectedRelayFingerprint: expected,
+      fetch: fakeRelay({
+        '/protocol/negotiate': {
+          status: 200,
+          body: {
+            data: {
+              currentVersion: 1,
+              minimumVersion: 1,
+              eventFormatVersions: {
+                message_accepted: 1,
+                notification_created: 1,
+                work_item_changed: 1,
+              },
+              requiresRequestSignature: true,
+              ...(declared === undefined ? {} : { relayFingerprint: declared }),
+            },
+          },
+        },
+        '/api/chat/conversations': { status: 200, body: { data: {} } },
+      }),
+    })
+  }
+
+  it('对得上就正常连', async () => {
+    const relay = pinned('a'.repeat(64), 'a'.repeat(64))
+    expect((await relay.connect()).kind).toBe('ready')
+  })
+
+  it('对不上就拒绝连接，而不是警告一下继续连', async () => {
+    // 换成「警告一下继续连」的话，攻击成功与否就取决于有没有人在看日志。
+    // 这是唯一真正防中间人的一步 —— relay 自己报的指纹，中间人当然也会报
+    const relay = pinned('a'.repeat(64), 'b'.repeat(64))
+    const state = await relay.connect()
+    expect(state.kind).toBe('unreachable')
+    expect(relay.writable).toBe(false)
+  })
+
+  it('relay 根本没报指纹，而本机钉了 —— 同样拒绝', async () => {
+    // 「没报就算了」等于让中间人把那个字段删掉就绕过钉住
+    const relay = pinned('a'.repeat(64), undefined)
+    expect((await relay.connect()).kind).toBe('unreachable')
+  })
+
+  it('拒绝后业务调用拿到可重试错误，不是假装成功', async () => {
+    const relay = pinned('a'.repeat(64), 'b'.repeat(64))
+    await relay.connect()
+    const response = await relay.call('/api/chat/conversations', {}, PRINCIPAL)
+    expect(response.status).toBe(503)
+  })
+})
+
 describe('注销', () => {
   it('远端撤销 + 本地清除', async () => {
     const relay = client(

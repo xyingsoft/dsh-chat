@@ -30,6 +30,7 @@ import {
   type CredentialStore,
   type DeviceCredentials,
 } from '../identity/credentials.js'
+import { ClockOffset, signRequest } from '../identity/request-proof.js'
 import type { Principal } from '../routes/message-commands.js'
 
 export interface RelayClientOptions {
@@ -52,6 +53,17 @@ export interface RelayClientOptions {
    * 不给也能跑 —— 那是「还没开户」的状态，走共享密钥回落。
    */
   readonly credentials?: CredentialStore
+  /**
+   * 期望的 relay TLS 公钥指纹（带外配置）。
+   *
+   * relay 在协商应答里会报自己的指纹，但**那个值本身不提供防中间人能力** ——
+   * 中间人当然会报自己的。配了这一项才有意义：两者不一致就拒绝连接，等价于
+   * SSH 的 `known_hosts` 钉法。
+   *
+   * 不配时用 relay 报的值签名（签名仍然防篡改、防重放），但**换不来通道
+   * 绑定**。这一点在 README 里写明，不靠读代码才能发现。
+   */
+  readonly expectedRelayFingerprint?: string
   /** 单次请求超时。默认 15 秒。 */
   readonly timeoutMs?: number
   /** 注入 fetch，便于测试不起真实网络。 */
@@ -75,6 +87,11 @@ export type RelayState =
 
 export class RelayClient {
   #state: RelayState = { kind: 'unnegotiated' }
+  /** 协商时从 relay 学到的指纹。签名要用它，所以必须在 connect 之后才有。 */
+  #relayFingerprint: string | undefined
+  /** relay 是否要求签名。它说不要求时也不要白签 —— 那只是多送一次密码学运算。 */
+  #requiresSignature = false
+  readonly #clock = new ClockOffset()
   readonly #options: RelayClientOptions
   readonly #fetch: typeof globalThis.fetch
 
@@ -128,6 +145,25 @@ export class RelayClient {
       this.#state = { kind: 'unreachable', diagnostic: 'relay 的协商应答形状不符合契约' }
       return this.#state
     }
+
+    const declared = (capability as { relayFingerprint?: unknown }).relayFingerprint
+    const expected = this.#options.expectedRelayFingerprint
+    if (expected !== undefined && expected.length > 0) {
+      // 钉住的指纹对不上就**不连**。这是唯一真正防中间人的一步 ——
+      // 换成「警告一下继续连」的话，攻击成功与否就取决于有没有人在看日志
+      if (declared !== expected) {
+        this.#state = {
+          kind: 'unreachable',
+          diagnostic:
+            'relay 指纹与配置的期望值不一致，已拒绝连接。' +
+            '若确实更换了证书，请更新 relayFingerprint 配置。',
+        }
+        return this.#state
+      }
+    }
+    this.#relayFingerprint = typeof declared === 'string' ? declared : undefined
+    this.#requiresSignature =
+      (capability as { requiresRequestSignature?: unknown }).requiresRequestSignature === true
 
     // `exactOptionalPropertyTypes` 下「可选」与「可为 undefined」是两回事：
     // 从网络上解析出来的对象里 deprecationDeadline 可能不存在，直接传会被
@@ -194,6 +230,14 @@ export class RelayClient {
 
     try {
       const first = await this.#request(path, body, principal)
+
+      // 时钟偏移：§7.1 让 relay 返回服务器时间与允许窗口，正是为了让这一侧
+      // 能自己校准。不处理的话，一台时钟偏了几分钟的机器什么都干不了，
+      // 而错误信息看起来像认证失败 —— 用户会去查密码
+      if (isTimeSkew(first.body) && this.#clock.learnFrom(first.body)) {
+        return await this.#request(path, body, principal)
+      }
+
       // access token 是短期的（relay 那边 1 小时），过期是**正常状态**而不是
       // 错误。让它冒到界面上，用户看到的就是每小时被踢一次
       if (first.status !== 401 || this.#options.credentials === undefined) return first
@@ -326,12 +370,46 @@ export class RelayClient {
     return revoked
   }
 
+  /**
+   * §7.1 的请求证明请求头。不该签时返回空对象。
+   *
+   * 四个都齐了才签：relay 要求签名、知道它的指纹、本机有私钥、这次请求带了
+   * 组织（签名覆盖目标组织，没有组织就签不出对侧认得的东西）。
+   *
+   * 缺任何一个都**静默不签**而不是抛异常：relay 那边不启用校验时不带签名是
+   * 完全正常的；而启用了却没签会被它明确拒掉 —— 由拒绝方报错，比在这里猜
+   * 一个错误更准。
+   */
+  #proofHeaders(
+    path: string,
+    payload: string,
+    principal: Principal | undefined,
+    credentials: DeviceCredentials | undefined,
+  ): Record<string, string> {
+    if (!this.#requiresSignature) return {}
+    if (this.#relayFingerprint === undefined) return {}
+    if (credentials === undefined || principal === undefined) return {}
+    return signRequest({
+      method: 'POST',
+      path,
+      body: payload,
+      deviceId: credentials.deviceId,
+      organizationId: principal.organizationId,
+      relayFingerprint: this.#relayFingerprint,
+      signingPrivateKey: credentials.signingPrivateKey,
+      clock: this.#clock,
+    })
+  }
+
   async #request(path: string, body: unknown, principal?: Principal): Promise<RelayResponse> {
     const controller = new AbortController()
     // 不设超时的话，一个不回包的 relay 会让 host 的请求永远挂着，
     // 浏览器那边表现为界面卡住而不是报错
     const timer = setTimeout(() => controller.abort(), this.#options.timeoutMs ?? 15_000)
     const credentials = this.#options.credentials?.read()
+    // 序列化一次并复用。签名覆盖请求体摘要，重新 stringify 一遍可能得到
+    // 不同的字节（键序、数字表示），摘要就对不上了
+    const payload = JSON.stringify(body)
     try {
       const response = await this.#fetch(`${this.#options.baseUrl}${path}`, {
         method: 'POST',
@@ -348,8 +426,9 @@ export class RelayClient {
                 'x-dsh-organization': principal.organizationId,
                 'x-dsh-device': principal.deviceId,
               }),
+          ...this.#proofHeaders(path, payload, principal, credentials),
         },
-        body: JSON.stringify(body),
+        body: payload,
         signal: controller.signal,
       })
       // relay 的错误信封与 host 自己的同形状，原样透传即可；
@@ -369,6 +448,11 @@ export class RelayClient {
 }
 
 /** relay 协商应答的形状校验。契约只在边界解析（§48）。 */
+/** relay 说时钟偏了。与认证失败区分开是 §7.1 的明文要求。 */
+function isTimeSkew(body: unknown): boolean {
+  return (body as { error?: { code?: unknown } }).error?.code === 'TIME_SKEW'
+}
+
 interface SessionPayload {
   accountId: string
   deviceId: string

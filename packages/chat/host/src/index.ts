@@ -106,6 +106,14 @@ export interface Config {
   relayUrl?: string
   /** relay 的部署期共享密钥。见 `RelayClient` 上关于它不是设备身份的说明。 */
   relaySharedSecret?: string
+  /**
+   * 期望的 relay TLS 公钥指纹（SHA-256 十六进制）。**带外配置。**
+   *
+   * 配了才防中间人：relay 在协商时报的指纹对不上就拒绝连接，等价于 SSH 的
+   * known_hosts 钉法。不配时签名仍防篡改与重放，但换不来通道绑定 ——
+   * 中间人当然会报自己的指纹。
+   */
+  relayFingerprint?: string
 }
 
 /**
@@ -121,6 +129,7 @@ export const Config: Schema<Config> = Schema.object({
   localDeviceId: Schema.string(),
   relayUrl: Schema.string(),
   relaySharedSecret: Schema.string(),
+  relayFingerprint: Schema.string(),
 })
 
 /**
@@ -322,6 +331,9 @@ function createRelayClient(
     baseUrl: relayUrl.replace(/\/$/, ''),
     sharedSecret: relaySharedSecret,
     credentials,
+    ...(config.relayFingerprint === undefined || config.relayFingerprint.length === 0
+      ? {}
+      : { expectedRelayFingerprint: config.relayFingerprint }),
   })
 }
 
