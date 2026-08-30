@@ -25,19 +25,33 @@ import {
   type ProtocolOffer,
 } from '@dsh-chat/contract'
 
+import {
+  generateDeviceKeyPair,
+  type CredentialStore,
+  type DeviceCredentials,
+} from '../identity/credentials.js'
 import type { Principal } from '../routes/message-commands.js'
 
 export interface RelayClientOptions {
   /** relay 的基地址，例如 `https://relay.example.com`。 */
   readonly baseUrl: string
   /**
-   * 部署期共享密钥。
+   * 部署期共享密钥。**回落用，不是设备身份。**
    *
-   * **这不是设备身份。** 它只证明「这是一台被授权接入的 host」，不证明请求
-   * 来自哪个账号 —— 账号由 `x-dsh-account` 声明。真正的绑定要靠 §7.1 的设备
-   * 签名，校验侧已在 `@dsh-chat/identity` 实现，缺会话建立与 token 下发。
+   * 它只证明「这是一台被授权接入的 host」，不证明请求来自哪个账号 —— 账号由
+   * `x-dsh-account` 声明。本机开过户之后就不再用它：`credentials` 里的
+   * access token 优先，账号与设备由 relay 从会话查出来，这一侧说了不算。
+   *
+   * relay 那边默认**不接受**用共享密钥声称身份（要显式开
+   * `allowSharedSecretIdentity`），所以这条路只在尚未开户的部署上通。
    */
   readonly sharedSecret: string
+  /**
+   * 本机凭据。给了就用 token 认证，并在 401 时自动刷新一次。
+   *
+   * 不给也能跑 —— 那是「还没开户」的状态，走共享密钥回落。
+   */
+  readonly credentials?: CredentialStore
   /** 单次请求超时。默认 15 秒。 */
   readonly timeoutMs?: number
   /** 注入 fetch，便于测试不起真实网络。 */
@@ -179,6 +193,13 @@ export class RelayClient {
     }
 
     try {
+      const first = await this.#request(path, body, principal)
+      // access token 是短期的（relay 那边 1 小时），过期是**正常状态**而不是
+      // 错误。让它冒到界面上，用户看到的就是每小时被踢一次
+      if (first.status !== 401 || this.#options.credentials === undefined) return first
+      if (!(await this.refreshTokens())) return first
+      // 只重试一次。刷完还是 401 说明会话真的没了（被撤销、设备换了密钥），
+      // 循环重试只会把一个需要重新登录的状态变成一个卡住的界面
       return await this.#request(path, body, principal)
     } catch (error) {
       return {
@@ -190,17 +211,136 @@ export class RelayClient {
     }
   }
 
+  /**
+   * 用邀请码在 relay 开户，并把凭据落到本机。
+   *
+   * 密钥对**在这里生成**，私钥进本地文件，出站请求里只有公钥 —— §7 的
+   * 「私钥永不上传」在这一行代码上兑现，不是在文档里。
+   *
+   * 不做协商检查：注册要能在协议不兼容时进行，否则一个版本不匹配的部署
+   * 连开户都做不了，而开户恰恰是升级之后要重做的事。
+   */
+  async enroll(input: {
+    inviteCode: string
+    displayName: string
+    deviceName: string
+  }): Promise<{ ok: true; credentials: DeviceCredentials } | { ok: false; status: number; body: unknown }> {
+    const store = this.#options.credentials
+    if (store === undefined) {
+      return { ok: false, status: 500, body: { error: { code: 'INTERNAL' } } }
+    }
+
+    const keys = generateDeviceKeyPair()
+    const response = await this.#request('/api/identity/register', {
+      inviteCode: input.inviteCode,
+      displayName: input.displayName,
+      deviceName: input.deviceName,
+      // 只有公钥。私钥在 keys 里，留在这个进程
+      signingPublicKey: keys.signingPublicKey,
+    })
+    if (response.status !== 200) return { ok: false, status: response.status, body: response.body }
+
+    const data = (response.body as { data?: unknown }).data
+    if (!isSessionPayload(data)) {
+      return { ok: false, status: 502, body: { error: { code: 'INTERNAL' } } }
+    }
+
+    const credentials: DeviceCredentials = {
+      accountId: data.accountId,
+      deviceId: data.deviceId,
+      signingPrivateKey: keys.signingPrivateKey,
+      signingPublicKey: keys.signingPublicKey,
+      keyFingerprint: keys.keyFingerprint,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      accessExpiresAt: data.accessExpiresAt,
+      refreshExpiresAt: data.refreshExpiresAt,
+    }
+    store.write(credentials)
+    return { ok: true, credentials }
+  }
+
+  /**
+   * 用 refresh token 换一对新的。
+   *
+   * relay 那边是**轮换**：旧的用过即撤销。所以这里一旦拿到新的就必须写进
+   * 文件，中途失败会让本机持有一对已经作废的 token —— 那种情况下唯一的
+   * 出路是重新注册，所以写文件放在最后一步且是整份替换。
+   */
+  async refreshTokens(): Promise<boolean> {
+    const store = this.#options.credentials
+    const current = store?.read()
+    if (store === undefined || current === undefined) return false
+
+    const response = await this.#request('/api/identity/session/refresh', {
+      refreshToken: current.refreshToken,
+    })
+    if (response.status !== 200) return false
+    const data = (response.body as { data?: unknown }).data
+    if (!isSessionPayload(data)) return false
+
+    store.updateTokens({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      accessExpiresAt: data.accessExpiresAt,
+      refreshExpiresAt: data.refreshExpiresAt,
+    })
+    return true
+  }
+
+  /** 本机是否已开户。给界面判断该显示注册引导还是聊天。 */
+  get enrolled(): boolean {
+    return this.#options.credentials?.read() !== undefined
+  }
+
+  /**
+   * 可以安全交给浏览器的那部分凭据。
+   *
+   * 只有账号与设备 ID。**没有 getter 能拿到 token 或私钥** —— 不是靠调用方
+   * 自觉不去读，而是这个类根本不往外给。
+   */
+  credentialsSummary(): { accountId: string; deviceId: string } | undefined {
+    const current = this.#options.credentials?.read()
+    if (current === undefined) return undefined
+    return { accountId: current.accountId, deviceId: current.deviceId }
+  }
+
+  /**
+   * 注销：撤销 relay 上的会话，并清除本机凭据。
+   *
+   * 返回的是「远端撤销成功了没有」。本地清除**无论如何都做** —— 一个连不上
+   * 服务器就退不掉的登出按钮是坏的。远端没撤成时那对 token 会一直活到过期，
+   * 所以这个返回值要如实报给用户，不能吞掉。
+   */
+  async signOut(): Promise<boolean> {
+    const store = this.#options.credentials
+    if (store === undefined) return false
+    let revoked = false
+    try {
+      const response = await this.#request('/api/identity/session/sign-out', {})
+      revoked = response.status === 200
+    } catch {
+      revoked = false
+    }
+    store.clear()
+    return revoked
+  }
+
   async #request(path: string, body: unknown, principal?: Principal): Promise<RelayResponse> {
     const controller = new AbortController()
     // 不设超时的话，一个不回包的 relay 会让 host 的请求永远挂着，
     // 浏览器那边表现为界面卡住而不是报错
     const timer = setTimeout(() => controller.abort(), this.#options.timeoutMs ?? 15_000)
+    const credentials = this.#options.credentials?.read()
     try {
       const response = await this.#fetch(`${this.#options.baseUrl}${path}`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          authorization: `Bearer ${this.#options.sharedSecret}`,
+          // token 优先。开过户之后账号与设备由 relay 从会话查出来，
+          // 下面那两个请求头就只是冗余信息了 —— 但组织仍然必须带，
+          // 一个账号可属多个组织（§9），当前在哪个组织下是这一侧的选择
+          authorization: `Bearer ${credentials?.accessToken ?? this.#options.sharedSecret}`,
           ...(principal === undefined
             ? {}
             : {
@@ -229,6 +369,29 @@ export class RelayClient {
 }
 
 /** relay 协商应答的形状校验。契约只在边界解析（§48）。 */
+interface SessionPayload {
+  accountId: string
+  deviceId: string
+  accessToken: string
+  refreshToken: string
+  accessExpiresAt: string
+  refreshExpiresAt: string
+}
+
+/**
+ * relay 的会话应答是不是完整的一份。
+ *
+ * 缺字段时宁可整个当失败：写一份缺 refreshToken 的凭据进去，本机会一直用到
+ * access 过期，然后既刷不了也不知道为什么。
+ */
+function isSessionPayload(value: unknown): value is SessionPayload {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Record<string, unknown>
+  return (
+    ['accountId', 'deviceId', 'accessToken', 'refreshToken', 'accessExpiresAt', 'refreshExpiresAt'] as const
+  ).every((key) => typeof record[key] === 'string' && record[key] !== '')
+}
+
 function isCapability(value: unknown): value is {
   currentVersion: number
   minimumVersion: number
