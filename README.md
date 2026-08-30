@@ -16,7 +16,7 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 
 ## 当前状态
 
-**尚未发布。** `P0-a` 的骨架步骤与验收清单已全部覆盖，host 侧功能完整；**界面还没有** —— 见下方「已知未完成项」。
+**尚未发布。** `P0-a` 的骨架步骤与验收清单已全部覆盖，插件已在 **DSH Desktop v2.0.4 上装载并渲染**（[截图](./docs/_meta/dsh-integration-evidence.md)）。
 
 | 阶段 | 范围 | 状态 |
 |---|---|---|
@@ -44,7 +44,6 @@ Ed25519 请求签名（nonce 去重、时间偏移容忍窗口）。
 
 | 项 | 影响 |
 |---|---|
-| **客户端插件未被真实 DSH 装载** | DSH 界面上看不到任何 UI。渲染侧入口须是预打包单文件，见 [装载验证](./docs/_meta/dsh-integration-evidence.md) |
 | 会话列表的数据源 | 组件与呈现规则已就绪并测过，但 host 缺按会话聚合的查询端点 |
 | relay 客户端抽象 | 三进程验收里 host 直接调 relay 的 HTTP 接口，架构分层比文档少一层 |
 

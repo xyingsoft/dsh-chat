@@ -58,7 +58,7 @@ const CAPABILITIES: readonly CapabilityRow[] = [
   { name: '设备注册与请求签名', status: 'ready', note: 'Ed25519，nonce 去重与时间偏移' },
   { name: '通知聚合与 SSE', status: 'ready', note: '5 分钟窗口，断线后按游标补拉' },
   { name: '会话列表与消息视图', status: 'partial', note: '组件已就绪，尚未接入数据源' },
-  { name: '本插件被 DSH 装载', status: 'not_implemented', note: '渲染侧入口需预打包，见 TODO' },
+  { name: '本插件被 DSH 装载', status: 'ready', note: '已在 DSH Desktop v2.0.4 上验证渲染' },
   { name: '第二验证因素与恢复', status: 'not_implemented', note: '属 P0-b 关口' },
   { name: '在线状态', status: 'not_implemented', note: '属 P0-b 关口' },
   { name: '群聊与附件', status: 'not_implemented', note: '属 P1 及之后' },

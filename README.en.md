@@ -16,7 +16,7 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ## Status
 
-**Not released.** `P0-a`'s skeleton steps and acceptance checklist are fully covered and the host side is complete; **there is still no UI** — see "Known gaps" below.
+**Not released.** `P0-a`'s skeleton steps and acceptance checklist are fully covered, and the plugin now **loads and renders in DSH Desktop v2.0.4** ([screenshot](./docs/_meta/dsh-integration-evidence.md)).
 
 | Stage | Scope | Status |
 |---|---|---|
@@ -46,7 +46,6 @@ its own local database.
 
 | Gap | Impact |
 |---|---|
-| **The client plugin is not loaded by real DSH** | No UI appears in DSH. The renderer entry must be a pre-bundled single file; see the [load verification](./docs/_meta/dsh-integration-evidence.md) |
 | Data source for the conversation list | Components and presentation rules are ready and tested, but the host lacks a per-conversation aggregation endpoint |
 | Relay client abstraction | In the three-process acceptance the host calls relay HTTP directly, so there is one fewer layer than the docs describe |
 
