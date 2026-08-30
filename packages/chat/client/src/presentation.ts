@@ -67,11 +67,18 @@ export interface ErrorPresentation {
  * 固有属性，不由调用方猜测」。
  */
 export function presentError(code: ErrorCode): ErrorPresentation {
-  const definition = ERROR_CATALOGUE[code]
-  const retryability = definition.retryability
+  // 目录里查不到就当作 terminal。这不是防御性编程的洁癖：错误码是**从网络上
+  // 来的**，服务端比客户端新时就会出现客户端不认识的码。
+  //
+  // 早先这里直接 `ERROR_CATALOGUE[code].retryability`，遇到未知码抛
+  // TypeError，整个界面白屏 —— 一个未知的错误码把界面整个搞没了，
+  // 比显示「操作未能完成」糟糕得多。
+  const definition = ERROR_CATALOGUE[code] as (typeof ERROR_CATALOGUE)[ErrorCode] | undefined
+  const retryability = definition?.retryability ?? 'terminal'
 
   return {
     retryability,
+    // 未知码不给重试入口：不知道重试有没有意义时，让用户反复点是最差的选择
     offersRetry: retryability === 'retryable',
     requiresPrecondition: retryability === 'conditional',
     message: userFacingMessage(code),

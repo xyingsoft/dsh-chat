@@ -19,8 +19,10 @@ import {
   checkDirectMessageGate,
   acceptDirectMessage,
   acknowledge,
+  conversationsOf,
   editMessage,
   leaseBatch,
+  messagesWith,
   revokeMessage,
 } from '@dsh-chat/messaging'
 
@@ -394,6 +396,72 @@ export function revokeMessageHandler(deps: MessageCommandDeps) {
           ? { ok: true as const, value: { revision: result.revision } }
           : { ok: false as const, errorCode: result.errorCode }
       })
+    },
+  })
+}
+
+/**
+ * 会话列表。
+ *
+ * 只读端点，但仍走 `commandHandler` —— 它带跨源防护。读端点也要防跨源：
+ * 会话列表含对端显示名与消息摘要，被第三方站点读走就是一次通讯录泄露。
+ *
+ * `accountId` 取自认证结果，请求体里给什么都不看。
+ */
+export function conversationsHandler(deps: MessageCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const limitInput =
+        typeof raw === 'object' && raw !== null
+          ? (raw as Record<string, unknown>)['limit']
+          : undefined
+      // 上限夹到 200：不夹的话调用方传一个巨大的 limit 就能让一次查询扫全表
+      const limit =
+        typeof limitInput === 'number' && Number.isInteger(limitInput) && limitInput > 0
+          ? Math.min(limitInput, 200)
+          : 50
+
+      const conversations = deps.database.transaction((db) =>
+        conversationsOf(db, principal.organizationId, principal.accountId, { limit }),
+      )
+      return { ok: true as const, value: { conversations } }
+    },
+  })
+}
+
+/**
+ * 某个会话的消息记录。
+ *
+ * `peerId` 来自请求体（要看哪个会话是调用方的选择），但**只返回自己参与的
+ * 消息** —— `messagesWith` 的查询两侧都锚定在认证出来的 accountId 上，
+ * 所以填别人的 peerId 只会得到空列表，拿不到他人之间的对话。
+ */
+export function messageHistoryHandler(deps: MessageCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const input = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {}
+      const peerId = input['peerId']
+      if (typeof peerId !== 'string' || peerId.length === 0) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+      const limitInput = input['limit']
+      const limit =
+        typeof limitInput === 'number' && Number.isInteger(limitInput) && limitInput > 0
+          ? Math.min(limitInput, 200)
+          : 50
+
+      const messages = deps.database.transaction((db) =>
+        messagesWith(db, principal.organizationId, principal.accountId, peerId, { limit }),
+      )
+      return { ok: true as const, value: { messages } }
     },
   })
 }

@@ -15,6 +15,7 @@ import { acceptContactRequest, createContactRequest, messageView } from '@dsh-ch
 import { ChatDatabase } from '../storage/database.js'
 
 import {
+  conversationsHandler,
   editMessageHandler,
   revokeMessageHandler,
   sendMessageHandler,
@@ -73,6 +74,7 @@ beforeEach(async () => {
         ['/api/chat/messages', sendMessageHandler(deps)],
         ['/api/chat/messages/edit', editMessageHandler(deps)],
         ['/api/chat/messages/revoke', revokeMessageHandler(deps)],
+        ['/api/chat/conversations', conversationsHandler(deps)],
       ] as const
       for (const [path, handler] of routes) {
         inner.effect(
@@ -95,6 +97,11 @@ async function post(path: string, body: unknown): Promise<Response> {
     headers: { origin: baseUrl, 'content-type': 'application/json' },
     body: JSON.stringify(body),
   })
+}
+
+async function dataOf<T>(response: Response): Promise<T> {
+  const body = (await response.json()) as { data: T }
+  return body.data
 }
 
 async function errorOf(response: Response): Promise<string> {
@@ -308,10 +315,62 @@ describe('撤回', () => {
   })
 })
 
+describe('会话列表端点', () => {
+  it('返回会话，预览反映撤回', async () => {
+    await send('msg-1', '第一条')
+    let list = await dataOf<{ conversations: Array<{ peerId: string; preview: string }> }>(
+      await post('/api/chat/conversations', {}),
+    )
+    expect(list.conversations).toHaveLength(1)
+    expect(list.conversations[0]?.peerId).toBe('bob')
+    expect(list.conversations[0]?.preview).toBe('第一条')
+
+    await post('/api/chat/messages/revoke', {
+      messageId: 'msg-1',
+      senderId: 'alice',
+      operationId: 'op-revoke',
+    })
+    list = await dataOf(await post('/api/chat/conversations', {}))
+    expect(list.conversations[0]?.preview).toBe('[已撤回]')
+    // 原文不能经这个端点漏出去
+    expect(JSON.stringify(list)).not.toContain('第一条')
+  })
+
+  it('accountId 取自认证结果，请求体里给什么都不看', async () => {
+    // 否则填上别人的 accountId 就能读他的会话列表
+    await send('msg-1', '甲乙之间')
+    principal = { accountId: 'admin', deviceId: 'admin-pc', organizationId: ORG }
+    const list = await dataOf<{ conversations: unknown[] }>(
+      await post('/api/chat/conversations', { accountId: 'alice' }),
+    )
+    expect(list.conversations).toHaveLength(0)
+  })
+
+  it('limit 被夹到上限，防止一次扫全表', async () => {
+    const response = await post('/api/chat/conversations', { limit: 999999 })
+    expect(response.status).toBe(200)
+  })
+
+  it('跨源读请求同样被拒绝', async () => {
+    // 会话列表含对端显示名与消息摘要，被第三方站点读走就是通讯录泄露
+    await send('msg-1', 'x')
+    const response = await fetch(`${baseUrl}/api/chat/conversations`, {
+      method: 'POST',
+      headers: { origin: 'https://evil.example', 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(response.status).toBe(403)
+  })
+})
+
 describe('通用边界', () => {
   it('未认证请求返回 401', async () => {
     principal = undefined
-    for (const path of ['/api/chat/messages/edit', '/api/chat/messages/revoke']) {
+    for (const path of [
+      '/api/chat/messages/edit',
+      '/api/chat/messages/revoke',
+      '/api/chat/conversations',
+    ]) {
       expect((await post(path, { messageId: 'x', operationId: 'op' })).status).toBe(401)
     }
   })
