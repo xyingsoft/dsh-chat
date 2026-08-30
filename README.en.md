@@ -47,7 +47,6 @@ its own local database.
 | Gap | Impact |
 |---|---|
 | Data source for the conversation list | Components and presentation rules are ready and tested, but the host lacks a per-conversation aggregation endpoint |
-| Relay client abstraction | The host calls relay HTTP directly in the three-process acceptance. **The plugin still calls local domain code and does not go through the relay yet** |
 
 Second factor, recovery, presence, groups, and attachments belong to later gates; their entry
 points are **explicitly absent rather than pretending to work**.
