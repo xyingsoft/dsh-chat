@@ -70,6 +70,28 @@ jobs:
         if: steps.probe.outputs.ready == 'true'
         run: yarn install --immutable
 
+      # 跨仓库集成测试需要 relay 的产物。检出到与本仓库并列的位置 ——
+      # 与本地开发时两个仓库并排放的布局一致，测试里的相对路径才对得上。
+      #
+      # 不做成「relay 不在就跳过」：那样 CI 摘要里「测试没跑」和「测试通过了」
+      # 长得一样，接通与否就没人盯着了。
+      - name: 检出 relay / Checkout relay
+        if: steps.probe.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: xyingsoft/dsh-chat-relay
+          path: relay-checkout
+
+      - name: 构建 relay / Build relay
+        if: steps.probe.outputs.ready == 'true'
+        run: |
+          # 测试按 ../dsh-chat-relay 找它；GitHub 的 checkout 只能落在
+          # workspace 内，所以在 workspace 外侧做一个同名目录
+          mv relay-checkout "${GITHUB_WORKSPACE}/../dsh-chat-relay"
+          cd "${GITHUB_WORKSPACE}/../dsh-chat-relay"
+          yarn install --immutable
+          yarn build
+
       - name: 检查 / Check
         if: steps.probe.outputs.ready == 'true'
         run: yarn check
