@@ -22,6 +22,7 @@ import {
   conversationsOf,
   editMessage,
   leaseBatch,
+  markConversationRead,
   messagesWith,
   revokeMessage,
 } from '@dsh-chat/messaging'
@@ -462,6 +463,41 @@ export function messageHistoryHandler(deps: MessageCommandDeps) {
         messagesWith(db, principal.organizationId, principal.accountId, peerId, { limit }),
       )
       return { ok: true as const, value: { messages } }
+    },
+  })
+}
+
+/**
+ * 把一个会话标记为已读。
+ *
+ * `recipientId` 与 `deviceId` 都取自认证结果 —— 只能标记自己的会话为已读。
+ * 请求体里只有「哪个对端」。
+ */
+export function markReadHandler(deps: MessageCommandDeps) {
+  return commandHandler({
+    expectedOrigin: deps.expectedOrigin,
+    execute: async (raw, request) => {
+      const principal = deps.authenticate(request)
+      if (!principal) return { ok: false as const, errorCode: 'UNAUTHENTICATED' as const }
+
+      const peerId =
+        typeof raw === 'object' && raw !== null
+          ? (raw as Record<string, unknown>)['peerId']
+          : undefined
+      if (typeof peerId !== 'string' || peerId.length === 0) {
+        return { ok: false as const, errorCode: 'NOT_FOUND_OR_FORBIDDEN' as const }
+      }
+
+      const acked = deps.database.transaction((db) =>
+        markConversationRead(db, {
+          organizationId: principal.organizationId,
+          recipientId: principal.accountId,
+          peerId,
+          deviceId: principal.deviceId,
+          now: deps.now(),
+        }),
+      )
+      return { ok: true as const, value: { acked } }
     },
   })
 }

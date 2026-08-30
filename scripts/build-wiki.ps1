@@ -143,6 +143,7 @@ $sidebar = @'
 - [实现记录](meta-implementation-log)
 - [骨架走查记录](meta-skeleton-walkthrough)
 - [P0-a 失败路径覆盖](meta-acceptance-coverage)
+- [功能全量清单](meta-feature-inventory)
 - [DSH 装载验证](meta-dsh-integration-evidence)
 '@
 [System.IO.File]::WriteAllText((Join-Path $OutDir '_Sidebar.md'), $sidebar, (New-Object System.Text.UTF8Encoding($false)))

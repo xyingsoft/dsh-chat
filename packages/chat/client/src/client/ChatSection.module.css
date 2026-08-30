@@ -1,58 +1,121 @@
 /* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
 
 .root {
-  display: grid;
-  grid-template-columns: minmax(180px, 34%) 1fr;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
   /* 填满容器而不是写死高度 —— 同一个组件既要放进设置面板（外面套一个
-     有界高度的盒子），也要放进右侧抽屉（占满剩余高度）。写死 420px 的话
+     有界高度的盒子），也要放进右侧抽屉（占满剩余高度）。写死高度的话
      在抽屉里就会只占上面一小块，下面空一大片。 */
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 
+/* 宽版：会话列表与消息并排。窄版下不加这个类，走单栏钻取 —— 380px 宽还
+   硬要两栏的话，两边都挤成一条，谁也看不清。 */
+.split {
+  flex-direction: row;
+}
+
 .sidebar {
-  border-right: 1px solid var(--dsh-color-border, #e0e0e0);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
   overflow-y: auto;
   padding: 6px;
+}
+
+.split .sidebar {
+  width: 210px;
+  flex: none;
+  border-right: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
 }
 
 .main {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
-  padding: 8px;
+  min-height: 0;
   overflow: hidden;
+}
+
+/* 单栏模式下的返回条。宽版不需要 —— 列表一直在旁边。 */
+.backBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  flex-shrink: 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.back:hover {
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  color: var(--dsw-alias-label-primary, #1f2328);
+}
+
+.peerName {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #1f2328);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
 }
 
 .status {
   margin: 0;
-  padding: 16px;
-  color: var(--dsh-color-text-secondary, #666);
+  padding: 24px 16px;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
   font-size: 13px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .statusText {
   margin: 0;
+  line-height: 1.6;
 }
 
 .retry {
-  border: 1px solid var(--dsh-color-border, #e0e0e0);
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
   background: transparent;
-  border-radius: 6px;
-  padding: 4px 12px;
+  border-radius: 8px;
+  padding: 6px 14px;
   font: inherit;
   font-size: 12px;
-  color: var(--dsh-color-accent, #3574d6);
+  color: var(--dsw-alias-brand-primary, #4f6ef7);
   cursor: pointer;
 }
 
 .retry:hover {
-  background: var(--dsh-color-bg-hover, #f5f5f5);
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
 }

@@ -215,3 +215,45 @@ export function messagesWith(
       }
     })
 }
+
+/**
+ * 把与某个对端的会话标记为已读。
+ *
+ * 「已读」在 P0 就是 ACK —— §15 明确不做已读回执，收件人 ACK 的语义是
+ * 「本设备已持久化这条消息」，界面上的未读数正是未 ACK 的队列项数。
+ *
+ * ## 为什么不复用 `leaseBatch` + `acknowledge`
+ *
+ * 那一对是**设备级同步**的接口：`leaseBatch` 按设备租约拉取**全部**待投递项，
+ * 不区分对端。用它来实现「打开一个会话就把它标为已读」，会把其他会话的未读
+ * 一并清掉 —— 用户点开一个人，所有人的红点都没了。
+ *
+ * 所以这里按对端过滤，并且**直接 ACK 而不经租约**：租约是为了防止多设备重复
+ * 投递同一批，而「用户在这台设备上读了」本身就确定了是哪台设备。
+ */
+export function markConversationRead(
+  db: DatabaseSync,
+  input: {
+    readonly organizationId: string
+    readonly recipientId: string
+    readonly peerId: string
+    readonly deviceId: string
+    readonly now: Date
+  },
+): number {
+  const result = db
+    .prepare(
+      `UPDATE delivery_queue
+          SET acked_at = ?, acked_device_id = ?, lease_device_id = NULL, lease_expires_at = NULL
+        WHERE organization_id = ? AND recipient_id = ? AND sender_id = ?
+          AND acked_at IS NULL`,
+    )
+    .run(
+      input.now.toISOString(),
+      input.deviceId,
+      input.organizationId,
+      input.recipientId,
+      input.peerId,
+    )
+  return Number(result.changes)
+}

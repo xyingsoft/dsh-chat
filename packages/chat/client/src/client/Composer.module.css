@@ -1,0 +1,100 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  flex-shrink: 0;
+}
+
+.field {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  /* 起始一行，随内容长高到上限。写死高度的话短消息浪费空间、
+     长消息看不全 */
+  min-height: 38px;
+  max-height: 140px;
+  padding: 9px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-2, #f7f8fa);
+  color: var(--dsw-alias-label-primary, #1f2328);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary, #4f6ef7);
+  background: var(--dsw-alias-bg-layer-1, #fff);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 发送按钮做成 36px 见方 —— 比常见的 24px 图标好点得多，
+   在 380px 宽的面板里尤其明显 */
+.send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--dsw-alias-brand-primary, #4f6ef7);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* 禁用态用降透明度而不是变灰：变灰在深色主题里会和背景糊在一起 */
+.send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  min-height: 15px;
+}
+
+.error {
+  color: var(--dsw-alias-label-danger, #a02020);
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 接近上限才提示，平时不占注意力 */
+.counterWarn {
+  color: var(--dsw-alias-label-warning, #8a5a00);
+}
+
+.counterOver {
+  color: var(--dsw-alias-label-danger, #a02020);
+}
