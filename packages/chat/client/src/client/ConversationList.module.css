@@ -90,3 +90,39 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+
+/* 在线状态点。§49：颜色不作为唯一状态信号 —— 形状也随状态变，
+   在线是实心、空闲是空心环、离线与未知不画点，色觉障碍或黑白截图下
+   仍然分得出来。文字说明在 title 与 aria-label 里。 */
+.presence {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  /* 与名字的基线对齐。不设的话点会贴着文字顶部 */
+  vertical-align: 1px;
+}
+
+.presence_online {
+  background: var(--dsw-alias-status-success, #16a34a);
+}
+
+/* 空心环：与实心点在灰度下也能区分 */
+.presence_idle {
+  background: transparent;
+  border: 1.5px solid var(--dsw-alias-status-warning, #d97706);
+}
+
+/* 离线与未知都不画点 —— 一排灰点比没有点更吵，而它们不携带信息。
+   两者的区别在 aria-label：一个是「离线」，一个是「状态未知」。
+   画成同一个可见样式是可以的，画成同一句话不行 —— 那会让隐藏了状态的人
+   看起来像离线。 */
+.presence_offline,
+.presence_unknown {
+  background: transparent;
+  border: none;
+  width: 0;
+  margin-right: 0;
+}

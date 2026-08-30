@@ -28,7 +28,12 @@ import {
   type ReactElement,
 } from 'react'
 
-import { presentError, type LocalDeliveryState, type StreamState } from '../presentation.js'
+import {
+  presentError,
+  type LocalDeliveryState,
+  type PresenceState,
+  type StreamState,
+} from '../presentation.js'
 
 import styles from './ChatSection.module.css'
 import { Composer } from './Composer.js'
@@ -39,6 +44,22 @@ import { useEventStream } from './useEventStream.js'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
 const SPLIT_THRESHOLD = 640
+
+/**
+ * 心跳间隔。与 §50.3 关闭的那条决策一致（host 侧的 online 窗口是它的三倍）。
+ *
+ * 改这个数要同时看 `PRESENCE_BASELINE` —— 两边脱节的话，要么心跳太密白费
+ * 请求，要么太疏让人一直闪断。
+ */
+const HEARTBEAT_INTERVAL_MS = 30_000
+
+/**
+ * 算作「用户还在」的交互。
+ *
+ * 只听这几个，不听 `mousemove` —— 鼠标从窗口上划过不代表人在用它，而
+ * mousemove 会以每秒几十次的频率触发，把 idle 判定彻底废掉。
+ */
+const INTERACTION_EVENTS = ['keydown', 'pointerdown', 'focus'] as const
 
 interface RemoteConversation {
   readonly peerId: string
@@ -148,6 +169,7 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
+  const [presence, setPresence] = useState<Readonly<Record<string, PresenceState>>>({})
   const scrollRef = useRef<HTMLDivElement | null>(null)
   // 选中会话放进 ref 供事件回调读。放进依赖数组的话，每切一次会话就会
   // 重建一次 SSE 连接 —— 而重建意味着丢掉订阅并重来
@@ -205,6 +227,53 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   useEffect(() => {
     void loadConversations()
   }, [loadConversations])
+
+  // 心跳。§9.1 说的是「host 是否仍在运行」，所以真正的心跳在 host 进程里；
+  // 浏览器这一趟只负责报告**用户交互时间** —— 那是它知道而 host 不知道的
+  // 信息，也是 online 与 idle 的唯一分界
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    let lastInteractionAt = new Date().toISOString()
+    const touch = (): void => {
+      lastInteractionAt = new Date().toISOString()
+    }
+    for (const type of INTERACTION_EVENTS) {
+      window.addEventListener(type, touch, { passive: true })
+    }
+
+    const beat = (): void => {
+      // 失败静默：心跳打不通不该在界面上报错。连接真的断了会由 SSE 那一路
+      // 显式呈现，两处都报就是同一件事说两遍
+      void callHost('/api/chat/presence/heartbeat', { lastInteractionAt }).catch(() => {})
+    }
+    beat()
+    const timer = setInterval(beat, HEARTBEAT_INTERVAL_MS)
+    return () => {
+      clearInterval(timer)
+      for (const type of INTERACTION_EVENTS) window.removeEventListener(type, touch)
+    }
+  }, [state.kind])
+
+  // 会话列表变了就查一次在线状态。跟着列表走而不是自己定时轮询 ——
+  // 列表不变时对方的状态最多差一个心跳周期，而那正是这个数据的精度上限
+  useEffect(() => {
+    if (conversations.length === 0) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const data = await callHost<{ presence: Record<string, PresenceState> }>(
+          '/api/chat/presence',
+          { accountIds: conversations.map((c) => c.peerId) },
+        )
+        if (!cancelled) setPresence(data.presence)
+      } catch {
+        // 查不到就维持上一次的结果。清空会让所有人在网络抖一下时集体「消失」
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [conversations])
 
   // 打开会话：拉消息 + 标记已读。
   // 标记已读放在这里而不是点击回调里 —— 组织切换或外部改选中时也要生效
@@ -329,6 +398,8 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     preview: c.lastMessageOutgoing ? `你：${c.preview}` : c.preview,
     lastActivityAt: c.lastActivityAt,
     unreadCount: c.unreadCount,
+    // 查不到时给 unknown 而不是 offline —— 后者是一个我们没有依据的断言
+    presence: presence[c.peerId] ?? 'unknown',
   }))
 
   const displayed: DisplayMessage[] = [
