@@ -41,6 +41,14 @@ const SECRET = 'e2e-shared-secret-0123456789'
 /** relay 引导时建的组织。开出来的账号就落在这里。 */
 const ORG = 'org-bootstrap'
 const BOOTSTRAP_INVITE = 'e2e-bootstrap-invite-code'
+/**
+ * relay 的 TLS 指纹。配了它 relay 才启用 §7.1 的请求证明校验。
+ *
+ * 这场测试是**两侧签名拼接格式唯一会碰面的地方** —— host 和 relay 各有一份
+ * 实现，各自的单测都只跟自己比。差一个换行两边就永远对不上，而失败长得像
+ * 认证失败。所以这里必须开着签名跑。
+ */
+const RELAY_FINGERPRINT = 'd'.repeat(64)
 
 let workDir: string
 let relayProcess: ChildProcess | undefined
@@ -69,6 +77,7 @@ function startRelay(): Promise<{ child: ChildProcess; port: number }> {
         // 全新的库里一条账号都没有，签不出邀请码，也就开不了户。
         // 这个变量解开那个死锁，且在第一个人开完户之后自动失效
         DSH_CHAT_RELAY_BOOTSTRAP_INVITE: BOOTSTRAP_INVITE,
+        DSH_CHAT_RELAY_TLS_FINGERPRINT: RELAY_FINGERPRINT,
       },
     })
     let stderr = ''
@@ -138,6 +147,9 @@ beforeAll(async () => {
     databasePath: join(workDir, 'host.db'),
     relayUrl: `http://127.0.0.1:${relayPort}`,
     relaySharedSecret: SECRET,
+    // 带外配置的期望指纹。对不上就拒绝连接 —— 这一条才是真正防中间人的，
+    // relay 自己报的那个值中间人当然也会报
+    relayFingerprint: RELAY_FINGERPRINT,
   })
 
   // 协商是 apply() 里不 await 发起的，这里等它落定再开始断言
@@ -229,6 +241,32 @@ describe('开户是真开出来的', () => {
     expect(status.mode).toBe('enrolled')
     expect(status.accountId).toBe(account.accountId)
     expect(status.accountId).not.toBe('not-yet-enrolled')
+  })
+})
+
+describe('请求证明确实在跑（§7.1）', () => {
+  it('业务请求带着签名过去并被接受', async () => {
+    // relay 端配了指纹，它会拒绝一切不带签名的 token 请求。
+    // 这一条能过就说明 host 签了、且**两边的拼接格式一致** ——
+    // 那是两个仓库里各写一份、只有在这里才碰面的东西
+    const response = await post('/api/chat/conversations', {})
+    expect(response.status).toBe(200)
+  })
+
+  it('每个请求的 nonce 都不同 —— 否则第二个就被判重放', async () => {
+    // 这一条不看请求头（拿不到），看结果：连打三次都成功，说明 nonce
+    // 没有被复用。复用的话 relay 会在第二次就拒掉
+    for (let i = 0; i < 3; i += 1) {
+      expect((await post('/api/chat/conversations', {})).status, `第 ${i + 1} 次`).toBe(200)
+    }
+  })
+
+  it('请求体不同也照样通过 —— 摘要是按实际字节算的', async () => {
+    // 签名覆盖请求体摘要。host 若对着一份和实际发出去的不同的字节算摘要
+    // （比如重新 stringify 了一次），带 body 的请求就会全部失败，而空 body
+    // 的照样成功 —— 那种失配极难定位，所以专门要一条带 body 的
+    const response = await post('/api/chat/messages/history', { peerId: '不存在的人' })
+    expect(response.status).not.toBe(401)
   })
 })
 
