@@ -39,6 +39,7 @@ import {
 import { createPortal } from 'react-dom'
 
 import styles from './ChatDrawer.module.css'
+import { VisibilityPicker } from './VisibilityPicker.js'
 
 /*
  * 存储键带版本后缀。
@@ -225,6 +226,9 @@ export function ChatDrawer(props: ChatDrawerProps): ReactElement {
       createElement(
         'div',
         { className: styles['headerActions'] },
+        // 可见性放在头部而不是设置面板深处：这是一个会被临时切换的开关
+        // （要专心一会儿就隐身），埋进三层设置里的开关等于没有
+        createElement(VisibilityPicker, {}),
         createElement(
           'button',
           {
