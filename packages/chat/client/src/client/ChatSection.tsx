@@ -35,6 +35,7 @@ import { Composer } from './Composer.js'
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
 import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage } from './MessageView.js'
+import { useEventStream } from './useEventStream.js'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
 const SPLIT_THRESHOLD = 640
@@ -148,6 +149,10 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  // 选中会话放进 ref 供事件回调读。放进依赖数组的话，每切一次会话就会
+  // 重建一次 SSE 连接 —— 而重建意味着丢掉订阅并重来
+  const selectedRef = useRef<string | undefined>(undefined)
+  selectedRef.current = selectedId
 
   const split = (props.width ?? SPLIT_THRESHOLD) >= SPLIT_THRESHOLD
 
@@ -181,6 +186,21 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     })
     setMessages(data.messages)
   }, [])
+
+  // SSE 只送「有新东西了」，正文走权威接口拉 —— 那条路径上才有完整的
+  // 权限判定。所以这里收到事件只是刷新，不直接把推送内容渲染出来
+  const stream = useEventStream({
+    enabled: state.kind === 'ready',
+    onEvent: (event) => {
+      void loadConversations()
+      const open = selectedRef.current
+      // 只有当前打开的会话才拉消息。不加这个判断的话，一个热闹的组织
+      // 会让每条消息都触发一次全量历史拉取
+      if (open !== undefined && (event.peerId === undefined || event.peerId === open)) {
+        void loadMessages(open)
+      }
+    },
+  })
 
   useEffect(() => {
     void loadConversations()
@@ -383,7 +403,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
           { className: styles['messages'], ref: scrollRef },
           createElement(MessageView, {
             messages: displayed,
-            streamState: props.streamState ?? 'connected',
+            // 外部传入的优先（设置面板里那个是静态预览），否则用真实连接状态。
+            // §4：事件流断开必须显式呈现，不能表现为静默停止刷新
+            streamState: props.streamState ?? stream.state,
           }),
         ),
     selectedId === undefined || props.composer === false
