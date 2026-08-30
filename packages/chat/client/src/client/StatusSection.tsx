@@ -11,6 +11,8 @@
 
 import { createElement, type ReactElement } from 'react'
 
+import { ChatSection } from './ChatSection.js'
+
 import styles from './StatusSection.module.css'
 
 /** 一项能力的就绪状态。取值与 TODO.md 中的阶段状态一致。 */
@@ -51,6 +53,9 @@ export function StatusSection(props: StatusSectionProps): ReactElement {
       { className: styles['summary'] },
       `协议版本 v${props.protocolVersion} · 数据库 schema v${props.schemaVersion}`,
     ),
+    // 会话界面放在能力表之前 —— 用户来这个分区是为了聊天，
+    // 能力表是给开发者看的诊断信息，不该占据第一屏
+    createElement(ChatSection, {}),
     createElement(
       'ul',
       { className: styles['list'] },
