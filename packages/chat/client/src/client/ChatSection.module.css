@@ -4,11 +4,11 @@
   display: grid;
   grid-template-columns: minmax(180px, 34%) 1fr;
   gap: 12px;
-  /* 设置面板里高度有限；给一个固定高度让两栏各自滚动，
-     而不是把整个设置页撑长 */
-  height: 420px;
-  border: 1px solid var(--dsh-color-border, #e0e0e0);
-  border-radius: 8px;
+  /* 填满容器而不是写死高度 —— 同一个组件既要放进设置面板（外面套一个
+     有界高度的盒子），也要放进右侧抽屉（占满剩余高度）。写死 420px 的话
+     在抽屉里就会只占上面一小块，下面空一大片。 */
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 

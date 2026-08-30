@@ -62,3 +62,12 @@
   color: var(--dsh-color-text-secondary, #666);
   font-size: 12px;
 }
+
+/* 设置面板里的聊天区：给一个有界高度，免得把整个设置页撑长。
+   高度约束在这里而不在 ChatSection 里 —— 同一个组件在抽屉里要占满剩余空间。 */
+.chatBox {
+  height: 420px;
+  border: 1px solid var(--dsh-color-border, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+}
