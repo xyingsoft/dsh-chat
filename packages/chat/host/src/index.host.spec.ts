@@ -76,3 +76,58 @@ it('未注册的路径返回 404 而不是被前缀匹配吞掉', async () => {
 
   expect(response.status).toBe(404)
 })
+
+it('ROUTE_PATHS 里的每一条都真的注册了', async () => {
+  // 这条是补上一次白屏事故的：处理器全都写好、端点测试全都通过，但插件的
+  // apply() 里只注册了 /health，浏览器一调 /api/chat/conversations 就落空。
+  //
+  // 「处理器行为对」与「插件把它挂上去了」是两件事，各自要有断言。
+  await ctx.plugin(hostPlugin, {
+    organizationId: 'org-1',
+    localAccountId: 'jia',
+    databasePath: ':memory:',
+  })
+
+  for (const path of hostPlugin.ROUTE_PATHS) {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: 'POST',
+      headers: { origin: baseUrl, 'content-type': 'application/json' },
+      body: '{}',
+    })
+    // 判据不能是状态码：空请求体会让多数端点合法地返回
+    // NOT_FOUND_OR_FORBIDDEN，那也是 404，与「路由不存在」的 404 撞了。
+    //
+    // 真正区分两者的是响应本身 —— 已注册的路由由我们的 commandHandler 应答，
+    // 一定带 JSON content-type；未注册的路径由 web server 兜底，body 是空的
+    expect(response.headers.get('content-type'), `${path} 未注册`).toContain('application/json')
+    await response.body?.cancel()
+  }
+})
+
+it('未配置本地身份时一律未认证，不是默认放行', async () => {
+  await ctx.plugin(hostPlugin, { databasePath: ':memory:' })
+
+  const response = await fetch(`${baseUrl}${hostPlugin.CHAT_API_PREFIX}/conversations`, {
+    method: 'POST',
+    headers: { origin: baseUrl, 'content-type': 'application/json' },
+    body: '{}',
+  })
+  expect(response.status).toBe(401)
+})
+
+it('卸载后全部路由一并撤销', async () => {
+  const fiber = await ctx.plugin(hostPlugin, {
+    organizationId: 'org-1',
+    localAccountId: 'jia',
+    databasePath: ':memory:',
+  })
+  await fiber.dispose()
+
+  for (const path of hostPlugin.ROUTE_PATHS) {
+    const response = await fetch(`${baseUrl}${path}`, { method: 'POST', body: '{}' })
+    expect(response.status, `${path} 卸载后仍在`).toBe(404)
+    // 同上：卸载后应当落到 web server 的兜底，而不是我们的处理器
+    expect(response.headers.get('content-type'), `${path} 卸载后仍有处理器`).toBeNull()
+    await response.body?.cancel()
+  }
+})

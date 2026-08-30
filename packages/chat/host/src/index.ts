@@ -5,11 +5,17 @@
  * 与 relay 的唯一入口，负责本地持久化缓存、保存设备凭证、运行 relay 客户端、发送在线
  * 心跳，并向浏览器提供同源 API。浏览器不直接与 relay 通信。
  *
- * 本文件目前只建立插件骨架与一个健康检查路由，用于验证插件能被 DSH 正确装载与卸载。
- * 业务路由随对应实现阶段加入。
+ * ## 这里注册的路由才是真正生效的那一份
+ *
+ * 各端点的测试自己起 `WebServer` 并注册路由 —— 那验证的是**处理器的行为**。
+ * 处理器写好了不等于插件把它挂上去了：这个文件长期只注册了 `/health`，
+ * 于是浏览器端一调 `/api/chat/conversations` 就拿不到东西，界面白屏。
+ *
+ * 所以路由表在下面集中列出，并由 `ROUTE_PATHS` 导出供测试逐条核对。
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { join } from 'node:path'
 
 import type { Context } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
@@ -20,8 +26,38 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 
 import type { HealthResponse } from '@dsh-chat/contract'
 
+import {
+  ackMessagesHandler,
+  conversationsHandler,
+  editMessageHandler,
+  messageHistoryHandler,
+  pullMessagesHandler,
+  revokeMessageHandler,
+  sendMessageHandler,
+  type MessageCommandDeps,
+  type Principal,
+} from './routes/message-commands.js'
+import {
+  acceptMembershipHandler,
+  createOrganizationHandler,
+  createProjectHandler,
+  createWorkspaceHandler,
+  inviteMemberHandler,
+  myMembershipsHandler,
+  type OrganizationCommandDeps,
+} from './routes/organization-commands.js'
+import {
+  addDependencyHandler,
+  assignWorkItemHandler,
+  createWorkItemHandler,
+  inboxHandler,
+  type WorkspaceCommandDeps,
+} from './routes/workspace-commands.js'
+import { ChatDatabaseService } from './storage/service.js'
+
 /** host 路由的同源前缀。§4 规定浏览器只与 `/api/chat` 和 `/api/organization` 通信。 */
 export const CHAT_API_PREFIX = '/api/chat'
+export const ORGANIZATION_API_PREFIX = '/api/organization'
 
 export const name = 'dsh-chat-host'
 
@@ -41,6 +77,16 @@ export interface Config {
    * 见 docs/04-roadmap/03-iteration-plan.md §44.1。
    */
   organizationId?: string
+  /** 本地数据库路径。缺省落在进程工作目录下。 */
+  databasePath?: string
+  /**
+   * 单机模式下的本地身份。
+   *
+   * `P0-a` 还没有设备会话与 token（属 `P0-b`），因此这里用配置里的账号直接充当
+   * 已认证主体。**这是一个明确的临时口子**，边界写在 `authenticateFrom` 上。
+   */
+  localAccountId?: string
+  localDeviceId?: string
 }
 
 /**
@@ -51,23 +97,120 @@ export interface Config {
  */
 export const Config: Schema<Config> = Schema.object({
   organizationId: Schema.string(),
+  databasePath: Schema.string(),
+  localAccountId: Schema.string(),
+  localDeviceId: Schema.string(),
 })
 
-export function apply(ctx: Context, _config: Config = {}): void {
+/**
+ * 从请求解析调用者。
+ *
+ * **`P0-a` 的临时实现**：桌面端是单用户本机进程，浏览器就是本机的渲染进程，
+ * 所以这里直接返回配置里的本地身份。真正的设备会话（access token 加 §7.1 的
+ * 请求签名）属 `P0-b` —— 校验侧已经在 `request-signing.ts` 实现，缺的是会话
+ * 建立与 token 下发。
+ *
+ * 之所以不先接一个「假 token」：假 token 会让调用方以为认证已经存在，而它挡不住
+ * 任何人。写成显式的本地身份，边界一眼可见。
+ *
+ * **没配就一律未认证** —— 默认拒绝，不是默认放行。
+ */
+function authenticateFrom(config: Config): (request: IncomingMessage) => Principal | undefined {
+  const { organizationId, localAccountId } = config
+  const deviceId = config.localDeviceId ?? 'local-device'
+  if (organizationId === undefined || localAccountId === undefined) return () => undefined
+  return () => ({ accountId: localAccountId, deviceId, organizationId })
+}
+
+/** 路由清单。与 `apply` 中注册的集合由 `buildRoutes` 保证一致。 */
+export const ROUTE_PATHS: readonly string[] = [
+  `${CHAT_API_PREFIX}/health`,
+  `${CHAT_API_PREFIX}/messages`,
+  `${CHAT_API_PREFIX}/messages/pull`,
+  `${CHAT_API_PREFIX}/messages/ack`,
+  `${CHAT_API_PREFIX}/messages/edit`,
+  `${CHAT_API_PREFIX}/messages/revoke`,
+  `${CHAT_API_PREFIX}/messages/history`,
+  `${CHAT_API_PREFIX}/conversations`,
+  `${CHAT_API_PREFIX}/work-items`,
+  `${CHAT_API_PREFIX}/work-items/assign`,
+  `${CHAT_API_PREFIX}/work-items/dependencies`,
+  `${CHAT_API_PREFIX}/notifications`,
+  ORGANIZATION_API_PREFIX,
+  `${ORGANIZATION_API_PREFIX}/workspaces`,
+  `${ORGANIZATION_API_PREFIX}/projects`,
+  `${ORGANIZATION_API_PREFIX}/members/invite`,
+  `${ORGANIZATION_API_PREFIX}/members/accept`,
+  `${ORGANIZATION_API_PREFIX}/members/me`,
+]
+
+type RouteHandler = (request: IncomingMessage, response: ServerResponse) => void
+
+function healthHandler(_request: IncomingMessage, response: ServerResponse): void {
+  const body: HealthResponse = { status: 'ok', plugin: name }
+  response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+  response.end(JSON.stringify(body))
+}
+
+export function apply(ctx: Context, config: Config = {}): void {
+  const database = new ChatDatabaseService(ctx, {
+    location: config.databasePath ?? join(process.cwd(), 'dsh-chat.db'),
+  })
+
+  // 同源判定用 web server 自己的地址。写死或从配置读都会让「同源」这个词失去
+  // 意义 —— 它必须就是浏览器实际访问的那个 origin
+  const expectedOrigin = `http://127.0.0.1:${ctx.webServer.port}`
+  const authenticate = authenticateFrom(config)
+  const now = (): Date => new Date()
+  let idCounter = 0
+  const newId = (prefix: string): string => `${prefix}-${Date.now()}-${(idCounter += 1)}`
+
+  const messageDeps: MessageCommandDeps = {
+    database,
+    expectedOrigin,
+    authenticate,
+    // 队列容量属版本化的 PlanLimits，此处取基线；组织策略化属 P0-b（§30.1）
+    queueCapacity: 1000,
+    leaseMs: 60_000,
+    now,
+  }
+  const shared = { database, expectedOrigin, authenticate, now, newId }
+  const workspaceDeps: WorkspaceCommandDeps = shared
+  const organizationDeps: OrganizationCommandDeps = shared
+
+  const handlers: Readonly<Record<string, RouteHandler>> = {
+    [`${CHAT_API_PREFIX}/health`]: healthHandler,
+    [`${CHAT_API_PREFIX}/messages`]: sendMessageHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/messages/pull`]: pullMessagesHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/messages/ack`]: ackMessagesHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/messages/edit`]: editMessageHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/messages/revoke`]: revokeMessageHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/messages/history`]: messageHistoryHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/conversations`]: conversationsHandler(messageDeps),
+    [`${CHAT_API_PREFIX}/work-items`]: createWorkItemHandler(workspaceDeps),
+    [`${CHAT_API_PREFIX}/work-items/assign`]: assignWorkItemHandler(workspaceDeps),
+    [`${CHAT_API_PREFIX}/work-items/dependencies`]: addDependencyHandler(workspaceDeps),
+    [`${CHAT_API_PREFIX}/notifications`]: inboxHandler(workspaceDeps),
+    [ORGANIZATION_API_PREFIX]: createOrganizationHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/workspaces`]: createWorkspaceHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/projects`]: createProjectHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members/invite`]: inviteMemberHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members/accept`]: acceptMembershipHandler(organizationDeps),
+    [`${ORGANIZATION_API_PREFIX}/members/me`]: myMembershipsHandler(organizationDeps),
+  }
+
   // 所有 Cordis 注册通过 ctx.effect() 完成并返回 disposer；插件卸载后不得残留
   // 路由、后台任务或事件监听（§48 编码规范）。
-  ctx.effect(
-    () =>
-      ctx.webServer.register({
-        kind: 'exact',
-        path: `${CHAT_API_PREFIX}/health`,
-        handler: (_request: IncomingMessage, response: ServerResponse) => {
-          const body: HealthResponse = { status: 'ok', plugin: name }
-          response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
-          response.end(JSON.stringify(body))
-        },
-      }),
-    `${name}: health route`,
-  )
+  for (const path of ROUTE_PATHS) {
+    const handler = handlers[path]
+    // ROUTE_PATHS 与 handlers 必须一一对应。少一个就静默不注册，
+    // 而那正是这次白屏的成因 —— 宁可启动失败
+    if (handler === undefined) throw new Error(`路由 ${path} 没有对应的处理器`)
+    ctx.effect(
+      () => ctx.webServer.register({ kind: 'exact', path, handler }),
+      `${name}: route ${path}`,
+    )
+  }
 }
+
 export * from './rate-limit.js'
