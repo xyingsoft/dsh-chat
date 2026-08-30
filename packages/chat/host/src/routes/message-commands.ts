@@ -60,6 +60,19 @@ export interface MessageCommandDeps {
    * 应该表现为「管理员撤不了别人的消息」，而不是「谁都能撤别人的消息」。
    */
   readonly authorizeCompliance?: (db: DatabaseSync, principal: Principal) => boolean
+  /**
+   * SSE 事件枢纽。发消息成功后推一条提示给收件人与发送者的其他设备。
+   *
+   * 可选：不给就只是没有推送，界面靠轮询/重新打开会话刷新 —— SSE 是加速
+   * 而不是数据通路，缺了它功能不残。
+   */
+  readonly events?: {
+    publish(
+      organizationId: string,
+      accountId: string,
+      event: { id: string; type: string; data: unknown },
+    ): number
+  }
 }
 
 interface SendBody {
@@ -123,7 +136,12 @@ export function sendMessageHandler(deps: MessageCommandDeps) {
         ...(errorCode === undefined ? {} : { errorCode }),
       })
 
-      return deps.database.transaction((db) => {
+      type SendOutcome =
+        | { ok: true; value: { deliverySeq: number }; replay: boolean }
+        | { ok: false; errorCode: ErrorCode }
+      // 显式标注：`transaction<T>` 的 T 推不出来（回调的返回类型是联合），
+      // 不标就是 unknown，后面每个字段访问都要断言
+      const committed = deps.database.transaction<SendOutcome>((db) => {
         const gate = checkDirectMessageGate(db, {
           organizationId: principal.organizationId,
           senderId: principal.accountId,
@@ -160,8 +178,31 @@ export function sendMessageHandler(deps: MessageCommandDeps) {
         if (!accepted.idempotentReplay) {
           recordAuditEvent(db, audit('succeeded'))
         }
-        return { ok: true as const, value: { deliverySeq: accepted.deliverySeq } }
+        return {
+          ok: true as const,
+          value: { deliverySeq: accepted.deliverySeq },
+          replay: accepted.idempotentReplay === true,
+        }
       })
+
+      // §26 的顺序：**提交后**才异步投递。放进事务里的话，事务回滚了推送
+      // 却已经发出去 —— 收件人会收到一条查不到的消息通知
+      if (committed.ok && !committed.replay) {
+        // 推给收件人，也推给发送者自己的其他设备 —— 在另一台机器上打开的
+        // 同一个会话应当跟着更新，否则用户会以为那台机器坏了
+        for (const accountId of [body.recipientId, principal.accountId]) {
+          deps.events?.publish(principal.organizationId, accountId, {
+            id: body.messageId,
+            type: 'message.accepted',
+            // 不推正文。SSE 是**加速而不是数据通路** —— 客户端收到提示后走
+            // 权威接口拉，那条路径上才有完整的权限判定
+            data: { peerId: accountId === body.recipientId ? principal.accountId : body.recipientId },
+          })
+        }
+      }
+      return committed.ok
+        ? { ok: true as const, value: committed.value }
+        : { ok: false as const, errorCode: committed.errorCode }
     },
   })
 }

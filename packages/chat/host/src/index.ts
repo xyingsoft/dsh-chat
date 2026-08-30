@@ -60,6 +60,7 @@ import {
   signOutHandler as identitySignOutHandler,
   type IdentityRouteDeps,
 } from './routes/identity-commands.js'
+import { EventStreamHub, eventStreamHandler } from './routes/event-stream.js'
 import { CredentialStore } from './identity/credentials.js'
 import { RelayClient } from './relay/client.js'
 import { relayProxyHandler } from './relay/proxy.js'
@@ -194,6 +195,7 @@ export const ROUTE_PATHS: readonly string[] = [
   `${CHAT_API_PREFIX}/work-items/assign`,
   `${CHAT_API_PREFIX}/work-items/dependencies`,
   `${CHAT_API_PREFIX}/notifications`,
+  `${CHAT_API_PREFIX}/events`,
   // 身份三件套。**始终由本地处理，永不转发** —— 见 apply 里的说明
   `${CHAT_API_PREFIX}/identity/status`,
   `${CHAT_API_PREFIX}/identity/enroll`,
@@ -217,6 +219,10 @@ export const ROUTE_PATHS: readonly string[] = [
  */
 const LOCAL_ONLY_PATHS: ReadonlySet<string> = new Set([
   `${CHAT_API_PREFIX}/health`,
+  // SSE 是一条长连接，`relayProxyHandler` 那套「转发一次请求、读完整个应答」
+  // 的模型套不上去 —— 套上去会一直挂到超时。relay 侧的事件推送要等 outbox
+  // 消费接通，那时候这里换成一条 host↔relay 的长连接，而不是逐请求转发
+  `${CHAT_API_PREFIX}/events`,
   `${CHAT_API_PREFIX}/identity/status`,
   `${CHAT_API_PREFIX}/identity/enroll`,
   `${CHAT_API_PREFIX}/identity/sign-out`,
@@ -247,6 +253,12 @@ export function apply(ctx: Context, config: Config = {}): void {
   let idCounter = 0
   const newId = (prefix: string): string => `${prefix}-${Date.now()}-${(idCounter += 1)}`
 
+  // SSE 连接不是持久状态：进程重启后为空，客户端重连并从游标补拉
+  const events = new EventStreamHub()
+  // §48：卸载后不得残留后台任务或连接。不关的话，重载插件会留下一批
+  // 永远不会被写入的 ServerResponse，浏览器那边表现为流卡住不动
+  ctx.effect(() => () => events.closeAll(), `${name}: event stream hub`)
+
   const messageDeps: MessageCommandDeps = {
     database,
     expectedOrigin,
@@ -255,6 +267,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     queueCapacity: 1000,
     leaseMs: 60_000,
     now,
+    events,
   }
   const shared = { database, expectedOrigin, authenticate, now, newId }
   const workspaceDeps: WorkspaceCommandDeps = shared
@@ -282,6 +295,15 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${CHAT_API_PREFIX}/work-items/assign`]: assignWorkItemHandler(workspaceDeps),
     [`${CHAT_API_PREFIX}/work-items/dependencies`]: addDependencyHandler(workspaceDeps),
     [`${CHAT_API_PREFIX}/notifications`]: inboxHandler(workspaceDeps),
+    [`${CHAT_API_PREFIX}/events`]: eventStreamHandler({
+      hub: events,
+      authenticate,
+      // 游标目前恒为 '0'：收件箱游标属 §17.1 的补拉机制，那一块还没接。
+      // 发一个恒定值而不是省略这个字段 —— 客户端的契约里它是必有的，
+      // 少一个字段会让客户端走到「应答形状不对」那条分支
+      cursorOf: () => '0',
+      now,
+    }),
     [`${CHAT_API_PREFIX}/identity/status`]: enrollmentStatusHandler(identityDeps),
     [`${CHAT_API_PREFIX}/identity/enroll`]: enrollHandler(identityDeps),
     [`${CHAT_API_PREFIX}/identity/sign-out`]: identitySignOutHandler(identityDeps),
