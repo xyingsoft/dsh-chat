@@ -54,6 +54,8 @@ import {
   inboxHandler,
   type WorkspaceCommandDeps,
 } from './routes/workspace-commands.js'
+import { RelayClient } from './relay/client.js'
+import { relayProxyHandler } from './relay/proxy.js'
 import { ChatDatabaseService } from './storage/service.js'
 
 /** host 路由的同源前缀。§4 规定浏览器只与 `/api/chat` 和 `/api/organization` 通信。 */
@@ -88,6 +90,15 @@ export interface Config {
    */
   localAccountId?: string
   localDeviceId?: string
+  /**
+   * relay 基地址。**配了就走 relay，不配就走本地库。**
+   *
+   * 不做成「配了也优先本地、失败再回落 relay」那种自动降级 —— §41 明确禁止
+   * 静默降级，而「有时读本地有时读远端」正是最难排查的那一类不一致。
+   */
+  relayUrl?: string
+  /** relay 的部署期共享密钥。见 `RelayClient` 上关于它不是设备身份的说明。 */
+  relaySharedSecret?: string
 }
 
 /**
@@ -101,6 +112,8 @@ export const Config: Schema<Config> = Schema.object({
   databasePath: Schema.string(),
   localAccountId: Schema.string(),
   localDeviceId: Schema.string(),
+  relayUrl: Schema.string(),
+  relaySharedSecret: Schema.string(),
 })
 
 /**
@@ -202,10 +215,25 @@ export function apply(ctx: Context, config: Config = {}): void {
     [`${ORGANIZATION_API_PREFIX}/members/me`]: myMembershipsHandler(organizationDeps),
   }
 
+  // relay 模式：配了地址就把业务路由换成转发。
+  //
+  // 只换业务路由，`/health` 仍由本地应答 —— 它报的是「这个插件活着」，
+  // 不是「relay 活着」，混为一谈会让 relay 挂掉时健康检查也跟着挂，
+  // 分不清是插件问题还是后端问题。
+  const relay = createRelayClient(config)
+  if (relay !== undefined) {
+    // 装载时协商一次。不 await —— relay 慢或不可达不该阻塞插件装载，
+    // 那会让用户连设置面板都打不开。未协商完成前的调用会拿到可重试的 503
+    void relay.connect()
+  }
+
   // 所有 Cordis 注册通过 ctx.effect() 完成并返回 disposer；插件卸载后不得残留
   // 路由、后台任务或事件监听（§48 编码规范）。
   for (const path of ROUTE_PATHS) {
-    const handler = handlers[path]
+    const handler =
+      relay !== undefined && path !== `${CHAT_API_PREFIX}/health`
+        ? relayProxyHandler({ relay, expectedOrigin, authenticate }, path)
+        : handlers[path]
     // ROUTE_PATHS 与 handlers 必须一一对应。少一个就静默不注册，
     // 而那正是这次白屏的成因 —— 宁可启动失败
     if (handler === undefined) throw new Error(`路由 ${path} 没有对应的处理器`)
@@ -216,4 +244,20 @@ export function apply(ctx: Context, config: Config = {}): void {
   }
 }
 
+/**
+ * 按配置决定要不要走 relay。
+ *
+ * 地址与密钥**必须成对出现**：只配地址就连不上（relay 不配密钥拒绝一切请求），
+ * 只配密钥没有意义。缺一个就当没配 relay，走本地库 —— 而不是带着半份配置
+ * 去连一个必然失败的地址。
+ */
+function createRelayClient(config: Config): RelayClient | undefined {
+  const { relayUrl, relaySharedSecret } = config
+  if (relayUrl === undefined || relayUrl.length === 0) return undefined
+  if (relaySharedSecret === undefined || relaySharedSecret.length === 0) return undefined
+  return new RelayClient({ baseUrl: relayUrl.replace(/\/$/, ''), sharedSecret: relaySharedSecret })
+}
+
+export { RelayClient } from './relay/client.js'
+export type { RelayState } from './relay/client.js'
 export * from './rate-limit.js'
