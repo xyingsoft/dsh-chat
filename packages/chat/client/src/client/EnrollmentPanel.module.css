@@ -1,0 +1,82 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5）。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 抽屉窄到 300px 也要能填完，所以不设最小宽度，只限最大 —— 宽版下
+     一行输入框拉到 900px 长是没法看的 */
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #1f2328);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.input {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  color: var(--dsw-alias-label-primary, #1f2328);
+  font: inherit;
+  font-size: 13px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary, #4f6ef7);
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dsw-alias-status-error, #d93025);
+}
+
+.submit {
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: var(--dsw-alias-brand-primary, #4f6ef7);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  /* 灰掉而不是隐藏：按钮消失会让人以为界面坏了，灰着至少说明「还差点什么」 */
+  opacity: 0.5;
+  cursor: not-allowed;
+}

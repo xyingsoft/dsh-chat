@@ -15,6 +15,8 @@
 
 import { createElement, type ReactElement } from 'react'
 
+import type { PresenceState } from '../presentation.js'
+
 import styles from './ConversationList.module.css'
 
 export interface ConversationSummary {
@@ -29,6 +31,13 @@ export interface ConversationSummary {
   /** ISO 8601。格式化在渲染时做，不改变数据。 */
   readonly lastActivityAt: string
   readonly unreadCount: number
+  /**
+   * 对方的在线状态。
+   *
+   * 缺省为 `unknown` —— 「还没查到」和「查到了但不知道」在界面上是同一回事：
+   * 都不该显示一个绿点。
+   */
+  readonly presence?: PresenceState
 }
 
 export interface ConversationListProps {
@@ -49,6 +58,35 @@ export interface ConversationListProps {
 function defaultFormatTime(iso: string): string {
   const match = /^\d{4}-(\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
   return match === null ? iso : `${match[1]} ${match[2]}`
+}
+
+/** 在线状态的文字说明。§49 要求颜色不作为唯一状态信号。 */
+const PRESENCE_LABEL: Readonly<Record<PresenceState, string>> = {
+  online: '在线',
+  idle: '空闲',
+  offline: '离线',
+  unknown: '状态未知',
+}
+
+/**
+ * 状态点。
+ *
+ * §49：「**颜色不作为唯一状态信号**（投递状态、风险状态、在线状态都必须有
+ * 文本或图标）」。所以每个点都带 `title` 与 `aria-label`，形状也随状态变
+ * （在线是实心、空闲是空心、离线与未知不画点）—— 色觉障碍或黑白截图下
+ * 仍然分得出来。
+ *
+ * `unknown` 与 `offline` 都不画点，但读屏读到的文字不同：前者是「状态未知」，
+ * 后者是「离线」。把它们画成同一个东西会让隐藏了状态的人看起来像离线，
+ * 而那是替对方撒谎。
+ */
+function presenceDot(state: PresenceState): ReactElement {
+  return createElement('span', {
+    className: [styles['presence'], styles[`presence_${state}`]].filter(Boolean).join(' '),
+    title: PRESENCE_LABEL[state],
+    'aria-label': PRESENCE_LABEL[state],
+    role: 'img',
+  })
 }
 
 export function ConversationList(props: ConversationListProps): ReactElement {
@@ -84,7 +122,12 @@ export function ConversationList(props: ConversationListProps): ReactElement {
                 .join(' '),
               onClick: () => props.onSelect(conversation.conversationId),
             },
-            createElement('span', { className: styles['name'] }, conversation.title),
+            createElement(
+              'span',
+              { className: styles['name'] },
+              presenceDot(conversation.presence ?? 'unknown'),
+              conversation.title,
+            ),
             createElement('span', { className: styles['preview'] }, conversation.preview),
             createElement(
               'span',

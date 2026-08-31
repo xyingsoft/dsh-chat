@@ -119,3 +119,34 @@
 .retry:hover {
   background: var(--dsw-alias-bg-layer-3, #f0f1f3);
 }
+
+/* 「会话 / 通讯录」切换。放在侧栏顶部而不是抽屉头部：抽屉头部已经有
+   可见性下拉和两个按钮，再塞两个标签会挤成一团；而这两个标签切换的是
+   侧栏的内容，放在它上面语义也更直白。 */
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  color: var(--dsw-alias-label-primary, #1f2328);
+  font-weight: 600;
+}

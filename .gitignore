@@ -27,3 +27,12 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# 测试与手动运行留下的本地库。曾经被误提交（#31）——
+# 里面只有 schema_migrations，没有个人数据，但它每跑一次测试就变一次，
+# 把工作区弄脏，也让「有没有改动」这个信号失去意义
+dsh-chat.db
+dsh-chat.db-journal
+dsh-chat.db-wal
+dsh-chat.db-shm
+dsh-chat.credentials.json

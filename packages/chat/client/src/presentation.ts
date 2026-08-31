@@ -14,6 +14,10 @@
 
 import { ERROR_CATALOGUE, type ErrorCode, type Retryability } from '@dsh-chat/contract'
 
+// 在线状态的取值由契约定义（PRESENCE_STATES），这里只是转出去让界面层
+// 不必直接依赖 contract —— 客户端包对 contract 的依赖越窄越好
+export type { PresenceState } from '@dsh-chat/contract'
+
 /**
  * 消息的本地投递态。
  *

@@ -27,6 +27,7 @@
     "@dsh-chat/audit": "workspace:^",
     "@dsh-chat/client": "workspace:^",
     "@dsh-chat/contract": "workspace:^",
+    "@dsh-chat/identity": "workspace:^",
     "@dsh-chat/messaging": "workspace:^",
     "@dsh-chat/notification": "workspace:^",
     "@dsh-chat/organization": "workspace:^",

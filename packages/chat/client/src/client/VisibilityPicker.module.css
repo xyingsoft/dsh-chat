@@ -1,0 +1,55 @@
+/* 使用 DSH 主题 token 而非硬编码颜色（§5）。 */
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.select {
+  height: 24px;
+  max-width: 132px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: var(--dsw-alias-border-l2, #e5e7eb);
+  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #4f6ef7);
+  outline-offset: 1px;
+}
+
+.unavailable {
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary, #8b93a1);
+}
+
+.error {
+  font-size: 11px;
+  color: var(--dsw-alias-status-error, #d93025);
+}
+
+/* 只给屏幕阅读器的标签。§49 要求状态变化对屏幕阅读器可感知，而这个下拉
+   在视觉上靠上下文就能理解，多一行可见文字只会挤占头部空间。 */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -97,9 +97,16 @@ it('ROUTE_PATHS 里的每一条都真的注册了', async () => {
     // 判据不能是状态码：空请求体会让多数端点合法地返回
     // NOT_FOUND_OR_FORBIDDEN，那也是 404，与「路由不存在」的 404 撞了。
     //
-    // 真正区分两者的是响应本身 —— 已注册的路由由我们的 commandHandler 应答，
-    // 一定带 JSON content-type；未注册的路径由 web server 兜底，body 是空的
-    expect(response.headers.get('content-type'), `${path} 未注册`).toContain('application/json')
+    // 真正区分两者的是响应本身 —— 已注册的路由由我们的处理器应答，一定带
+    // 一个我们自己写的 content-type；未注册的路径由 web server 兜底，
+    // body 是空的、也没有 content-type。
+    //
+    // 两种都算数：命令端点回 JSON，SSE 端点回 text/event-stream。只认 JSON
+    // 的话，新加一个流式端点就会被误判成「没注册」
+    const contentType = response.headers.get('content-type') ?? ''
+    const answeredByUs =
+      contentType.includes('application/json') || contentType.includes('text/event-stream')
+    expect(answeredByUs, `${path} 未注册（content-type: ${contentType || '无'}）`).toBe(true)
     await response.body?.cancel()
   }
 })

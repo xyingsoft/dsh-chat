@@ -28,15 +28,39 @@ import {
   type ReactElement,
 } from 'react'
 
-import { presentError, type LocalDeliveryState, type StreamState } from '../presentation.js'
+import {
+  presentError,
+  type LocalDeliveryState,
+  type PresenceState,
+  type StreamState,
+} from '../presentation.js'
 
 import styles from './ChatSection.module.css'
 import { Composer } from './Composer.js'
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
+import { DirectoryPanel } from './DirectoryPanel.js'
+import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage } from './MessageView.js'
+import { useEventStream } from './useEventStream.js'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
 const SPLIT_THRESHOLD = 640
+
+/**
+ * 心跳间隔。与 §50.3 关闭的那条决策一致（host 侧的 online 窗口是它的三倍）。
+ *
+ * 改这个数要同时看 `PRESENCE_BASELINE` —— 两边脱节的话，要么心跳太密白费
+ * 请求，要么太疏让人一直闪断。
+ */
+const HEARTBEAT_INTERVAL_MS = 30_000
+
+/**
+ * 算作「用户还在」的交互。
+ *
+ * 只听这几个，不听 `mousemove` —— 鼠标从窗口上划过不代表人在用它，而
+ * mousemove 会以每秒几十次的频率触发，把 idle 判定彻底废掉。
+ */
+const INTERACTION_EVENTS = ['keydown', 'pointerdown', 'focus'] as const
 
 interface RemoteConversation {
   readonly peerId: string
@@ -116,6 +140,13 @@ async function callHost<T>(path: string, body: unknown): Promise<T> {
 type LoadState =
   | { readonly kind: 'loading' }
   | { readonly kind: 'ready' }
+  /**
+   * 配了 relay 但本机还没开户。
+   *
+   * 与「没有会话」是两回事，所以是一个独立状态而不是空列表 —— 空列表长得像
+   * 「你还没有会话」，而实际情况是「你还没有账号」，下一步动作完全不同。
+   */
+  | { readonly kind: 'unenrolled' }
   /** 加载失败。**必须显式呈现**，不能表现为一直空着（§5）。 */
   | { readonly kind: 'failed'; readonly errorCode: string }
 
@@ -139,12 +170,31 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
+  const [presence, setPresence] = useState<Readonly<Record<string, PresenceState>>>({})
+  // 「会话」与「通讯录」。在有通讯录之前，界面上没有任何办法开始一段新
+  // 对话 —— 会话列表只显示已有的，而已有的要靠别人先发消息产生
+  const [tab, setTab] = useState<'chats' | 'directory'>('chats')
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  // 选中会话放进 ref 供事件回调读。放进依赖数组的话，每切一次会话就会
+  // 重建一次 SSE 连接 —— 而重建意味着丢掉订阅并重来
+  const selectedRef = useRef<string | undefined>(undefined)
+  selectedRef.current = selectedId
 
   const split = (props.width ?? SPLIT_THRESHOLD) >= SPLIT_THRESHOLD
 
   const loadConversations = useCallback(async () => {
     try {
+      // 先问开户状态。跳过这一步直接拉会话的话，未开户时拿到的是一个
+      // 认证错误 —— 界面会显示「出错了，重试」，而重试一百次也不会成功，
+      // 真正要做的是开户
+      const status = await callHost<{ mode: 'local' | 'enrolled' | 'unenrolled' }>(
+        '/api/chat/identity/status',
+        {},
+      )
+      if (status.mode === 'unenrolled') {
+        setState({ kind: 'unenrolled' })
+        return
+      }
       const data = await callHost<{ conversations: RemoteConversation[] }>(
         '/api/chat/conversations',
         {},
@@ -163,9 +213,71 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     setMessages(data.messages)
   }, [])
 
+  // SSE 只送「有新东西了」，正文走权威接口拉 —— 那条路径上才有完整的
+  // 权限判定。所以这里收到事件只是刷新，不直接把推送内容渲染出来
+  const stream = useEventStream({
+    enabled: state.kind === 'ready',
+    onEvent: (event) => {
+      void loadConversations()
+      const open = selectedRef.current
+      // 只有当前打开的会话才拉消息。不加这个判断的话，一个热闹的组织
+      // 会让每条消息都触发一次全量历史拉取
+      if (open !== undefined && (event.peerId === undefined || event.peerId === open)) {
+        void loadMessages(open)
+      }
+    },
+  })
+
   useEffect(() => {
     void loadConversations()
   }, [loadConversations])
+
+  // 心跳。§9.1 说的是「host 是否仍在运行」，所以真正的心跳在 host 进程里；
+  // 浏览器这一趟只负责报告**用户交互时间** —— 那是它知道而 host 不知道的
+  // 信息，也是 online 与 idle 的唯一分界
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    let lastInteractionAt = new Date().toISOString()
+    const touch = (): void => {
+      lastInteractionAt = new Date().toISOString()
+    }
+    for (const type of INTERACTION_EVENTS) {
+      window.addEventListener(type, touch, { passive: true })
+    }
+
+    const beat = (): void => {
+      // 失败静默：心跳打不通不该在界面上报错。连接真的断了会由 SSE 那一路
+      // 显式呈现，两处都报就是同一件事说两遍
+      void callHost('/api/chat/presence/heartbeat', { lastInteractionAt }).catch(() => {})
+    }
+    beat()
+    const timer = setInterval(beat, HEARTBEAT_INTERVAL_MS)
+    return () => {
+      clearInterval(timer)
+      for (const type of INTERACTION_EVENTS) window.removeEventListener(type, touch)
+    }
+  }, [state.kind])
+
+  // 会话列表变了就查一次在线状态。跟着列表走而不是自己定时轮询 ——
+  // 列表不变时对方的状态最多差一个心跳周期，而那正是这个数据的精度上限
+  useEffect(() => {
+    if (conversations.length === 0) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const data = await callHost<{ presence: Record<string, PresenceState> }>(
+          '/api/chat/presence',
+          { accountIds: conversations.map((c) => c.peerId) },
+        )
+        if (!cancelled) setPresence(data.presence)
+      } catch {
+        // 查不到就维持上一次的结果。清空会让所有人在网络抖一下时集体「消失」
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [conversations])
 
   // 打开会话：拉消息 + 标记已读。
   // 标记已读放在这里而不是点击回调里 —— 组织切换或外部改选中时也要生效
@@ -247,6 +359,17 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     )
   }
 
+  if (state.kind === 'unenrolled') {
+    return createElement(EnrollmentPanel, {
+      onEnrolled: () => {
+        // 开完户重走一遍加载。不直接切 ready —— 会话列表还没拉过，
+        // 切过去会是一个空列表，看起来像开户没生效
+        setState({ kind: 'loading' })
+        void loadConversations()
+      },
+    })
+  }
+
   if (state.kind === 'failed') {
     const presented = presentError(state.errorCode as Parameters<typeof presentError>[0])
     return createElement(
@@ -279,6 +402,8 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     preview: c.lastMessageOutgoing ? `你：${c.preview}` : c.preview,
     lastActivityAt: c.lastActivityAt,
     unreadCount: c.unreadCount,
+    // 查不到时给 unknown 而不是 offline —— 后者是一个我们没有依据的断言
+    presence: presence[c.peerId] ?? 'unknown',
   }))
 
   const displayed: DisplayMessage[] = [
@@ -306,14 +431,53 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
       })),
   ]
 
+  const tabBar = createElement(
+    'div',
+    { className: styles['tabs'], role: 'tablist', 'aria-label': '聊天与通讯录' },
+    ...(
+      [
+        ['chats', '会话'],
+        ['directory', '通讯录'],
+      ] as const
+    ).map(([value, label]) =>
+      createElement(
+        'button',
+        {
+          key: value,
+          type: 'button',
+          role: 'tab',
+          'aria-selected': tab === value,
+          className: [styles['tab'], tab === value ? styles['tabActive'] : '']
+            .filter(Boolean)
+            .join(' '),
+          onClick: () => setTab(value),
+        },
+        label,
+      ),
+    ),
+  )
+
+  const directory = createElement(DirectoryPanel, {
+    onOpenConversation: (accountId: string) => {
+      // 切回会话并选中他。不切的话，用户点了「发消息」还停在通讯录上，
+      // 看不出发生了什么
+      setTab('chats')
+      setSelectedId(accountId)
+      void loadConversations()
+    },
+  })
+
   const list = createElement(
     'div',
     { className: styles['sidebar'] },
-    createElement(ConversationList, {
-      conversations: summaries,
-      ...(selectedId === undefined ? {} : { selectedId }),
-      onSelect: setSelectedId,
-    }),
+    tabBar,
+    tab === 'chats'
+      ? createElement(ConversationList, {
+          conversations: summaries,
+          ...(selectedId === undefined ? {} : { selectedId }),
+          onSelect: setSelectedId,
+        })
+      : directory,
   )
 
   // 单栏钻取：选中后只显示消息，否则只显示列表
@@ -353,7 +517,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
           { className: styles['messages'], ref: scrollRef },
           createElement(MessageView, {
             messages: displayed,
-            streamState: props.streamState ?? 'connected',
+            // 外部传入的优先（设置面板里那个是静态预览），否则用真实连接状态。
+            // §4：事件流断开必须显式呈现，不能表现为静默停止刷新
+            streamState: props.streamState ?? stream.state,
           }),
         ),
     selectedId === undefined || props.composer === false

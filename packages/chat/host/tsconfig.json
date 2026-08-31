@@ -15,6 +15,9 @@
       "path": "../audit"
     },
     {
+      "path": "../identity"
+    },
+    {
       "path": "../messaging"
     },
     {

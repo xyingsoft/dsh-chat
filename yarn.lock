@@ -213,6 +213,7 @@ __metadata:
     "@dsh-chat/audit": "workspace:^"
     "@dsh-chat/client": "workspace:^"
     "@dsh-chat/contract": "workspace:^"
+    "@dsh-chat/identity": "workspace:^"
     "@dsh-chat/messaging": "workspace:^"
     "@dsh-chat/notification": "workspace:^"
     "@dsh-chat/organization": "workspace:^"
@@ -224,7 +225,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dsh-chat/identity@workspace:packages/chat/identity":
+"@dsh-chat/identity@workspace:^, @dsh-chat/identity@workspace:packages/chat/identity":
   version: 0.0.0-use.local
   resolution: "@dsh-chat/identity@workspace:packages/chat/identity"
   dependencies:

@@ -314,3 +314,105 @@ export function membershipsOf(
     .all(organizationId, accountId) as Array<Record<string, string | number>>
   return rows.map(toMembership)
 }
+
+/**
+ * 列出一个组织的全部成员关系。
+ *
+ * 包含 `invited` 与 `removed` —— 管理界面要能看到「邀了还没接受」的人
+ * （否则会重复邀请）和「已移除」的记录（那是审计线索，§11.2 的移除是状态
+ * 变更而不是删行）。调用方按 `state` 自行过滤。
+ *
+ * 按 `(account_id, scope_kind)` 排序而不是插入序：管理界面按人分组显示，
+ * 排序不稳的话每次刷新条目都在跳。
+ */
+export function organizationMemberships(
+  db: DatabaseSync,
+  organizationId: string,
+): readonly Membership[] {
+  const rows = db
+    .prepare(
+      `SELECT * FROM memberships
+        WHERE organization_id = ?
+        ORDER BY account_id, scope_kind, scope_id`,
+    )
+    .all(organizationId) as Array<Record<string, string | number>>
+  return rows.map(toMembership)
+}
+
+/**
+ * 改角色。
+ *
+ * 带 `expectedVersion` 的乐观并发（§11.2）：两个管理员同时改同一个人时，
+ * 后一个拿到 `VERSION_CONFLICT` 而不是静默覆盖 —— 静默覆盖的后果是有人
+ * 以为自己把某人降级了，实际被另一次并发写盖回去。
+ *
+ * 只改 `active` 或 `invited` 的成员。已移除的改角色没有意义，而允许它会
+ * 造成一种「改完了但那人其实不在」的错觉。
+ */
+export function changeMembershipRole(
+  db: DatabaseSync,
+  input: { membershipId: string; role: Role; expectedVersion: number; now: Date },
+): Membership {
+  const result = db
+    .prepare(
+      `UPDATE memberships
+          SET role = ?, updated_at = ?, version = version + 1
+        WHERE membership_id = ? AND version = ? AND state IN ('active', 'invited')`,
+    )
+    .run(input.role, input.now.toISOString(), input.membershipId, input.expectedVersion)
+
+  if (result.changes !== 1) {
+    const current = findMembership(db, input.membershipId)
+    throw new VersionConflictError(input.expectedVersion, current?.version)
+  }
+  return findMembership(db, input.membershipId)!
+}
+
+/**
+ * 移除成员：状态转 `removed`。
+ *
+ * **不删行。** §11.2 的成员关系带版本与策略修订，审计要能回答「这个人当时
+ * 是什么角色、什么时候被谁移除的」—— 删掉行就永远答不了。已移除的成员关系
+ * 在授权判定里不算数（那一侧只认 `active`），所以留着不会放行任何东西。
+ *
+ * 重复移除返回 `VERSION_CONFLICT` 而不是静默成功：调用方拿着一个过期的
+ * 版本号来，说明它看到的不是当前状态，那种情况下让它重新读一次才对。
+ */
+export function removeMembership(
+  db: DatabaseSync,
+  input: { membershipId: string; expectedVersion: number; now: Date },
+): Membership {
+  const result = db
+    .prepare(
+      `UPDATE memberships
+          SET state = 'removed', updated_at = ?, version = version + 1
+        WHERE membership_id = ? AND version = ? AND state <> 'removed'`,
+    )
+    .run(input.now.toISOString(), input.membershipId, input.expectedVersion)
+
+  if (result.changes !== 1) {
+    const current = findMembership(db, input.membershipId)
+    throw new VersionConflictError(input.expectedVersion, current?.version)
+  }
+  return findMembership(db, input.membershipId)!
+}
+
+/**
+ * 一个组织里状态为 `active` 的所有者数量。
+ *
+ * 用来挡住「把最后一个所有者移除或降级」。没有所有者的组织谁也管不了 ——
+ * 改不了成员、建不了工作区、连把所有权交出去都做不到。那是一个不可逆的
+ * 自锁，而它只需要一次误操作。
+ */
+export function activeOwnerCount(db: DatabaseSync, organizationId: string): number {
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM memberships
+        WHERE organization_id = ?
+          AND scope_kind = 'organization'
+          AND role = 'organization_owner'
+          AND state = 'active'`,
+    )
+    .get(organizationId) as { c: number }
+  return row.c
+}
