@@ -28,7 +28,7 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 
 ### 当前可用的能力
 
-以下命令**经真实 HTTP 走通**，共 506 个测试：
+以下命令**经真实 HTTP 走通**，共 574 个测试：
 
 - **私聊** —— 发送、按设备租约拉取、确认投递、编辑、撤回
 - **组织** —— 创建组织/工作区/项目、邀请成员、接受邀请
