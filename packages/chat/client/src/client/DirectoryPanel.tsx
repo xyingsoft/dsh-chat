@@ -37,7 +37,10 @@ export interface DirectoryPanelProps {
   readonly onOpenConversation: (accountId: string) => void
   /** 注入数据源，测试用。默认打 host 的同源 API。 */
   readonly load?: () => Promise<{ members: DirectoryEntry[]; incoming: IncomingRequest[] }>
-  readonly act?: (action: 'request' | 'accept', payload: Record<string, string>) => Promise<void>
+  readonly act?: (
+    action: 'request' | 'accept' | 'reject' | 'remove',
+    payload: Record<string, string>,
+  ) => Promise<void>
 }
 
 async function callHost<T>(path: string, body: unknown): Promise<T> {
@@ -90,17 +93,26 @@ export function DirectoryPanel(props: DirectoryPanelProps): ReactElement {
   }, [refresh])
 
   const run = useCallback(
-    async (key: string, action: 'request' | 'accept', payload: Record<string, string>) => {
+    async (
+      key: string,
+      action: 'request' | 'accept' | 'reject' | 'remove',
+      payload: Record<string, string>,
+    ) => {
       // 同一个人连点两下会发两条请求。第二条要么被去重、要么报错，
       // 两种都是用户不该看到的噪音
       if (busy !== undefined) return
       setBusy(key)
       try {
         if (act === undefined) {
-          await callHost(
-            action === 'request' ? '/api/chat/contacts/request' : '/api/chat/contacts/accept',
-            payload,
-          )
+          const path =
+            action === 'request'
+              ? '/api/chat/contacts/request'
+              : action === 'accept'
+                ? '/api/chat/contacts/accept'
+                : action === 'reject'
+                  ? '/api/chat/contacts/reject'
+                  : '/api/chat/contacts/remove'
+          await callHost(path, payload)
         } else {
           await act(action, payload)
         }
@@ -163,15 +175,30 @@ export function DirectoryPanel(props: DirectoryPanelProps): ReactElement {
               { key: request.requestId, className: styles['row'] },
               createElement('span', { className: styles['name'] }, request.displayName),
               createElement(
-                'button',
-                {
-                  type: 'button',
-                  className: styles['primary'],
-                  disabled: busy !== undefined,
-                  onClick: () =>
-                    void run(request.requestId, 'accept', { requestId: request.requestId }),
-                },
-                '接受',
+                'div',
+                { className: styles['rowActions'] },
+                createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    className: styles['primary'],
+                    disabled: busy !== undefined,
+                    onClick: () =>
+                      void run(request.requestId, 'accept', { requestId: request.requestId }),
+                  },
+                  '接受',
+                ),
+                createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    className: styles['remove'],
+                    disabled: busy !== undefined,
+                    onClick: () =>
+                      void run(request.requestId, 'reject', { requestId: request.requestId }),
+                  },
+                  '拒绝',
+                ),
               ),
             ),
           ),
@@ -213,17 +240,36 @@ function actionFor(
   member: DirectoryEntry,
   busy: string | undefined,
   openConversation: (accountId: string) => void,
-  run: (key: string, action: 'request' | 'accept', payload: Record<string, string>) => Promise<void>,
+  run: (
+    key: string,
+    action: 'request' | 'accept' | 'reject' | 'remove',
+    payload: Record<string, string>,
+  ) => Promise<void>,
 ): ReactElement {
   if (member.relation === 'contact') {
     return createElement(
-      'button',
-      {
-        type: 'button',
-        className: styles['primary'],
-        onClick: () => openConversation(member.accountId),
-      },
-      '发消息',
+      'div',
+      { className: styles['rowActions'] },
+      createElement(
+        'button',
+        {
+          type: 'button',
+          className: styles['primary'],
+          onClick: () => openConversation(member.accountId),
+        },
+        '发消息',
+      ),
+      // 移除联系人 = 解除关系，之后需重新发起请求（ui-design batch2 缺口补）
+      createElement(
+        'button',
+        {
+          type: 'button',
+          className: styles['remove'],
+          disabled: busy !== undefined,
+          onClick: () => void run(member.accountId, 'remove', { peerId: member.accountId }),
+        },
+        '移除',
+      ),
     )
   }
   if (member.relation === 'pending_outgoing') {

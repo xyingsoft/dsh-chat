@@ -12,6 +12,7 @@
 import { createElement, type ReactElement } from 'react'
 
 import { ChatSection } from './ChatSection.js'
+import { BasicSettings } from './BasicSettings.js'
 
 import styles from './StatusSection.module.css'
 
@@ -48,11 +49,11 @@ export function StatusSection(props: StatusSectionProps): ReactElement {
   return createElement(
     'div',
     { className: styles['root'] },
-    createElement(
-      'p',
-      { className: styles['summary'] },
-      `协议版本 v${props.protocolVersion} · 数据库 schema v${props.schemaVersion}`,
-    ),
+    // 基础信息与账户：模式/账号/设备/版本 + 退出登录（数据全部来自 host）
+    createElement(BasicSettings, {
+      protocolVersion: props.protocolVersion,
+      schemaVersion: props.schemaVersion,
+    }),
     // 会话界面放在能力表之前 —— 用户来这个分区是为了聊天，
     // 能力表是给开发者看的诊断信息，不该占据第一屏
     createElement('div', { className: styles['chatBox'] }, createElement(ChatSection, {})),

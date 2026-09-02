@@ -1,0 +1,187 @@
+/* 设置 → dsh-chat 的基础信息与账户块：引用 tokens。 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-3);
+  padding: var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-divider);
+  border-radius: var(--dsh-chat-radius-lg);
+  background: var(--dsh-chat-bg-elevated);
+  font-family: var(--dsh-chat-font-ui);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dsh-chat-space-3);
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--dsh-chat-text-md);
+  font-weight: 650;
+  color: var(--dsh-chat-fg);
+}
+
+.chips {
+  display: flex;
+  gap: var(--dsh-chat-space-1);
+}
+
+.chip {
+  padding: 2px 8px;
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-pill);
+  background: var(--dsh-chat-bg);
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.identityRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-2);
+  min-width: 0;
+}
+
+.rowLabel {
+  flex: none;
+  width: 88px;
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+}
+
+.modeBadge {
+  padding: 1px 10px;
+  border-radius: var(--dsh-chat-radius-pill);
+  background: var(--dsh-chat-accent-soft);
+  color: var(--dsh-chat-accent);
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 650;
+}
+
+.monoValue {
+  font-family: var(--dsh-chat-font-mono);
+  font-size: var(--dsh-chat-text-sm);
+  color: var(--dsh-chat-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyBtn {
+  flex: none;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-sm);
+  background: transparent;
+  color: var(--dsh-chat-fg-muted);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-xs);
+  cursor: pointer;
+}
+
+.copyBtn:hover {
+  background: var(--dsh-chat-bg-hover);
+  color: var(--dsh-chat-fg);
+}
+
+.copyBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+.hintText {
+  margin: 0;
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-xs);
+  line-height: var(--dsh-chat-leading-normal);
+}
+
+.signOut {
+  align-self: flex-start;
+  height: 26px;
+  padding: 0 var(--dsh-chat-space-3);
+  border: 1px solid color-mix(in srgb, var(--dsh-chat-danger) 45%, transparent);
+  border-radius: var(--dsh-chat-radius-md);
+  background: transparent;
+  color: var(--dsh-chat-danger);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
+  cursor: pointer;
+}
+
+.signOut:hover {
+  background: var(--dsh-chat-danger-soft);
+}
+
+.signOut:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+.dialogBody {
+  margin: 0 0 var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dsh-chat-space-2);
+}
+
+.dialogCancel,
+.dialogDanger {
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-4);
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dialogCancel {
+  border: 1px solid var(--dsh-chat-border);
+  background: transparent;
+  color: var(--dsh-chat-fg-muted);
+}
+
+.dialogCancel:hover {
+  background: var(--dsh-chat-bg-hover);
+}
+
+.dialogDanger {
+  border: 1px solid var(--dsh-chat-danger);
+  background: var(--dsh-chat-danger);
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.dialogDanger:hover {
+  background: var(--dsh-chat-danger-hover);
+}
+
+.dialogDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dialogCancel:focus-visible,
+.dialogDanger:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}

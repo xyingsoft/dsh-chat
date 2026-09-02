@@ -1,10 +1,10 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5）。 */
+/* 通讯录面板：引用 styles/tokens.module.css（含暗色）。 */
 
 .root {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  gap: var(--dsh-chat-space-3);
+  padding: var(--dsh-chat-space-3);
   min-height: 0;
   overflow-y: auto;
 }
@@ -12,36 +12,44 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  border-radius: 8px;
-  /* 待处理请求要一眼看见 —— 埋在通讯录里的话，一条加好友请求可能几天
-     都没人看见 */
-  background: var(--dsw-alias-bg-layer-2, #fafafa);
+  gap: var(--dsh-chat-space-2);
+  padding: var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg-elevated);
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--dsw-alias-label-secondary, #6b7280);
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dsh-chat-fg-faint);
 }
 
 .search {
   height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-1, #ffffff);
-  color: var(--dsw-alias-label-primary, #1f2328);
-  font: inherit;
-  font-size: 13px;
+  padding: 0 var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg);
+  color: var(--dsh-chat-fg);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
+  transition:
+    border-color var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    box-shadow var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.search::placeholder {
+  color: var(--dsh-chat-fg-faint);
 }
 
 .search:focus {
   outline: none;
-  border-color: var(--dsw-alias-brand-primary, #4f6ef7);
+  border-color: var(--dsh-chat-accent);
+  box-shadow: 0 0 0 2px var(--dsh-chat-accent-soft);
 }
 
 .list {
@@ -52,19 +60,62 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
+  gap: var(--dsh-chat-space-2);
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-1);
   min-width: 0;
+  border-radius: var(--dsh-chat-radius-sm);
+}
+
+.row:hover {
+  background: var(--dsh-chat-bg-hover);
 }
 
 .name {
   flex: 1;
   min-width: 0;
-  font-size: 13px;
-  color: var(--dsw-alias-label-primary, #1f2328);
+  font-size: var(--dsh-chat-text-md);
+  color: var(--dsh-chat-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-1);
+  flex-shrink: 0;
+}
+
+/* 「拒绝 / 移除」：次级外观但带危险语义（红色文字 + 红色描边） */
+.remove {
+  height: 26px;
+  padding: 0 var(--dsh-chat-space-3);
+  border: 1px solid color-mix(in srgb, var(--dsh-chat-danger) 45%, transparent);
+  border-radius: var(--dsh-chat-radius-md);
+  background: transparent;
+  color: var(--dsh-chat-danger);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
+  cursor: pointer;
+  transition:
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    border-color var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.remove:hover:not(:disabled) {
+  background: var(--dsh-chat-danger-soft);
+  border-color: var(--dsh-chat-danger);
+}
+
+.remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.remove:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }
 
 .primary,
@@ -72,34 +123,40 @@
 .muted {
   flex-shrink: 0;
   height: 26px;
-  padding: 0 10px;
-  border-radius: 6px;
-  font: inherit;
-  font-size: 12px;
+  padding: 0 var(--dsh-chat-space-3);
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
   cursor: pointer;
   border: 1px solid transparent;
+  transition:
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    border-color var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
 }
 
 .primary {
-  background: var(--dsw-alias-brand-primary, #4f6ef7);
-  color: #ffffff;
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--dsh-chat-accent-hover);
 }
 
 .secondary {
   background: transparent;
-  border-color: var(--dsw-alias-border-l2, #e5e7eb);
-  color: var(--dsw-alias-brand-primary, #4f6ef7);
+  border-color: var(--dsh-chat-border);
+  color: var(--dsh-chat-accent);
 }
 
-.secondary:hover {
-  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+.secondary:hover:not(:disabled) {
+  background: var(--dsh-chat-accent-soft);
+  border-color: var(--dsh-chat-accent);
 }
 
-/* 已发出的请求：灰掉而不是隐藏 —— 隐藏的话用户不知道自己已经发过了，
-   会去别处找入口 */
 .muted {
   background: transparent;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  color: var(--dsh-chat-fg-faint);
   cursor: not-allowed;
 }
 
@@ -109,24 +166,31 @@
   cursor: not-allowed;
 }
 
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
 .hint {
   flex-shrink: 0;
-  font-size: 12px;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
 }
 
 .empty,
 .status {
   margin: 0;
-  padding: 20px 8px;
+  padding: var(--dsh-chat-space-5) var(--dsh-chat-space-2);
   text-align: center;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
+  color: var(--dsh-chat-fg-faint);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--dsh-chat-space-3);
 }
 
 .statusText {
@@ -134,12 +198,21 @@
 }
 
 .retry {
-  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  background: transparent;
-  border-radius: 8px;
-  padding: 5px 14px;
-  font: inherit;
-  font-size: 12px;
-  color: var(--dsw-alias-brand-primary, #4f6ef7);
+  border: 1px solid var(--dsh-chat-border);
+  background: var(--dsh-chat-bg-elevated);
+  border-radius: var(--dsh-chat-radius-md);
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-4);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
+  color: var(--dsh-chat-accent);
   cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--dsh-chat-accent-soft);
+}
+
+.retry:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }

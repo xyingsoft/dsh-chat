@@ -1,18 +1,32 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+/* dsh-chat 会话主体：引用 styles/tokens.module.css 的 --dsh-chat-* 变量。 */
 
 .root {
   display: flex;
   flex-direction: column;
-  /* 填满容器而不是写死高度 —— 同一个组件既要放进设置面板（外面套一个
-     有界高度的盒子），也要放进右侧抽屉（占满剩余高度）。写死高度的话
-     在抽屉里就会只占上面一小块，下面空一大片。 */
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  font-family: var(--dsh-chat-font-ui);
+  color: var(--dsh-chat-fg);
+  background: var(--dsh-chat-bg);
+}
+
+/* 占布局提示条所在层 */
+.bannerWrap {
+  flex-shrink: 0;
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3) 0;
+  background: var(--dsh-chat-bg);
+}
+
+/* 列表与消息区的舞台：窄版纵排，宽版切横排（.split） */
+.stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* 宽版：会话列表与消息并排。窄版下不加这个类，走单栏钻取 —— 380px 宽还
-   硬要两栏的话，两边都挤成一条，谁也看不清。 */
 .split {
   flex-direction: row;
 }
@@ -22,14 +36,46 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  overflow-y: auto;
-  padding: 6px;
+  overflow: hidden;
 }
 
 .split .sidebar {
-  width: 210px;
+  width: 248px;
   flex: none;
-  border-right: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  border-right: 1px solid var(--dsh-chat-divider);
+  background: var(--dsh-chat-bg-elevated);
+}
+
+.chatColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--dsh-chat-space-2);
+}
+
+.searchWrap {
+  flex-shrink: 0;
+  margin-bottom: var(--dsh-chat-space-2);
+}
+
+.searchEmpty {
+  padding: var(--dsh-chat-space-6) var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-sm);
+  text-align: center;
+}
+
+.searchEmpty p {
+  margin: 0;
+}
+
+.loadingPane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-1);
+  padding: var(--dsh-chat-space-2);
 }
 
 .main {
@@ -41,41 +87,47 @@
   overflow: hidden;
 }
 
-/* 单栏模式下的返回条。宽版不需要 —— 列表一直在旁边。 */
+/* 单栏模式返回条 */
 .backBar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
+  gap: var(--dsh-chat-space-2);
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border-bottom: 1px solid var(--dsh-chat-divider);
   flex-shrink: 0;
+  background: var(--dsh-chat-bg-elevated);
 }
 
 .back {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--dsh-chat-space-1);
   height: 28px;
-  padding: 0 8px;
+  padding: 0 var(--dsh-chat-space-2);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--dsh-chat-radius-md);
   background: transparent;
-  color: var(--dsw-alias-label-secondary, #6b7280);
-  font: inherit;
-  font-size: 12px;
+  color: var(--dsh-chat-fg-muted);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
   cursor: pointer;
 }
 
 .back:hover {
-  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
-  color: var(--dsw-alias-label-primary, #1f2328);
+  background: var(--dsh-chat-bg-hover);
+  color: var(--dsh-chat-fg);
+}
+
+.back:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }
 
 .peerName {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--dsw-alias-label-primary, #1f2328);
+  font-size: var(--dsh-chat-text-md);
+  font-weight: 650;
+  color: var(--dsh-chat-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -85,68 +137,143 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 10px;
+  background: var(--dsh-chat-bg);
 }
 
 .status {
+  flex: 1;
   margin: 0;
-  padding: 24px 16px;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
-  font-size: 13px;
+  padding: var(--dsh-chat-space-6) var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-sm);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: var(--dsh-chat-space-3);
 }
 
 .statusText {
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--dsh-chat-leading-normal);
 }
 
 .retry {
-  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  background: transparent;
-  border-radius: 8px;
-  padding: 6px 14px;
-  font: inherit;
-  font-size: 12px;
-  color: var(--dsw-alias-brand-primary, #4f6ef7);
+  border: 1px solid var(--dsh-chat-border);
+  background: var(--dsh-chat-bg-elevated);
+  border-radius: var(--dsh-chat-radius-md);
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-4);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
+  color: var(--dsh-chat-accent);
   cursor: pointer;
+  transition: background var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
 }
 
 .retry:hover {
-  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  background: var(--dsh-chat-accent-soft);
 }
 
-/* 「会话 / 通讯录」切换。放在侧栏顶部而不是抽屉头部：抽屉头部已经有
-   可见性下拉和两个按钮，再塞两个标签会挤成一团；而这两个标签切换的是
-   侧栏的内容，放在它上面语义也更直白。 */
+.retry:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+/* 「会话 / 通讯录」切换（pill 分页） */
 .tabs {
   display: flex;
   gap: 2px;
-  padding: 2px;
-  margin-bottom: 6px;
-  border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  padding: 3px;
+  margin: var(--dsh-chat-space-2) var(--dsh-chat-space-2) var(--dsh-chat-space-1);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg-inset);
+  border: 1px solid var(--dsh-chat-divider);
   flex-shrink: 0;
+}
+
+.split .tabs {
+  margin: var(--dsh-chat-space-3) var(--dsh-chat-space-3) var(--dsh-chat-space-2);
 }
 
 .tab {
   flex: 1;
-  height: 26px;
+  height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--dsh-chat-radius-sm);
   background: transparent;
-  color: var(--dsw-alias-label-secondary, #6b7280);
-  font: inherit;
-  font-size: 12px;
+  color: var(--dsh-chat-fg-muted);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
   cursor: pointer;
+  transition:
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    color var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.tab:hover {
+  color: var(--dsh-chat-fg);
 }
 
 .tabActive {
-  background: var(--dsw-alias-bg-layer-1, #ffffff);
-  color: var(--dsw-alias-label-primary, #1f2328);
+  background: var(--dsh-chat-bg);
+  color: var(--dsh-chat-fg);
+  font-weight: 650;
+  box-shadow: var(--dsh-chat-shadow-bubble);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+/* 撤回等破坏性操作的 Dialog 内容 */
+.dialogBody {
+  margin: 0 0 var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dsh-chat-space-2);
+}
+
+.dialogCancel,
+.dialogDanger {
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-4);
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
   font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.dialogCancel {
+  border: 1px solid var(--dsh-chat-border);
+  background: transparent;
+  color: var(--dsh-chat-fg-muted);
+}
+
+.dialogCancel:hover {
+  background: var(--dsh-chat-bg-hover);
+}
+
+.dialogDanger {
+  border: 1px solid var(--dsh-chat-danger);
+  background: var(--dsh-chat-danger);
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.dialogDanger:hover {
+  background: var(--dsh-chat-danger-hover);
+}
+
+.dialogCancel:focus-visible,
+.dialogDanger:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }

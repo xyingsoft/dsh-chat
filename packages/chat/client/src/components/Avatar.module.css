@@ -1,0 +1,43 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--dsh-chat-radius-pill);
+  color: #ffffff;
+  background: hsl(var(--dsh-chat-avatar-hue, 210) 42% 46%);
+  font-family: var(--dsh-chat-font-ui);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+[data-theme='dark'] .avatar {
+  background: hsl(var(--dsh-chat-avatar-hue, 210) 45% 58%);
+}
+
+.avatarAccent {
+  background: var(--dsh-chat-accent);
+}
+
+[data-theme='dark'] .avatarAccent {
+  background: var(--dsh-chat-accent);
+}
+
+.sizeSm {
+  width: 20px;
+  height: 20px;
+  font-size: var(--dsh-chat-text-xs);
+}
+
+.sizeMd {
+  width: 28px;
+  height: 28px;
+  font-size: var(--dsh-chat-text-sm);
+}
+
+.sizeLg {
+  width: 40px;
+  height: 40px;
+  font-size: var(--dsh-chat-text-lg);
+}

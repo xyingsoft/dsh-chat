@@ -1,44 +1,49 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+/* 输入框（Composer）：引用 styles/tokens.module.css（含暗色）。 */
 
 .root {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  background: var(--dsw-alias-bg-layer-1, #fff);
+  gap: var(--dsh-chat-space-1);
+  padding: var(--dsh-chat-space-3) var(--dsh-chat-space-4) var(--dsh-chat-space-3);
+  border-top: 1px solid var(--dsh-chat-divider);
+  background: var(--dsh-chat-bg-elevated);
   flex-shrink: 0;
 }
 
 .field {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--dsh-chat-space-2);
 }
 
 .input {
   flex: 1;
   min-width: 0;
-  /* 起始一行，随内容长高到上限。写死高度的话短消息浪费空间、
-     长消息看不全 */
   min-height: 38px;
   max-height: 140px;
-  padding: 9px 12px;
-  border: 1px solid var(--dsw-alias-border-l2, #e5e7eb);
-  border-radius: 10px;
-  background: var(--dsw-alias-bg-layer-2, #f7f8fa);
-  color: var(--dsw-alias-label-primary, #1f2328);
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.5;
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-lg);
+  background: var(--dsh-chat-bg);
+  color: var(--dsh-chat-fg);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-md);
+  line-height: var(--dsh-chat-leading-normal);
   resize: none;
   overflow-y: auto;
+  transition:
+    border-color var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    box-shadow var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.input::placeholder {
+  color: var(--dsh-chat-fg-faint);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--dsw-alias-brand-primary, #4f6ef7);
-  background: var(--dsw-alias-bg-layer-1, #fff);
+  border-color: var(--dsh-chat-accent);
+  box-shadow: 0 0 0 2px var(--dsh-chat-accent-soft);
 }
 
 .input:disabled {
@@ -46,8 +51,7 @@
   cursor: not-allowed;
 }
 
-/* 发送按钮做成 36px 见方 —— 比常见的 24px 图标好点得多，
-   在 380px 宽的面板里尤其明显 */
+/* 发送按钮：36px 见方，命中面大 */
 .send {
   display: inline-flex;
   align-items: center;
@@ -55,46 +59,57 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  border: none;
-  border-radius: 10px;
-  background: var(--dsw-alias-brand-primary, #4f6ef7);
-  color: #fff;
-  font: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--dsh-chat-radius-lg);
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-fg-on-accent);
+  font-family: var(--dsh-chat-font-ui);
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
+  transition:
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    transform var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
 }
 
 .send:hover:not(:disabled) {
-  filter: brightness(1.08);
+  background: var(--dsh-chat-accent-hover);
 }
 
-/* 禁用态用降透明度而不是变灰：变灰在深色主题里会和背景糊在一起 */
+.send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
 .send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
+.send:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
 .hint {
   margin: 0;
-  font-size: 11px;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
   min-height: 15px;
+  line-height: var(--dsh-chat-leading-tight);
 }
 
 .error {
-  color: var(--dsw-alias-label-danger, #a02020);
+  color: var(--dsh-chat-danger);
 }
 
 .counter {
   font-variant-numeric: tabular-nums;
 }
 
-/* 接近上限才提示，平时不占注意力 */
 .counterWarn {
-  color: var(--dsw-alias-label-warning, #8a5a00);
+  color: var(--dsh-chat-warning);
 }
 
 .counterOver {
-  color: var(--dsw-alias-label-danger, #a02020);
+  color: var(--dsh-chat-danger);
 }

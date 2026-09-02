@@ -1,16 +1,17 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+/* 会话列表：引用 styles/tokens.module.css 的 --dsh-chat-* 变量（含暗色）。 */
 
 .root {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--dsh-chat-space-1);
 }
 
 .empty {
   margin: 0;
-  padding: 16px;
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 13px;
+  padding: var(--dsh-chat-space-5) var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-faint);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
   text-align: center;
 }
 
@@ -20,45 +21,60 @@
   list-style: none;
   display: flex;
   flex-direction: column;
+  gap: var(--dsh-chat-space-1);
 }
 
 .item {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: 'name meta' 'preview meta';
-  gap: 2px 12px;
-  padding: 10px 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'avatar name meta' 'avatar preview meta';
+  gap: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
   border: none;
   background: transparent;
   text-align: left;
   cursor: pointer;
-  border-radius: 6px;
-  font: inherit;
-  color: inherit;
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: var(--dsh-chat-font-ui);
+  color: var(--dsh-chat-fg);
   width: 100%;
+  align-items: center;
+  transition: background var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.avatar {
+  grid-area: avatar;
+  align-self: center;
 }
 
 .item:hover {
-  background: var(--dsh-color-bg-hover, #f5f5f5);
+  background: var(--dsh-chat-bg-hover);
 }
 
-/* 选中态同时用背景与左边框标示 —— 只用颜色的话，色觉障碍用户看不出选了哪一条 */
+/* 选中态：背景 + 左侧强调条双信号（不只用颜色） */
 .selected {
-  background: var(--dsh-color-bg-selected, #eef3fb);
-  box-shadow: inset 3px 0 0 var(--dsh-color-accent, #3574d6);
+  background: var(--dsh-chat-accent-soft);
+  box-shadow: inset 3px 0 0 var(--dsh-chat-accent);
+}
+
+.item:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }
 
 .name {
   grid-area: name;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 650;
+  font-size: var(--dsh-chat-text-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preview {
   grid-area: preview;
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 12px;
-  /* 预览是单行摘要；超出省略而不是把列表撑成不等高 */
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -69,56 +85,67 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--dsh-chat-space-1);
+  padding-left: var(--dsh-chat-space-2);
 }
 
 .time {
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 11px;
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-xs);
   font-variant-numeric: tabular-nums;
 }
 
-/* 未读角标。带文字计数而非纯圆点 —— 「有未读」与「有 12 条未读」是不同的信息 */
+/* 未读角标：带文字计数（「有未读」与「有 12 条未读」不同） */
 .unread {
-  min-width: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: var(--dsh-color-accent, #3574d6);
-  color: var(--dsh-color-text-inverse, #fff);
-  font-size: 11px;
-  line-height: 18px;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--dsh-chat-radius-pill);
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-fg-on-accent);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 650;
+  line-height: 20px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-/* 在线状态点。§49：颜色不作为唯一状态信号 —— 形状也随状态变，
-   在线是实心、空闲是空心环、离线与未知不画点，色觉障碍或黑白截图下
-   仍然分得出来。文字说明在 title 与 aria-label 里。 */
+/* 搜索命中高亮：不改正文文本语义，只加视觉标记 */
+.mark {
+  background: var(--dsh-chat-warning-soft);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dsh-chat-warning) 55%, transparent);
+}
+
+[data-theme='dark'] .mark {
+  background: #4d3a11;
+  color: #f0c46a;
+}
+
+/* 在线状态点：颜色不唯一，形状随状态变（实=在线、空环=空闲、无=离线/未知） */
 .presence {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   margin-right: 6px;
   flex-shrink: 0;
-  /* 与名字的基线对齐。不设的话点会贴着文字顶部 */
   vertical-align: 1px;
 }
 
 .presence_online {
-  background: var(--dsw-alias-status-success, #16a34a);
+  background: var(--dsh-chat-presence-online);
 }
 
-/* 空心环：与实心点在灰度下也能区分 */
 .presence_idle {
   background: transparent;
-  border: 1.5px solid var(--dsw-alias-status-warning, #d97706);
+  border: 1.5px solid var(--dsh-chat-presence-idle);
+  width: 7px;
+  height: 7px;
 }
 
-/* 离线与未知都不画点 —— 一排灰点比没有点更吵，而它们不携带信息。
-   两者的区别在 aria-label：一个是「离线」，一个是「状态未知」。
-   画成同一个可见样式是可以的，画成同一句话不行 —— 那会让隐藏了状态的人
-   看起来像离线。 */
 .presence_offline,
 .presence_unknown {
   background: transparent;

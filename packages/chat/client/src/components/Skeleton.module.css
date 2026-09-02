@@ -1,0 +1,45 @@
+.skeleton {
+  display: inline-block;
+  flex: none;
+  border-radius: var(--dsh-chat-radius-sm);
+  background: var(--dsh-chat-bg-hover);
+  animation: dshChatShimmer 1.4s var(--dsh-chat-ease) infinite;
+}
+
+@keyframes dshChatShimmer {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.line {
+  height: 12px;
+}
+
+.circle {
+  border-radius: var(--dsh-chat-radius-pill);
+}
+
+.rect {
+  border-radius: var(--dsh-chat-radius-md);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-3);
+  padding: var(--dsh-chat-space-3) var(--dsh-chat-space-4);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-2);
+}

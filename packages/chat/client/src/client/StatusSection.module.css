@@ -1,15 +1,16 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+/* 设置面板 dsh-chat 分区：引用 styles/tokens.module.css（含暗色）。 */
 
 .root {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--dsh-chat-space-3);
 }
 
 .summary {
   margin: 0;
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 13px;
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
 }
 
 .list {
@@ -18,56 +19,64 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--dsh-chat-space-2);
 }
 
 .item {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas: 'name status' 'note note';
-  gap: 4px 12px;
-  padding: 8px 12px;
-  border: 1px solid var(--dsh-color-border, #e0e0e0);
-  border-radius: 6px;
+  gap: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-divider);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg-elevated);
 }
 
 .name {
   grid-area: name;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: var(--dsh-chat-text-sm);
 }
 
-/* 颜色不是唯一的状态信号——文字标签始终存在（§49 无障碍）。 */
+/* 状态标签：颜色不是唯一信号，文字始终在（U5） */
 .status {
   grid-area: status;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: var(--dsh-chat-radius-pill);
   border: 1px solid currentColor;
+  letter-spacing: 0.02em;
 }
 
 .status[data-status='ready'] {
-  color: var(--dsh-color-success, #2e7d32);
+  color: var(--dsh-chat-success);
+  background: var(--dsh-chat-success-soft);
 }
 
 .status[data-status='partial'] {
-  color: var(--dsh-color-warning, #ed6c02);
+  color: var(--dsh-chat-warning);
+  background: var(--dsh-chat-warning-soft);
 }
 
 .status[data-status='not_implemented'] {
-  color: var(--dsh-color-text-secondary, #666);
+  color: var(--dsh-chat-fg-faint);
+  background: var(--dsh-chat-bg-inset);
 }
 
 .note {
   grid-area: note;
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 12px;
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
 }
 
-/* 设置面板里的聊天区：给一个有界高度，免得把整个设置页撑长。
-   高度约束在这里而不在 ChatSection 里 —— 同一个组件在抽屉里要占满剩余空间。 */
+/* 设置面板里的聊天预览区：有界高度，不撑长设置页 */
 .chatBox {
   height: 420px;
-  border: 1px solid var(--dsh-color-border, #e0e0e0);
-  border-radius: 8px;
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-lg);
   overflow: hidden;
+  background: var(--dsh-chat-bg);
 }
