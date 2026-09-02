@@ -1,0 +1,39 @@
+docs/ui-design.md
+  s_2a0ad92afe8049::t_8564fe949b3515 1-618
+docs/ui-gap-analysis.md
+  s_2a0ad92afe8049::t_c396578ce86a8f 1-188
+docs/ui-implementation-plan.md
+  s_2a0ad92afe8049::t_6401a4655aeb02 1-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "2b4f3f28307eaf319b881500974987db9a25868a",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.2__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "operation_id": "6a97e04c4cb341d16d3bd24e",
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "tool_use_id": "6a97e04c4cb341d16d3bd24e",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "tool_name": "Write",
+        "client_type": "ide",
+        "source_scene": "agent",
+        "edit_kind": "file_edit",
+        "runtime_client": "trae-tob-git-ai"
+      }
+    }
+  }
+}
