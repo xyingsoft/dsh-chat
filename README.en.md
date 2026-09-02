@@ -16,7 +16,7 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 
 ## Status
 
-**Not released.** `P0-a`'s skeleton steps and acceptance checklist are fully covered, and the plugin now **loads and renders in DSH Desktop v2.0.4** ([screenshot](./docs/_meta/dsh-integration-evidence.md)).
+**Not released.** `P0-a`'s skeleton steps and acceptance checklist are fully covered, and the plugin now **loads and renders in DSH Desktop v2.0.4** ([screenshot](./docs/archive/_meta/dsh-integration-evidence.md)).
 
 | Stage | Scope | Status |
 |---|---|---|
@@ -24,7 +24,7 @@ It follows DSH's "everything is a plugin" model — **there is no privileged cha
 | `P0-b` | Second factor, recovery, presence visibility, local search, full protocol-negotiation acceptance | Not started (the negotiation codec is implemented) |
 | `P1`–`P4` | Groups and resources, collaboration sessions and bots, governance and analytics, enterprise and E2EE | Not started |
 
-**Per-stage progress, completed items, and gaps are tracked in [TODO.md](./TODO.md).** See the [iteration plan](./docs/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
+**Per-stage progress, completed items, and gaps are tracked in [TODO.md](./TODO.md).** See the [iteration plan](./docs/archive/04-roadmap/03-iteration-plan.md) for stage boundaries and acceptance criteria.
 
 ### What works today
 
@@ -53,18 +53,21 @@ points are **explicitly absent rather than pretending to work**.
 
 ## Documentation
 
-**[`docs/`](./docs/README.md) in this repository is the single source of truth for implementation, review, and acceptance.**
+**[`docs/README.md`](./docs/README.md) in this repository is the single source of truth for implementation, review, and acceptance** — a single-file design document aimed at AI-driven iteration, with a clear framework and no redundancy.
 
-Documents are organized in four layers — requirements → architecture → details → roadmap — and constraints only propagate downward:
+The single file covers: product boundaries (eight declarations), three-tier architecture, the plugin model, the write protocol, key mechanisms, deployment layers, project layout, the iteration roadmap (P0–P4), and the AI iteration workflow.
 
-| Layer | Directory | Answers |
-|---|---|---|
-| Requirements | [`01-requirements/`](./docs/01-requirements/) | What we build, for whom, and what we explicitly will not build |
-| Architecture | [`02-architecture/`](./docs/02-architecture/) | What structure we use and how components are split |
-| Technical details | [`03-details/`](./docs/03-details/) | How each mechanism actually works |
-| Roadmap | [`04-roadmap/`](./docs/04-roadmap/) | When it ships and how it is accepted |
+Detailed specifications (full fields, error codes, acceptance details) are archived under [`docs/archive/`](./docs/archive/):
 
-> **This project mandates documentation-first development.** Any change that touches requirements or architecture must update the documents before any code is written. See the [documentation workflow](./docs/_meta/documentation-workflow.md).
+| Archive | Contents |
+|---|---|
+| [`01-requirements/`](./docs/archive/01-requirements/) | Product positioning and boundaries, collaboration requirements |
+| [`02-architecture/`](./docs/archive/02-architecture/) | Three-tier architecture, plugin model, server and deployment layers |
+| [`03-details/`](./docs/archive/03-details/) | Identity and permissions, delivery and persistence, performance and rate limits, security and compliance, observability, contracts appendix |
+| [`04-roadmap/`](./docs/archive/04-roadmap/) | Operation/state matrix, minimal skeleton, iteration plan, test strategy |
+| [`_meta/`](./docs/archive/_meta/) | Documentation workflow, implementation log, feature inventory, DSH integration evidence |
+
+> **This project mandates documentation-first development.** Any change that touches requirements or architecture must update the documents before any code is written. See the [documentation workflow](./docs/archive/_meta/documentation-workflow.md).
 
 The root `DESIGN.md` is the pre-refactor single-file original, kept as a historical archive only. **It is no longer the basis for implementation.**
 
@@ -81,7 +84,7 @@ The root `DESIGN.md` is the pre-refactor single-file original, kept as a histori
 | Persistence | `P0` SQLite (L1); `P1` onward PostgreSQL + Redis + object storage (L2) |
 
 > The DSH runtime is **not installed from npm.** Upstream moved to vendored tarball distribution as of `0.1.2-alpha.1`, and the `latest` tag on npm points at a version far older than the current one.
-> Exact versions, the source commit, verification, and the upgrade process are recorded in the [implementation log](https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/implementation-log.md); this table is only an overview.
+> Exact versions, the source commit, verification, and the upgrade process are recorded in the [implementation log](https://github.com/xyingsoft/dsh-chat/blob/main/docs/archive/_meta/implementation-log.md); this table is only an overview.
 
 ## License
 
