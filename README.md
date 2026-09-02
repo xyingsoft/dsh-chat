@@ -16,7 +16,7 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 
 ## 当前状态
 
-**尚未发布。** `P0-a` 的骨架步骤与验收清单已全部覆盖，插件已在 **DSH Desktop v2.0.4 上装载并渲染**（[截图](./docs/_meta/dsh-integration-evidence.md)）。
+**尚未发布。** `P0-a` 的骨架步骤与验收清单已全部覆盖，插件已在 **DSH Desktop v2.0.4 上装载并渲染**（[截图](./docs/archive/_meta/dsh-integration-evidence.md)）。
 
 | 阶段 | 范围 | 状态 |
 |---|---|---|
@@ -24,7 +24,7 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 | `P0-b` | 第二因素、恢复、在线可见范围、本地搜索、协议协商的完整验收 | 未开始（协议协商的编解码已实现） |
 | `P1`–`P4` | 群聊与资源、协作会话与 Bot、治理与分析、企业与 E2EE | 未开始 |
 
-**逐阶段进度、已完成项与未完成项见 [TODO.md](./TODO.md)。** 阶段划分与验收条件见[迭代计划](./docs/04-roadmap/03-iteration-plan.md)。
+**逐阶段进度、已完成项与未完成项见 [TODO.md](./TODO.md)。** 阶段划分与验收条件见[迭代计划](./docs/archive/04-roadmap/03-iteration-plan.md)。
 
 ### 当前可用的能力
 
@@ -50,18 +50,21 @@ Ed25519 请求签名（nonce 去重、时间偏移容忍窗口）。
 
 ## 文档
 
-**本仓库的 [`docs/`](./docs/README.md) 是实现、评审与验收的唯一依据。**
+**本仓库的 [`docs/README.md`](./docs/README.md) 是实现、评审与验收的唯一依据**（面向 AI 迭代的单文件设计文档，框架清晰、不冗余）。
 
-文档按「需求 → 架构 → 细节 → 排期」四层组织，约束只能自上而下传递：
+单文件总纲覆盖：产品边界（八条声明）、三层架构、插件化模型、写入协议、关键机制、部署分层、工程结构、迭代路线图（P0–P4）与 AI 迭代工作流。
 
-| 层 | 目录 | 回答什么问题 |
-|---|---|---|
-| 需求说明 | [`01-requirements/`](./docs/01-requirements/) | 做什么、给谁做、明确不做什么 |
-| 整体架构 | [`02-architecture/`](./docs/02-architecture/) | 用什么结构做、组件如何切分 |
-| 技术细节 | [`03-details/`](./docs/03-details/) | 每个机制具体如何实现 |
-| 项目排期 | [`04-roadmap/`](./docs/04-roadmap/) | 什么时候交付、如何验收 |
+详细规格（完整字段、错误码、验收细节）归档在 [`docs/archive/`](./docs/archive/)：
 
-> **本项目强制「文档先行」**：任何涉及需求变更或架构调整的修改，必须先更新文档再写代码。详见[文档维护规范](./docs/_meta/documentation-workflow.md)。
+| 归档 | 内容 |
+|---|---|
+| [`01-requirements/`](./docs/archive/01-requirements/) | 产品定位与边界、协作能力需求 |
+| [`02-architecture/`](./docs/archive/02-architecture/) | 三层架构、插件化模型、服务端与部署分层 |
+| [`03-details/`](./docs/archive/03-details/) | 身份权限、投递持久化、性能限流、安全合规、可观测性、契约附录 |
+| [`04-roadmap/`](./docs/archive/04-roadmap/) | 操作状态矩阵、最小骨架、迭代计划、测试策略 |
+| [`_meta/`](./docs/archive/_meta/) | 文档维护规范、实现记录、功能清单、DSH 装载验证 |
+
+> **本项目强制「文档先行」**：任何涉及需求变更或架构调整的修改，必须先更新文档再写代码。详见[文档维护规范](./docs/archive/_meta/documentation-workflow.md)。
 
 根目录的 `DESIGN.md` 是重构前的单文件原稿，仅作历史归档，**不再作为实现依据**。
 
@@ -78,7 +81,7 @@ Ed25519 请求签名（nonce 去重、时间偏移容忍窗口）。
 | 持久化 | `P0` SQLite（L1），`P1` 起 PostgreSQL + Redis + 对象存储（L2） |
 
 > DSH 运行时**不从 npm 安装** —— 上游自 `0.1.2-alpha.1` 起改为 vendored tarball 分发，npm 上的 `latest` 标签指向一个远早于当前的版本。
-> 精确版本、来源 commit、校验方式与升级流程记录在[实现记录](https://github.com/xyingsoft/dsh-chat/blob/main/docs/_meta/implementation-log.md)，本表只作概览。
+> 精确版本、来源 commit、校验方式与升级流程记录在[实现记录](https://github.com/xyingsoft/dsh-chat/blob/main/docs/archive/_meta/implementation-log.md)，本表只作概览。
 
 ## 许可
 
