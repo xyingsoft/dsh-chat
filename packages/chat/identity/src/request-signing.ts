@@ -1,7 +1,7 @@
 /**
  * 请求签名与时间偏移。
  *
- * [§7.1](../../../../docs/03-details/01-identity-and-permission.md#71-请求签名与时间偏移)：
+ * [§7.1](../../../../docs/archive/03-details/01-identity-and-permission.md#71-请求签名与时间偏移)：
  *
  * > 每个认证请求都携带 access token，以及设备签名私钥对**请求方法、路径、请求体
  * > 摘要、时间戳、nonce、`DeviceId` 和目标组织**签名生成的证明。

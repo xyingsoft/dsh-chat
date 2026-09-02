@@ -1,7 +1,7 @@
 /**
  * 消息编辑与撤回。
  *
- * [§14.1](../../../../docs/01-requirements/02-collaboration-requirements.md#141-消息编辑与撤回)：
+ * [§14.1](../../../../docs/archive/01-requirements/02-collaboration-requirements.md#141-消息编辑与撤回)：
  *
  * > **消息正文不是可原地覆盖的字段。** 每个 `MessageId` 具有单调递增的
  * > `MessageRevision`，初始正文为 revision 1；编辑追加不可变 `message_edited`

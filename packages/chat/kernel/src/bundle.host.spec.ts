@@ -5,7 +5,7 @@
  * 只会让该插件被静默跳过 —— 界面上表现为「功能没了」，日志里什么都没有。
  * 这类失效必须在 CI 阶段挡住，而不是等到装进 DSH 才发现。
  *
- * 见 docs/02-architecture/02-plugin-model.md §6.2。
+ * 见 docs/archive/02-architecture/02-plugin-model.md §6.2。
  */
 
 import { readFileSync } from 'node:fs'

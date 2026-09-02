@@ -16,7 +16,7 @@ import { COMMAND_NAMES, DOMAIN_EVENT_NAMES, type CommandInput } from './commands
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const pluginModelDoc = readFileSync(
-  join(repoRoot, 'docs', '02-architecture', '02-plugin-model.md'),
+  join(repoRoot, 'docs', 'archive', '02-architecture', '02-plugin-model.md'),
   'utf8',
 )
 

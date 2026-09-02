@@ -1,7 +1,7 @@
 /**
  * 评论与 `CommentRevision`。
  *
- * [§18](../../../../docs/01-requirements/02-collaboration-requirements.md#18-评审与评论)：
+ * [§18](../../../../docs/archive/01-requirements/02-collaboration-requirements.md#18-评审与评论)：
  *
  * > 评论属于工作项、资源版本、评审或协作会话，**不属于群消息**，因此不进入
  * > `GroupLog`，也**不参与消息撤回语义**。评论包含作者、目标对象与版本、正文、

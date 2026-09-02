@@ -1,7 +1,7 @@
 /**
  * 评审。
  *
- * [§18](../../../../docs/01-requirements/02-collaboration-requirements.md#18-评审与评论)：
+ * [§18](../../../../docs/archive/01-requirements/02-collaboration-requirements.md#18-评审与评论)：
  *
  * > 评审是工作项从 `in_review` 进入 `done` 的**显式关口**，不是聊天消息里的
  * > 口头确认。
