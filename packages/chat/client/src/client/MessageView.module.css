@@ -53,6 +53,21 @@
   text-align: center;
 }
 
+/* 日历日分组头：居中弱化，是分隔符不是内容 */
+.dayHeader {
+  align-self: center;
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
+  font-family: var(--dsh-chat-font-ui);
+  /* 分组头与上下消息保持可分的间距 */
+  margin-top: var(--dsh-chat-space-2);
+}
+
+.dayHeader:first-child {
+  margin-top: 0;
+}
+
 .message {
   display: flex;
   flex-direction: column;
@@ -149,4 +164,86 @@
   height: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+/* ── 内联编辑器（ui-design.md §4.3）──────────────────────────── */
+
+/* 替换气泡正文的位置：宽度仍受 .message 的 max-width 约束 */
+.editWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-2);
+  width: 100%;
+}
+
+.editInput {
+  margin: 0;
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-accent);
+  border-radius: var(--dsh-chat-radius-lg);
+  background: var(--dsh-chat-bg-elevated);
+  color: var(--dsh-chat-fg);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-md);
+  line-height: var(--dsh-chat-leading-normal);
+  resize: vertical;
+  min-height: 3em;
+  /* 与正文气泡同一呈现规则：保留换行 */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.editInput:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-2);
+}
+
+/* 出栈消息的编辑器在右侧，操作行也跟着右对齐 */
+.outgoing .editActions {
+  justify-content: flex-end;
+}
+
+.editCancel,
+.editSave {
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  border-radius: var(--dsh-chat-radius-sm);
+  border: 1px solid var(--dsh-chat-border-strong);
+  background: var(--dsh-chat-bg-elevated);
+  color: var(--dsh-chat-fg);
+  cursor: pointer;
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
+}
+
+.editSave {
+  border-color: var(--dsh-chat-accent);
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-accent-fg);
+}
+
+.editCancel:disabled,
+.editSave:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.editCancel:focus-visible,
+.editSave:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+.editHint {
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
+}
+
+.editHint.overLimit {
+  color: var(--dsh-chat-danger);
 }

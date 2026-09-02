@@ -16,7 +16,7 @@ import { LOCAL_DELIVERY_STATES, STREAM_STATES } from '../presentation.js'
 
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
 import { MessageView, REVOKED_PLACEHOLDER, type DisplayMessage } from './MessageView.js'
-import { click, findAll, findByClass, hasDangerousHtml, textOf } from './element-tree.js'
+import { click, findAll, findByClass, hasDangerousHtml, textOf, walk } from './element-tree.js'
 
 function conversation(overrides: Partial<ConversationSummary> = {}): ConversationSummary {
   return {
@@ -44,7 +44,13 @@ function message(overrides: Partial<DisplayMessage> = {}): DisplayMessage {
 
 describe('会话列表', () => {
   it('渲染标题、预览与时间', () => {
-    const tree = ConversationList({ conversations: [conversation()], onSelect: () => {} })
+    // formatTime 注入固定实现：默认实现按「今天/昨天/更早」相对切分，
+    // 断言它的输出会让用例随运行日期漂移
+    const tree = ConversationList({
+      conversations: [conversation()],
+      onSelect: () => {},
+      formatTime: () => '08-30 12:34',
+    })
     const text = textOf(tree)
     expect(text).toContain('乙')
     expect(text).toContain('好的，我看一下')
@@ -55,6 +61,37 @@ describe('会话列表', () => {
     // 空白无法区分「没有会话」与「还没加载出来」，
     // 而这两者用户该做的事完全不同
     expect(textOf(ConversationList({ conversations: [], onSelect: () => {} }))).toBe('还没有会话')
+  })
+
+  it('空态提供去通讯录的入口，点它触发引导回调', () => {
+    // 没有会话时唯一能开始对话的入口是通讯录 ——
+    // 不给入口的话，空列表就是一个死胡同
+    let opened = false
+    const tree = ConversationList({
+      conversations: [],
+      onSelect: () => {},
+      onOpenDirectory: () => {
+        opened = true
+      },
+    })
+    const buttons = findAll(tree, 'button')
+    expect(buttons).toHaveLength(1)
+    expect(textOf(tree)).toContain('去通讯录发起对话')
+    click(buttons[0]!)
+    expect(opened).toBe(true)
+  })
+
+  it('有草稿时预览行让位给草稿，而非最后一条消息', () => {
+    // §5：草稿是设备本地的视图状态。「打了没发」比「最后收到什么」
+    // 更需要被记住 —— 用户切走了会话，回来时列表要提醒他
+    const tree = ConversationList({
+      conversations: [conversation({ draft: '打了一半的话' })],
+      onSelect: () => {},
+    })
+    const text = textOf(tree)
+    expect(text).toContain('草稿')
+    expect(text).toContain('打了一半的话')
+    expect(text).not.toContain('好的，我看一下')
   })
 
   it('点击回调带出会话 ID', () => {
@@ -220,6 +257,151 @@ describe('消息视图 · 撤回与编辑（§14.1）', () => {
       streamState: 'connected',
     })
     expect(textOf(tree)).not.toContain('已编辑')
+  })
+})
+
+describe('消息视图 · 内联编辑（§14.1）', () => {
+  /** 可编辑的消息：本人发出、已被服务端接受（有 revision）、未撤回。 */
+  function editable(overrides: Partial<DisplayMessage> = {}): DisplayMessage {
+    return message({ messageId: 'msg-e', outgoing: true, body: '初始正文', revision: 2, ...overrides })
+  }
+
+  it('editing 状态下目标消息被编辑器替换，且带 aria-label', () => {
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: '初始正文' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => {},
+    })
+    expect(findAll(tree, 'textarea')[0]?.props['aria-label']).toBe('编辑消息')
+    // 正文位置被编辑器替换，原正文不再以气泡形式出现（草稿在 textarea 的 value 里）
+    expect(findByClass(tree, 'body')).toHaveLength(0)
+  })
+
+  it('只有编辑中的那条被替换，其他消息照常显示', () => {
+    const tree = MessageView({
+      messages: [editable(), message({ messageId: 'msg-o', body: '别人的' })],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: '初始正文' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => {},
+    })
+    expect(findByClass(tree, 'body')).toHaveLength(1)
+    expect(textOf(tree)).toContain('别人的')
+  })
+
+  it('保存回调带出 (messageId, revision + 1, 草稿)', () => {
+    // targetRevision 必须严格大于当前 revision（§14.1）—— 客户端唯一可靠的
+    // 构造方式就是 history 给的 revision + 1
+    const edits: Array<[string, number, string]> = []
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: '改过的正文' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => {},
+      onEdit: (id, rev, body) => edits.push([id, rev, body]),
+    })
+    click(findByClass(tree, 'editSave')[0]!)
+    expect(edits).toEqual([['msg-e', 3, '改过的正文']])
+  })
+
+  it('提交后收起编辑器（乐观关闭）', () => {
+    const cancelled: boolean[] = []
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: '改过的正文' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => cancelled.push(true),
+      onEdit: () => {},
+    })
+    click(findByClass(tree, 'editSave')[0]!)
+    expect(cancelled).toEqual([true])
+  })
+
+  it('空草稿或超长时保存禁用', () => {
+    const renderWith = (draft: string) =>
+      MessageView({
+        messages: [editable()],
+        streamState: 'connected',
+        editing: { messageId: 'msg-e', draft },
+        onChangeDraft: () => {},
+        onCancelEdit: () => {},
+        onEdit: () => {},
+      })
+    const saveDisabled = (tree: ReturnType<typeof MessageView>): unknown =>
+      findByClass(tree, 'editSave')[0]?.props['disabled']
+    expect(saveDisabled(renderWith('   '))).toBe(true)
+    expect(saveDisabled(renderWith('a'.repeat(8001)))).toBe(true)
+    expect(saveDisabled(renderWith('正常的草稿'))).toBe(false)
+  })
+
+  it('超限时提示超出字数', () => {
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: 'a'.repeat(8005) },
+      onChangeDraft: () => {},
+      onCancelEdit: () => {},
+      onEdit: () => {},
+    })
+    expect(textOf(tree)).toContain('超出 5 字')
+  })
+
+  it('Esc 触发取消', () => {
+    const cancelled: boolean[] = []
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: 'x' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => cancelled.push(true),
+    })
+    const textarea = findAll(tree, 'textarea')[0]!
+    const handler = textarea.props['onKeyDown'] as (event: unknown) => void
+    handler({ key: 'Escape', preventDefault: () => {}, nativeEvent: {} })
+    expect(cancelled).toEqual([true])
+  })
+
+  it('Enter 提交；Shift+Enter 与输入法组字不提交', () => {
+    const edits: string[] = []
+    const tree = MessageView({
+      messages: [editable()],
+      streamState: 'connected',
+      editing: { messageId: 'msg-e', draft: 'x' },
+      onChangeDraft: () => {},
+      onCancelEdit: () => {},
+      onEdit: () => edits.push('called'),
+    })
+    const handler = findAll(tree, 'textarea')[0]!.props['onKeyDown'] as (event: unknown) => void
+    const enter = (extra: Record<string, unknown> = {}): unknown =>
+      handler({ key: 'Enter', shiftKey: false, preventDefault: () => {}, nativeEvent: { isComposing: false }, ...extra })
+    enter({ shiftKey: true })
+    expect(edits).toEqual([])
+    enter({ nativeEvent: { isComposing: true } })
+    expect(edits).toEqual([])
+    enter()
+    expect(edits).toEqual(['called'])
+  })
+
+  it('菜单项里「编辑」只对有 revision 的本人消息出现', () => {
+    // 菜单项藏在 DropdownMenu 的 props.items 里（walk 不调用组件函数，
+    // 但 props 是可见的）。没有 revision = 还没被服务端接受，编辑无从附着
+    const labelsOf = (msg: DisplayMessage): string[] => {
+      const tree = MessageView({
+        messages: [msg],
+        streamState: 'connected',
+        onStartEdit: () => {},
+      })
+      const menu = walk(tree).find((n) => n.props['items'] !== undefined)
+      return (menu?.props['items'] as Array<{ label: string }>).map((i) => i.label)
+    }
+    expect(labelsOf(editable())).toContain('编辑')
+    expect(labelsOf(editable({ revision: undefined }))).not.toContain('编辑')
+    expect(labelsOf(message({ outgoing: false }))).not.toContain('编辑')
+    expect(labelsOf(editable({ revoked: true }))).not.toContain('编辑')
   })
 })
 

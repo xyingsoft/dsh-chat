@@ -13,6 +13,27 @@
   font-family: var(--dsh-chat-font-ui);
   font-size: var(--dsh-chat-text-sm);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dsh-chat-space-3);
+}
+
+/* 空态引导按钮：去通讯录开始新对话 */
+.emptyAction {
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  border: 1px solid var(--dsh-chat-accent);
+  border-radius: var(--dsh-chat-radius-sm);
+  background: transparent;
+  color: var(--dsh-chat-accent);
+  cursor: pointer;
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
+}
+
+.emptyAction:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }
 
 .list {
@@ -78,6 +99,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 草稿标记：与普通预览可区分（弱强调底 + 文字），不止靠颜色 */
+.draftTag {
+  display: inline-block;
+  margin-right: var(--dsh-chat-space-1);
+  padding: 0 var(--dsh-chat-space-1);
+  border-radius: var(--dsh-chat-radius-sm);
+  background: var(--dsh-chat-warning-soft);
+  color: var(--dsh-chat-warning);
+  font-size: var(--dsh-chat-text-xs);
+  line-height: 1.4;
+  vertical-align: 1px;
 }
 
 .meta {

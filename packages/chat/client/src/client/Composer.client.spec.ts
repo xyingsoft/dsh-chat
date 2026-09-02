@@ -16,7 +16,12 @@ import { COMPOSER_LIMITS, Composer, type ComposerProps } from './Composer.js'
 
 function render(props: Partial<ComposerProps> = {}): string {
   return renderToStaticMarkup(
-    createElement(Composer, { onSend: async () => undefined, ...props }),
+    createElement(Composer, {
+      onSend: async () => undefined,
+      value: '',
+      onChange: () => {},
+      ...props,
+    }),
   )
 }
 
@@ -30,6 +35,14 @@ describe('初始状态', () => {
   it('空内容时发送按钮禁用', () => {
     // 允许发空消息的话，一次误触就在对方那边留一条空气泡
     expect(render()).toContain('disabled=""')
+  })
+
+  it('受控草稿：value 渲染进输入框，有内容时发送可用', () => {
+    // 草稿由父层持有（切会话恢复、发送后清空都走 value）——
+    // 受控失灵的话，切回来草稿就是空的，等于没保存
+    const html = render({ value: '还没发出去的话' })
+    expect(html).toContain('还没发出去的话')
+    expect(html).not.toContain('disabled=""')
   })
 
   it('提示 Enter 发送、Shift+Enter 换行', () => {

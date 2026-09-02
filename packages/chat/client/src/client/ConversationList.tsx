@@ -17,6 +17,7 @@ import { createElement, type ReactElement, type ReactNode } from 'react'
 
 import type { PresenceState } from '../presentation.js'
 import { Avatar } from '../components/Avatar.js'
+import { formatListTime } from './time.js'
 
 import styles from './ConversationList.module.css'
 
@@ -39,6 +40,13 @@ export interface ConversationSummary {
    * 都不该显示一个绿点。
    */
   readonly presence?: PresenceState
+  /**
+   * 未发送的草稿（工单：草稿保存）。
+   *
+   * 草稿是**设备本地的视图状态**（§5），不进 host —— 有草稿时预览行
+   * 显示 `[草稿] …` 而不是最后一条消息，让用户记得那里还有话没说完。
+   */
+  readonly draft?: string
 }
 
 export interface ConversationListProps {
@@ -47,6 +55,13 @@ export interface ConversationListProps {
   readonly onSelect: (conversationId: string) => void
   /** 本地搜索命中词。命中片段用 <mark> 高亮（正文仍是文本节点，U4）。 */
   readonly highlightQuery?: string
+  /**
+   * 空态引导：切换到通讯录开始新对话。
+   *
+   * 没有会话时用户唯一能做的是去通讯录找人 —— 不给入口的话，空列表
+   * 就是一个死胡同。
+   */
+  readonly onOpenDirectory?: () => void
   /**
    * 把 ISO 时间格式化为显示文本。
    *
@@ -57,10 +72,9 @@ export interface ConversationListProps {
   readonly formatTime?: (iso: string) => string
 }
 
-/** 默认时间格式化：`2026-08-30T12:34:56Z` → `08-30 12:34`。 */
+/** 默认时间格式化：`formatListTime`（今天 HH:MM / 昨天 / MM-DD）。相对语义按本地日历日切，见 `time.ts`。 */
 function defaultFormatTime(iso: string): string {
-  const match = /^\d{4}-(\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
-  return match === null ? iso : `${match[1]} ${match[2]}`
+  return formatListTime(iso, new Date())
 }
 
 /** 在线状态的文字说明。§49 要求颜色不作为唯一状态信号。 */
@@ -128,8 +142,24 @@ export function ConversationList(props: ConversationListProps): ReactElement {
 
   if (props.conversations.length === 0) {
     // 空态给一句明确的话，而不是一片空白。空白无法区分「没有会话」与
-    // 「还没加载出来」，而这两者用户该做的事完全不同
-    return createElement('p', { className: styles['empty'] }, '还没有会话')
+    // 「还没加载出来」，而这两者用户该做的事完全不同。
+    // 没有会话时唯一能开始对话的入口是通讯录 —— 给按钮，别让列表成死胡同
+    return createElement(
+      'p',
+      { className: styles['empty'] },
+      '还没有会话',
+      props.onOpenDirectory === undefined
+        ? null
+        : createElement(
+            'button',
+            {
+              type: 'button',
+              className: styles['emptyAction'],
+              onClick: props.onOpenDirectory,
+            },
+            '去通讯录发起对话',
+          ),
+    )
   }
 
   return createElement(
@@ -173,7 +203,18 @@ export function ConversationList(props: ConversationListProps): ReactElement {
             createElement(
               'span',
               { className: styles['preview'] },
-              ...highlightSegments(conversation.preview, props.highlightQuery),
+              // 有草稿时预览行让位给草稿（§5：草稿是设备本地视图状态）——
+              // 「打了没发」比「最后收到什么」更需要被记住
+              conversation.draft !== undefined && conversation.draft.length > 0
+                ? [
+                    createElement(
+                      'span',
+                      { key: 'draft-tag', className: styles['draftTag'] },
+                      '草稿',
+                    ),
+                    ` ${conversation.draft}`,
+                  ]
+                : highlightSegments(conversation.preview, props.highlightQuery),
             ),
             createElement(
               'span',

@@ -162,6 +162,12 @@ export interface ConversationMessage {
   readonly revoked: boolean
   readonly edited: boolean
   readonly sentAt: string
+  /**
+   * 当前修订号。编辑接口要求 `targetRevision` 严格大于它（§14.1），
+   * 不透传的话客户端就只能瞎填 —— 填低了永远 `VERSION_CONFLICT`，
+   * 填高了会吞掉并发编辑。撤回也占 revision，同样体现在这里。
+   */
+  readonly revision: number
 }
 
 /**
@@ -212,6 +218,8 @@ export function messagesWith(
         revoked: view?.revoked ?? false,
         edited: view?.edited ?? false,
         sentAt: row.created_at,
+        // messageView 缺席（事件表还没这行）时回退 1 = 初始正文的修订号
+        revision: view?.revision ?? 1,
       }
     })
 }
