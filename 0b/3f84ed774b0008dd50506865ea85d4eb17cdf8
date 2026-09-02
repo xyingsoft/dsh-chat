@@ -1,0 +1,126 @@
+packages/chat/client/src/client/MessageView.tsx
+  s_2a0ad92afe8049::t_4836e76afd73af 58,61,73,76,78-91,118-119
+  s_2a0ad92afe8049::t_cfb3d5d931ddd4 26
+  s_2a0ad92afe8049::t_57388d00932ce6 242-244
+  s_2a0ad92afe8049::t_cb83d5755d49a0 98-101,103-115
+  s_2a0ad92afe8049::t_dd8ccb4849d9ab 211-220,231,245,251,270,278
+  s_2a0ad92afe8049::t_179693150b365d 116,222,224-230,232-241,246-250,252-269,271-277,279-292,298-303
+  s_2a0ad92afe8049::t_ef0cda7e528e99 293-297
+  s_2a0ad92afe8049::t_e53756b44f1609 38
+  s_2a0ad92afe8049::t_17a29acaf1eb29 155-172
+  s_2a0ad92afe8049::t_3a9cc3ea7b51df 335,339,354-367
+  s_2a0ad92afe8049::t_a2469cb3ac15d1 37
+  s_2a0ad92afe8049::t_7832355da51d8d 59-60
+  s_2a0ad92afe8049::t_6e3b1e61ecf25c 62
+  s_2a0ad92afe8049::t_98c1d7786c28ab 74-75
+  s_2a0ad92afe8049::t_4f1ba2fcf145a1 77
+  s_2a0ad92afe8049::t_c3d6c8483c57eb 117
+  s_2a0ad92afe8049::t_5a33849d971cce 120-121
+  s_2a0ad92afe8049::t_705db827ab5a33 221
+  s_2a0ad92afe8049::t_1c1b24e33b36c9 223
+  s_2a0ad92afe8049::t_3ffdd2a3697012 332-334
+  s_2a0ad92afe8049::t_e1bd13a9971fba 336-338
+  s_2a0ad92afe8049::t_80ff8013091cda 340-341
+packages/chat/messaging/src/conversations.host.spec.ts
+  s_2a0ad92afe8049::t_c175dac1491d9c 258-313
+packages/chat/client/src/client/MessageView.client.spec.ts
+  s_2a0ad92afe8049::t_c454540f505c1e 53,263-305,307-319,321-333,339-407
+  s_2a0ad92afe8049::t_1a34e7fa871485 66-83
+  s_2a0ad92afe8049::t_18704816650753 19
+  s_2a0ad92afe8049::t_58c5069a9da73f 306,320,334-338
+  s_2a0ad92afe8049::t_8f175940da7f51 49,51,84-96
+  s_2a0ad92afe8049::t_6572e050be14c3 47-48
+  s_2a0ad92afe8049::t_2fbbedb604d2ae 50
+  s_2a0ad92afe8049::t_c260b85c5d9142 52
+packages/chat/client/src/client/ConversationList.module.css
+  s_2a0ad92afe8049::t_c85b8dbc1a8669 16-36
+  s_2a0ad92afe8049::t_b7fd7ba913f1a7 104-116
+packages/chat/client/src/client/ChatSection.tsx
+  s_2a0ad92afe8049::t_d37677229698c4 253-265
+  s_2a0ad92afe8049::t_991f0554f8e4ea 727-729
+  s_2a0ad92afe8049::t_f55c148948f862 348-350
+  s_2a0ad92afe8049::t_3c6c0f82a2917c 212-214
+  s_2a0ad92afe8049::t_8fa705837b27f5 635-637
+  s_2a0ad92afe8049::t_b39e88ccac4048 528-559
+  s_2a0ad92afe8049::t_31d2c54d558d44 210-211
+  s_2a0ad92afe8049::t_f8c905c6110599 117-118
+  s_2a0ad92afe8049::t_30de094d31f18c 788-790
+  s_2a0ad92afe8049::t_88ccb02fc6e7de 53
+  s_2a0ad92afe8049::t_44d24a36a94e78 425-441
+  s_2a0ad92afe8049::t_308a4941bf5f90 355-361
+  s_2a0ad92afe8049::t_d1e959d3500409 797-799
+  s_2a0ad92afe8049::t_7a63698b67c3c3 619-623
+  s_2a0ad92afe8049::t_f0f23a59505a94 62-83
+  s_2a0ad92afe8049::t_a3c36e6a454839 20-23
+  s_2a0ad92afe8049::t_9eec02bc860843 781-787
+packages/chat/messaging/src/conversations.ts
+  s_2a0ad92afe8049::t_782bc84fa52458 221-222
+  s_2a0ad92afe8049::t_79cb0c46c501b4 165-170
+packages/chat/client/src/client/Composer.tsx
+  s_2a0ad92afe8049::t_1eebcfabde1a04 134
+  s_2a0ad92afe8049::t_c7618f7330de27 37-41
+  s_2a0ad92afe8049::t_b4477ee8e6f75e 128
+  s_2a0ad92afe8049::t_f3fd3dd487944d 51-59,77,79,81,86,90-92,97,100
+examples/two-users/start-relay.mjs
+  s_2a0ad92afe8049::t_0b9c73509393fa 24,29,55,57-58,60,63-64,66-74,82,84-100,105,107-116,147-150
+  s_2a0ad92afe8049::t_c4ef5a1b1c119d 79-81,83
+  s_2a0ad92afe8049::t_ef38fea907f1fb 1-23,25-28,30,32-54,56,59,61-62,65,75-78,101-104,106,118-146,151
+  s_2a0ad92afe8049::t_b198ae8cc78120 31
+  s_2a0ad92afe8049::t_4fb01134ff1aa2 117
+.gitignore
+  s_2a0ad92afe8049::t_65ed6ba40aab67 39-41
+packages/chat/client/src/client/Composer.client.spec.ts
+  s_2a0ad92afe8049::t_32b5d8c504dc45 19-24,40-45
+  s_2a0ad92afe8049::t_6ce80b563967c1 46-47
+packages/chat/client/src/client/time.ts
+  s_2a0ad92afe8049::t_88f698513bb474 1-86
+packages/chat/client/src/client/MessageView.module.css
+  s_2a0ad92afe8049::t_728902dc9cd6f2 168-249
+  s_2a0ad92afe8049::t_d8c41212e8b70d 56-70
+packages/chat/client/src/client/ConversationList.tsx
+  s_2a0ad92afe8049::t_d9c585bb69bc08 145-162
+  s_2a0ad92afe8049::t_c473029fc8b23a 43-49,58-64
+  s_2a0ad92afe8049::t_2f3ce68b12a8e2 75,77
+  s_2a0ad92afe8049::t_543fe2eea99ca1 20
+  s_2a0ad92afe8049::t_6af93587fc36eb 206-217
+packages/chat/client/src/client/time.client.spec.ts
+  s_2a0ad92afe8049::t_d189da37f2418e 1-99
+examples/two-users/bob.mjs
+  s_2a0ad92afe8049::t_5aaddf0c3fb556 1-69,104,113,115-176
+  s_2a0ad92afe8049::t_f80de224091d0d 70-81,83-103,105-108,110,112,114
+  s_2a0ad92afe8049::t_837fb1c75ec06a 82,109,111
+examples/two-users/README.md
+  s_2a0ad92afe8049::t_6e8b5e53884883 1-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "0b3f84ed774b0008dd50506865ea85d4eb17cdf8",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "edit_kind": "file_edit",
+        "tool_use_id": "6a97f2d24cb341d16d3bd5aa",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "source_scene": "agent",
+        "tool_name": "Edit",
+        "runtime_client": "trae-tob-git-ai",
+        "operation_id": "6a97f2d24cb341d16d3bd5aa",
+        "client_type": "ide"
+      }
+    }
+  }
+}
