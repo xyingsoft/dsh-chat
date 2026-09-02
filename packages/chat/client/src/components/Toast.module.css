@@ -1,0 +1,109 @@
+.region {
+  position: fixed;
+  top: var(--dsh-chat-space-4);
+  right: var(--dsh-chat-space-4);
+  z-index: var(--dsh-chat-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-chat-space-2);
+  width: min(340px, calc(100vw - var(--dsh-chat-space-6)));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dsh-chat-space-2);
+  padding: var(--dsh-chat-space-3) var(--dsh-chat-space-3);
+  border-radius: var(--dsh-chat-radius-md);
+  border: 1px solid var(--dsh-chat-border);
+  background: var(--dsh-chat-bg-elevated);
+  color: var(--dsh-chat-fg);
+  box-shadow: var(--dsh-chat-shadow-pop);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-md);
+  line-height: var(--dsh-chat-leading-tight);
+  animation: dshChatToastIn var(--dsh-chat-dur) var(--dsh-chat-ease);
+}
+
+@keyframes dshChatToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: var(--dsh-chat-radius-pill);
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 700;
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.info .icon {
+  background: var(--dsh-chat-accent);
+}
+
+.success .icon {
+  background: var(--dsh-chat-success);
+}
+
+.warning .icon {
+  background: var(--dsh-chat-warning);
+}
+
+.error .icon {
+  background: var(--dsh-chat-danger);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.action {
+  border: none;
+  background: none;
+  padding: 0 var(--dsh-chat-space-1);
+  color: var(--dsh-chat-accent);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--dsh-chat-radius-sm);
+}
+
+.action:focus-visible,
+.close:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+.close {
+  flex: none;
+  border: none;
+  background: none;
+  padding: 0 var(--dsh-chat-space-1);
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-md);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--dsh-chat-radius-sm);
+}
+
+.close:hover {
+  color: var(--dsh-chat-fg);
+}

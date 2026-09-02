@@ -39,6 +39,7 @@ import {
 import { createPortal } from 'react-dom'
 
 import styles from './ChatDrawer.module.css'
+import { ToastHost } from '../components/Toast.js'
 import { VisibilityPicker } from './VisibilityPicker.js'
 
 /*
@@ -257,6 +258,8 @@ export function ChatDrawer(props: ChatDrawerProps): ReactElement {
       { className: styles['body'] },
       typeof props.children === 'function' ? props.children(width) : props.children,
     ),
+    // 操作反馈 toast 的挂载点（随抽屉生命周期，通知 region 在 body portal）
+    createElement(ToastHost, {}),
   )
 
   return createElement(

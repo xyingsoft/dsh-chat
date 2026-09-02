@@ -1,44 +1,55 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5：样式走 DSH 主题 token + CSS Modules）。 */
+/* 消息视图：引用 styles/tokens.module.css（含暗色）。正文不可信内容规则不变。 */
 
 .root {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 8px;
+  gap: var(--dsh-chat-space-2);
 }
 
-/* 事件流状态条。§5 要求断开、组织切换、权限变更、sync_diverged 必须显式呈现，
-   所以它占据布局空间而不是浮层 —— 浮层会被忽略，也会被其他元素盖住 */
+/* 事件流状态条：占布局而非浮层（U2），断开/对账时整行呈现 */
 .streamBanner {
-  margin: 0;
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: var(--dsh-color-bg-warning, #fff6e5);
-  color: var(--dsh-color-text-warning, #8a5a00);
-  font-size: 12px;
+  margin: var(--dsh-chat-space-2) var(--dsh-chat-space-3) 0;
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-warning-soft);
+  color: var(--dsh-chat-warning);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
 }
 
 .streamBannerHalted {
-  background: var(--dsh-color-bg-danger, #fdecec);
-  color: var(--dsh-color-text-danger, #a02020);
+  background: var(--dsh-chat-danger-soft);
+  color: var(--dsh-chat-danger);
+}
+
+[data-theme='dark'] .streamBanner {
+  color: #e3b341;
+}
+
+[data-theme='dark'] .streamBannerHalted {
+  color: #ff8a85;
 }
 
 .list {
   margin: 0;
-  padding: 0;
+  padding: var(--dsh-chat-space-3) var(--dsh-chat-space-4);
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--dsh-chat-space-2);
   overflow-y: auto;
   flex: 1;
+  scrollbar-width: thin;
 }
 
 .empty {
-  margin: 0;
-  padding: 24px;
-  color: var(--dsh-color-text-secondary, #666);
-  font-size: 13px;
+  margin: auto;
+  padding: var(--dsh-chat-space-6) var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-faint);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
   text-align: center;
 }
 
@@ -46,8 +57,6 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  /* 抽屉只有 380px 宽，70% 会让气泡挤成一条。用 min() 让窄容器里放宽比例，
-     宽容器里仍然留出对比两侧的余地 */
   max-width: min(85%, 34em);
   align-self: flex-start;
 }
@@ -59,36 +68,47 @@
 
 .body {
   margin: 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: var(--dsh-color-bg-subtle, #f2f2f2);
-  /* 正文是不可信内容（§18）；保留换行但绝不解释为标记 */
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border-radius: var(--dsh-chat-radius-lg);
+  border-bottom-left-radius: var(--dsh-chat-radius-sm);
+  background: var(--dsh-chat-bubble-peer);
+  color: var(--dsh-chat-bubble-peer-fg);
+  box-shadow: var(--dsh-chat-shadow-bubble);
+  /* 正文不可信（§18）：保留换行但不解释标记 */
   white-space: pre-wrap;
-  /* break-word 而不是 anywhere：anywhere 会在任意位置断行，窄面板里像
-     idx_audit_lookup 这种标识符会被劈成两半。break-word 只在一个词确实
-     放不下时才断，优先在词边界换行 */
   overflow-wrap: break-word;
-  font-size: 14px;
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-md);
+  line-height: var(--dsh-chat-leading-normal);
 }
 
 .outgoing .body {
-  background: var(--dsh-color-bg-accent-subtle, #e8f0fc);
+  background: var(--dsh-chat-bubble-self);
+  color: var(--dsh-chat-bubble-self-fg);
+  border-radius: var(--dsh-chat-radius-lg);
+  border-bottom-right-radius: var(--dsh-chat-radius-sm);
 }
 
-/* 撤回占位与正文视觉上必须不同，否则「[已撤回]」看起来像是有人真的这么说了 */
+/* 撤回占位必须与正文视觉不同（U3） */
 .revoked {
   font-style: italic;
-  color: var(--dsh-color-text-secondary, #666);
+  color: var(--dsh-chat-fg-muted);
   background: transparent;
-  border: 1px dashed var(--dsh-color-border, #e0e0e0);
+  border: 1px dashed var(--dsh-chat-border-strong);
+  box-shadow: none;
 }
 
 .meta {
   display: flex;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 11px;
-  color: var(--dsh-color-text-secondary, #666);
+  gap: var(--dsh-chat-space-2);
+  align-items: center;
+  padding: 0 var(--dsh-chat-space-1);
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
+}
+
+.outgoing .meta {
+  flex-direction: row-reverse;
 }
 
 .time {
@@ -97,20 +117,36 @@
 
 .edited {
   font-style: italic;
+  color: var(--dsh-chat-fg-muted);
 }
 
-/* 投递状态。三态各有措辞，且没有一态说「已送达」（§5） */
+/* 投递三态（U1）：待发送/已接收/失败各自有措辞，无一态称「已送达」 */
 .deliveryFailed {
-  color: var(--dsh-color-text-danger, #a02020);
+  color: var(--dsh-chat-danger);
 }
 
 .retry {
   border: none;
   background: transparent;
-  padding: 0;
-  color: var(--dsh-color-accent, #3574d6);
+  padding: 0 var(--dsh-chat-space-1);
+  color: var(--dsh-chat-accent);
   cursor: pointer;
-  font: inherit;
-  font-size: 11px;
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-xs);
   text-decoration: underline;
+  border-radius: var(--dsh-chat-radius-sm);
+}
+
+.retry:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+/* 右键菜单的零尺寸锚点：不参与布局，也不被读屏 */
+.menuAnchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
 }

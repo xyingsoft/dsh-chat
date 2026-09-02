@@ -1,0 +1,105 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: var(--dsh-chat-space-5);
+  font-family: var(--dsh-chat-font-ui);
+  color: var(--dsh-chat-fg);
+}
+
+.card {
+  width: min(360px, 100%);
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--dsh-chat-space-4);
+  border-radius: var(--dsh-chat-radius-pill);
+  background: var(--dsh-chat-warning-soft);
+  color: var(--dsh-chat-warning);
+  font-size: var(--dsh-chat-text-xl);
+  font-weight: 800;
+}
+
+.title {
+  margin: 0 0 var(--dsh-chat-space-2);
+  font-size: var(--dsh-chat-text-xl);
+  font-weight: 700;
+}
+
+.lead {
+  margin: 0 auto;
+  max-width: 280px;
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-md);
+  line-height: var(--dsh-chat-leading-normal);
+}
+
+.versions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--dsh-chat-space-1) var(--dsh-chat-space-3);
+  margin: var(--dsh-chat-space-4) auto var(--dsh-chat-space-5);
+  max-width: 260px;
+  font-size: var(--dsh-chat-text-sm);
+  text-align: left;
+}
+
+.versions dt {
+  color: var(--dsh-chat-fg-faint);
+}
+
+.versions dd {
+  margin: 0;
+  font-family: var(--dsh-chat-font-mono);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--dsh-chat-space-3);
+}
+
+.primary,
+.ghost {
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-4);
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.primary {
+  border: 1px solid var(--dsh-chat-accent);
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.primary:hover {
+  background: var(--dsh-chat-accent-hover);
+}
+
+.ghost {
+  border: 1px solid var(--dsh-chat-border);
+  background: none;
+  color: var(--dsh-chat-fg-muted);
+}
+
+.ghost:hover {
+  background: var(--dsh-chat-bg-hover);
+}
+
+.primary:focus-visible,
+.ghost:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}

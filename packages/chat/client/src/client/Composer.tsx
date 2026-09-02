@@ -20,6 +20,7 @@
 import {
   createElement,
   useCallback,
+  useEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -53,6 +54,15 @@ export function Composer(props: ComposerProps): ReactElement {
   const [error, setError] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const composingRef = useRef(false)
+
+  // 多行自适应高度（ui-design.md gap：固定一行不会随内容长高）。
+  // 输入框高度 = 内容高度，上限由 CSS 的 max-height 兜住后内部滚动。
+  useEffect(() => {
+    const el = inputRef.current
+    if (el === null) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [text])
 
   const graphemes = countGraphemes(text)
   const overLimit = graphemes > MAX_GRAPHEMES

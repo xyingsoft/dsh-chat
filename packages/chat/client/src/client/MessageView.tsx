@@ -31,6 +31,9 @@ import {
   type LocalDeliveryState,
   type StreamState,
 } from '../presentation.js'
+import { Avatar } from '../components/Avatar.js'
+import { DropdownMenu, type DropdownMenuItem } from '../components/DropdownMenu.js'
+import { notify } from '../components/Toast.js'
 
 import styles from './MessageView.module.css'
 
@@ -58,6 +61,8 @@ export interface MessageViewProps {
   readonly messages: readonly DisplayMessage[]
   readonly streamState: StreamState
   readonly onRetry?: (messageId: string) => void
+  /** 请求撤回。由父层负责二次确认与调用 host（本组件保持纯呈现）。 */
+  readonly onRevoke?: (messageId: string) => void
   readonly formatTime?: (iso: string) => string
 }
 
@@ -99,20 +104,149 @@ export function MessageView(props: MessageViewProps): ReactElement {
       : createElement(
           'ul',
           { className: styles['list'] },
-          ...props.messages.map((message) => renderMessage(message, format, props.onRetry)),
+          ...props.messages.map((message) =>
+            renderMessage(message, format, props.onRetry, props.onRevoke),
+          ),
         ),
   )
+}
+
+/**
+ * 复制纯文本到剪贴板（正文不可信内容按纯文本复制，不做 HTML）。
+ * 复制成功后给 toast；失败静默 —— 复制是便利功能，不该因此打断操作。
+ */
+function copyPlainText(text: string): void {
+  const done = (): void => {
+    notify({ id: 'copy-message', variant: 'success', message: '已复制到剪贴板' })
+  }
+  if (globalThis.navigator?.clipboard?.writeText !== undefined) {
+    globalThis.navigator.clipboard.writeText(text).then(done).catch(() => {
+      fallbackCopy(text, done)
+    })
+  } else {
+    fallbackCopy(text, done)
+  }
+}
+
+function fallbackCopy(text: string, done: () => void): void {
+  if (typeof document === 'undefined') return
+  try {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.select()
+    document.execCommand('copy')
+    document.body.removeChild(area)
+    done()
+  } catch {
+    // 隐私策略下剪贴板不可写：什么都不做
+  }
 }
 
 function renderMessage(
   message: DisplayMessage,
   format: (iso: string) => string,
   onRetry: ((messageId: string) => void) | undefined,
+  onRevoke: ((messageId: string) => void) | undefined,
 ): ReactElement {
   const delivery =
     message.outgoing && message.deliveryState !== undefined
       ? presentDeliveryState(message.deliveryState)
       : undefined
+
+  // 右键菜单。「复制」始终可用；「撤回」只对本人已发送且未撤回的消息出现，
+  // 窗口/权限判定在 host 侧（U7：客户端不自行重算能力），超窗会由服务端拒绝。
+  // 撤回是破坏性操作，父层（ChatSection）负责弹 Dialog 二次确认后再调 host。
+  const menuItems: readonly DropdownMenuItem[] = [
+    {
+      id: 'copy',
+      label: '复制',
+      disabled: message.revoked || message.body === undefined,
+      onSelect: () => {
+        if (message.body !== undefined) copyPlainText(message.body)
+      },
+    },
+    ...(message.outgoing && !message.revoked && onRevoke !== undefined
+      ? [
+          {
+            id: 'revoke',
+            label: '撤回',
+            danger: true as const,
+            onSelect: () => onRevoke(message.messageId),
+          },
+        ]
+      : []),
+  ]
+
+  const body = createElement(
+    'p',
+    {
+      className: [styles['body'], message.revoked ? styles['revoked'] : '']
+        .filter(Boolean)
+        .join(' '),
+    },
+    // 撤回后展示占位而非正文（§14.1）。正文经文本节点输出，
+    // 不做任何标记解释（§18：不可信内容）
+    message.revoked ? REVOKED_PLACEHOLDER : (message.body ?? REVOKED_PLACEHOLDER),
+  )
+  const meta = createElement(
+    'span',
+    { className: styles['meta'] },
+    // 对方消息在信息行带头像（生成式），本端不重复画自己
+    !message.outgoing
+      ? createElement(Avatar, { name: message.authorName, size: 'sm', title: message.authorName })
+      : null,
+    createElement('span', null, message.authorName),
+    createElement(
+      'time',
+      { className: styles['time'], dateTime: message.sentAt },
+      format(message.sentAt),
+    ),
+    // 已撤回的消息不标「已编辑」—— 那会暗示当前有一份被编辑过的正文可看，
+    // 而实际上正文已经不可得
+    message.edited && !message.revoked
+      ? createElement('span', { className: styles['edited'] }, '已编辑')
+      : null,
+    delivery === undefined
+      ? null
+      : createElement(
+          'span',
+          {
+            className:
+              message.deliveryState === 'failed' ? styles['deliveryFailed'] : undefined,
+          },
+          delivery.label,
+        ),
+    // 只有终态失败才给重试入口（§5）—— offersRetry 已判定，这里不再自行判断
+    delivery?.offersRetry === true && onRetry !== undefined
+      ? createElement(
+          'button',
+          {
+            type: 'button',
+            className: styles['retry'],
+            onClick: () => onRetry(message.messageId),
+          },
+          '重试',
+        )
+      : null,
+  )
+
+  // children 渲染函数执行时把 openAt 交给外层右键处理器
+  let openMenu: ((anchor: HTMLElement | { readonly x: number; readonly y: number }) => void) | undefined
+  const menu = createElement(
+    DropdownMenu,
+    {
+      trigger: 'manual',
+      items: menuItems,
+      ariaLabel: '消息操作',
+      children: (openAt) => {
+        openMenu = openAt
+        return createElement('span', { className: styles['menuAnchor'], 'aria-hidden': true })
+      },
+    },
+  )
 
   return createElement(
     'li',
@@ -121,55 +255,14 @@ function renderMessage(
       className: [styles['message'], message.outgoing ? styles['outgoing'] : '']
         .filter(Boolean)
         .join(' '),
-    },
-    createElement(
-      'p',
-      {
-        className: [styles['body'], message.revoked ? styles['revoked'] : '']
-          .filter(Boolean)
-          .join(' '),
+      onContextMenu: (event: { preventDefault: () => void; clientX: number; clientY: number }) => {
+        if (openMenu === undefined) return
+        event.preventDefault()
+        openMenu({ x: event.clientX, y: event.clientY })
       },
-      // 撤回后展示占位而非正文（§14.1）。正文经文本节点输出，
-      // 不做任何标记解释（§18：不可信内容）
-      message.revoked ? REVOKED_PLACEHOLDER : (message.body ?? REVOKED_PLACEHOLDER),
-    ),
-    createElement(
-      'span',
-      { className: styles['meta'] },
-      createElement('span', null, message.authorName),
-      createElement(
-        'time',
-        { className: styles['time'], dateTime: message.sentAt },
-        format(message.sentAt),
-      ),
-      // 已撤回的消息不标「已编辑」—— 那会暗示当前有一份被编辑过的正文可看，
-      // 而实际上正文已经不可得
-      message.edited && !message.revoked
-        ? createElement('span', { className: styles['edited'] }, '已编辑')
-        : null,
-      delivery === undefined
-        ? null
-        : createElement(
-            'span',
-            {
-              className:
-                message.deliveryState === 'failed' ? styles['deliveryFailed'] : undefined,
-            },
-            delivery.label,
-          ),
-      // 只有 terminal 失败才给重试入口（§5：terminal 不提供重试按钮 ——
-      // 这里的 offersRetry 已经把该判断做完了，本文件不再自行判断）
-      delivery?.offersRetry === true && onRetry !== undefined
-        ? createElement(
-            'button',
-            {
-              type: 'button',
-              className: styles['retry'],
-              onClick: () => onRetry(message.messageId),
-            },
-            '重试',
-          )
-        : null,
-    ),
+    },
+    body,
+    meta,
+    menu,
   )
 }

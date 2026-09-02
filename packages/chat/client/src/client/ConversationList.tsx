@@ -13,9 +13,10 @@
  * 同样只能来自 host。
  */
 
-import { createElement, type ReactElement } from 'react'
+import { createElement, type ReactElement, type ReactNode } from 'react'
 
 import type { PresenceState } from '../presentation.js'
+import { Avatar } from '../components/Avatar.js'
 
 import styles from './ConversationList.module.css'
 
@@ -44,6 +45,8 @@ export interface ConversationListProps {
   readonly conversations: readonly ConversationSummary[]
   readonly selectedId?: string
   readonly onSelect: (conversationId: string) => void
+  /** 本地搜索命中词。命中片段用 <mark> 高亮（正文仍是文本节点，U4）。 */
+  readonly highlightQuery?: string
   /**
    * 把 ISO 时间格式化为显示文本。
    *
@@ -89,6 +92,37 @@ function presenceDot(state: PresenceState): ReactElement {
   })
 }
 
+/**
+ * 把一段文本按命中词切成 文本 / <mark> 节点。
+ *
+ * 正文作为不可信内容（§18）——只按字符串片段切，绝不把片段当 HTML；
+ * 大小写不敏感，命中点从 0 开始无限期循环直到找不到。
+ */
+function highlightSegments(text: string, query: string | undefined): ReactNode[] {
+  if (query === undefined || query.length === 0) return [text]
+  const lower = text.toLocaleLowerCase()
+  const needle = query.toLocaleLowerCase()
+  const segments: ReactNode[] = []
+  let cursor = 0
+  let index = 0
+  for (;;) {
+    const at = lower.indexOf(needle, cursor)
+    if (at === -1) break
+    if (at > cursor) segments.push(text.slice(cursor, at))
+    segments.push(
+      createElement(
+        'mark',
+        { key: `hl-${index}`, className: styles['mark'] },
+        text.slice(at, at + needle.length),
+      ),
+    )
+    cursor = at + needle.length
+    index += 1
+  }
+  if (cursor < text.length) segments.push(text.slice(cursor))
+  return segments.length === 0 ? [text] : segments
+}
+
 export function ConversationList(props: ConversationListProps): ReactElement {
   const format = props.formatTime ?? defaultFormatTime
 
@@ -122,13 +156,25 @@ export function ConversationList(props: ConversationListProps): ReactElement {
                 .join(' '),
               onClick: () => props.onSelect(conversation.conversationId),
             },
+            // 生成式头像：同一联系人颜色稳定可辨（ui-design.md §4.8）
+            createElement('span', { className: styles['avatar'] },
+              createElement(Avatar, {
+                name: conversation.title,
+                size: 'md',
+                title: conversation.title,
+              }),
+            ),
             createElement(
               'span',
               { className: styles['name'] },
               presenceDot(conversation.presence ?? 'unknown'),
-              conversation.title,
+              ...highlightSegments(conversation.title, props.highlightQuery),
             ),
-            createElement('span', { className: styles['preview'] }, conversation.preview),
+            createElement(
+              'span',
+              { className: styles['preview'] },
+              ...highlightSegments(conversation.preview, props.highlightQuery),
+            ),
             createElement(
               'span',
               { className: styles['meta'] },

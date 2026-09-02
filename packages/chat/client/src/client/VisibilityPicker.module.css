@@ -1,47 +1,50 @@
-/* 使用 DSH 主题 token 而非硬编码颜色（§5）。 */
+/* 引用 styles/tokens.module.css 的 --dsh-chat-* 变量 */
 
 .root {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--dsh-chat-space-1);
   min-width: 0;
 }
 
 .select {
-  height: 24px;
-  max-width: 132px;
-  padding: 0 4px;
+  height: 26px;
+  max-width: 140px;
+  padding: 0 var(--dsh-chat-space-2);
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--dsh-chat-radius-md);
   background: transparent;
-  color: var(--dsw-alias-label-secondary, #6b7280);
-  font: inherit;
-  font-size: 12px;
+  color: var(--dsh-chat-fg-muted);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-sm);
   cursor: pointer;
+  transition:
+    border-color var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
 }
 
 .select:hover {
-  border-color: var(--dsw-alias-border-l2, #e5e7eb);
-  background: var(--dsw-alias-bg-layer-3, #f0f1f3);
+  border-color: var(--dsh-chat-border);
+  background: var(--dsh-chat-bg-hover);
+  color: var(--dsh-chat-fg);
 }
 
 .select:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #4f6ef7);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
 }
 
 .unavailable {
-  font-size: 12px;
-  color: var(--dsw-alias-label-tertiary, #8b93a1);
+  font-size: var(--dsh-chat-text-sm);
+  color: var(--dsh-chat-fg-faint);
 }
 
 .error {
-  font-size: 11px;
-  color: var(--dsw-alias-status-error, #d93025);
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-danger);
 }
 
-/* 只给屏幕阅读器的标签。§49 要求状态变化对屏幕阅读器可感知，而这个下拉
-   在视觉上靠上下文就能理解，多一行可见文字只会挤占头部空间。 */
+/* 只给屏幕阅读器的标签 */
 .srOnly {
   position: absolute;
   width: 1px;

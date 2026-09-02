@@ -36,12 +36,21 @@ import {
 } from '../presentation.js'
 
 import styles from './ChatSection.module.css'
+import { Dialog } from '../components/Dialog.js'
+import { LocalSearch } from '../components/LocalSearch.js'
+import { PolicyBanner, type PolicyCondition } from '../components/PolicyBanner.js'
+import { ProtocolUnsupportedPage } from '../components/ProtocolUnsupportedPage.js'
+import { ConversationRowSkeleton } from '../components/Skeleton.js'
+import { notify } from '../components/Toast.js'
 import { Composer } from './Composer.js'
 import { ConversationList, type ConversationSummary } from './ConversationList.js'
 import { DirectoryPanel } from './DirectoryPanel.js'
 import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage } from './MessageView.js'
 import { useEventStream } from './useEventStream.js'
+
+/** host 返回此错误码时抽屉整体替换为升级提示页（ui-design.md §3.5）。 */
+const PROTOCOL_UNSUPPORTED = 'PROTOCOL_VERSION_UNSUPPORTED'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
 const SPLIT_THRESHOLD = 640
@@ -171,9 +180,16 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
   const [presence, setPresence] = useState<Readonly<Record<string, PresenceState>>>({})
+  // identity/status 返回 local | enrolled | unenrolled。local = 本机单机模式：
+  // 没有 relay/组织，数据只在这台设备 —— 该事实占布局提示（U2），不隐藏
+  const [localMode, setLocalMode] = useState(false)
+  // 已关闭的占布局提示（PolicyBanner 默认不可关，这里仅放开非策略类提示）
+  const [dismissedBanners, setDismissedBanners] = useState<readonly string[]>([])
   // 「会话」与「通讯录」。在有通讯录之前，界面上没有任何办法开始一段新
   // 对话 —— 会话列表只显示已有的，而已有的要靠别人先发消息产生
   const [tab, setTab] = useState<'chats' | 'directory'>('chats')
+  // 本地搜索词（ui-design.md §3.4：与会话列表同源、与通讯录搜索相互独立）
+  const [search, setSearch] = useState('')
   const scrollRef = useRef<HTMLDivElement | null>(null)
   // 选中会话放进 ref 供事件回调读。放进依赖数组的话，每切一次会话就会
   // 重建一次 SSE 连接 —— 而重建意味着丢掉订阅并重来
@@ -195,6 +211,7 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
         setState({ kind: 'unenrolled' })
         return
       }
+      setLocalMode(status.mode === 'local')
       const data = await callHost<{ conversations: RemoteConversation[] }>(
         '/api/chat/conversations',
         {},
@@ -312,6 +329,43 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     if (nearBottom) node.scrollTop = node.scrollHeight
   }, [messages, pending])
 
+  /**
+   * 真正把一条消息交给 host。
+   *
+   * 发送与失败重试共用这条路径：重试复用原 messageId 作为幂等键
+   * （`send-${messageId}`），relay 自然去重（ui-design.md §3.6）。
+   */
+  const attemptSend = useCallback(
+    async (record: PendingMessage): Promise<string | undefined> => {
+      setPending((prev) =>
+        prev.map((m) => (m.messageId === record.messageId ? { ...m, state: 'pending' } : m)),
+      )
+      try {
+        await callHost<{ deliverySeq: number }>('/api/chat/messages', {
+          messageId: record.messageId,
+          recipientId: record.peerId,
+          body: record.body,
+          // 幂等键由调用方生成（§26）。用消息 ID 派生，重试时天然一致
+          operationId: `send-${record.messageId}`,
+        })
+        // 服务端已接收，交给权威列表呈现，本地那条撤掉
+        setPending((prev) => prev.filter((m) => m.messageId !== record.messageId))
+        await loadMessages(record.peerId)
+        await loadConversations()
+        return undefined
+      } catch (error) {
+        const code = (error as Error).message
+        // 失败的那条留在列表里并标为终态失败 —— §4 要求终态失败可见，
+        // 不能让它悄悄消失
+        setPending((prev) =>
+          prev.map((m) => (m.messageId === record.messageId ? { ...m, state: 'failed' } : m)),
+        )
+        return presentError(code as Parameters<typeof presentError>[0]).message
+      }
+    },
+    [loadMessages, loadConversations],
+  )
+
   const send = useCallback(
     async (body: string): Promise<string | undefined> => {
       const peerId = selectedId
@@ -320,32 +374,79 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
       const messageId = uuidv7()
       // §4：先本地显示为「待发送」。等服务端确认才显示的话，慢网络下界面
       // 像没反应，用户会重复点
-      setPending((prev) => [
-        ...prev,
-        { messageId, peerId, body, sentAt: new Date().toISOString(), state: 'pending' },
-      ])
+      const record: PendingMessage = {
+        messageId,
+        peerId,
+        body,
+        sentAt: new Date().toISOString(),
+        state: 'pending',
+      }
+      setPending((prev) => [...prev, record])
+      return attemptSend(record)
+    },
+    [selectedId, attemptSend],
+  )
 
+  // 失败消息的重试：仅对 pending/failed（retryable）生效；accepted 由服务端
+  // 权威列表呈现，本地没有那条记录，自然点不到（U1）
+  const retryMessage = useCallback(
+    (messageId: string): void => {
+      const record = pending.find((m) => m.messageId === messageId)
+      if (record !== undefined) void attemptSend(record)
+    },
+    [pending, attemptSend],
+  )
+
+  // 撤回：菜单只给出入口，二次确认在这里（Dialog），确认后才调 host
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null)
+
+  // 占布局的策略/状态提示（U2：影响理解的现状必须占据布局而非浮层）。
+  // 当前真实条件：identity/status 的 local 单机模式。
+  const policyConditions: readonly PolicyCondition[] =
+    localMode && !dismissedBanners.includes('local-mode')
+      ? [
+          {
+            id: 'local-mode',
+            tone: 'info',
+            text: '本地模式：消息只保存在这台设备，尚未连接团队服务（通讯录、多设备与组织功能不可用）。',
+            dismissable: true,
+          },
+        ]
+      : []
+  const policyBanner =
+    policyConditions.length === 0
+      ? null
+      : createElement(
+          'div',
+          { className: styles['bannerWrap'] },
+          createElement(PolicyBanner, {
+            conditions: policyConditions,
+            onDismiss: (id: string) => {
+              setDismissedBanners((prev) => (prev.includes(id) ? prev : [...prev, id]))
+            },
+          }),
+        )
+  const doRevoke = useCallback(
+    async (messageId: string): Promise<void> => {
+      setConfirmRevokeId(null)
+      const peerId = selectedId
+      if (peerId === undefined) return
       try {
-        await callHost<{ deliverySeq: number }>('/api/chat/messages', {
+        // operationId 幂等：同一消息重复撤回请求会被服务端去重
+        await callHost<{ ok: boolean }>('/api/chat/messages/revoke', {
           messageId,
-          recipientId: peerId,
-          body,
-          // 幂等键由调用方生成（§26）。用消息 ID 派生，重试时天然一致
-          operationId: `send-${messageId}`,
+          operationId: `revoke-${messageId}`,
         })
-        // 服务端已接收，交给权威列表呈现，本地那条撤掉
-        setPending((prev) => prev.filter((m) => m.messageId !== messageId))
         await loadMessages(peerId)
         await loadConversations()
-        return undefined
+        notify({ id: `revoked-${messageId}`, variant: 'success', message: '已撤回该消息' })
       } catch (error) {
         const code = (error as Error).message
-        // 失败的那条留在列表里并标为终态失败 —— §4 要求终态失败可见，
-        // 不能让它悄悄消失
-        setPending((prev) =>
-          prev.map((m) => (m.messageId === messageId ? { ...m, state: 'failed' } : m)),
-        )
-        return presentError(code as Parameters<typeof presentError>[0]).message
+        notify({
+          id: 'revoke-failed',
+          variant: 'error',
+          message: presentError(code as Parameters<typeof presentError>[0]).message,
+        })
       }
     },
     [selectedId, loadMessages, loadConversations],
@@ -354,8 +455,10 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   if (state.kind === 'loading') {
     return createElement(
       'div',
-      { className: styles['status'] },
-      createElement('p', { className: styles['statusText'] }, '正在加载会话…'),
+      { className: styles['loadingPane'], role: 'status', 'aria-label': '正在加载会话' },
+      createElement(ConversationRowSkeleton, {}),
+      createElement(ConversationRowSkeleton, {}),
+      createElement(ConversationRowSkeleton, {}),
     )
   }
 
@@ -371,6 +474,10 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   }
 
   if (state.kind === 'failed') {
+    // 协议不兼容是独立形态：抽屉整体替换为升级提示页（U2，不可静默降级）
+    if (state.errorCode === PROTOCOL_UNSUPPORTED) {
+      return createElement(ProtocolUnsupportedPage, {})
+    }
     const presented = presentError(state.errorCode as Parameters<typeof presentError>[0])
     return createElement(
       'div',
@@ -467,22 +574,52 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     },
   })
 
+  // 本地搜索：只过滤客户端已拿到的会话（标题/预览），结果与列表同源
+  const query = search.trim().toLocaleLowerCase()
+  const filteredSummaries =
+    query.length === 0
+      ? summaries
+      : summaries.filter(
+          (s) =>
+            s.title.toLocaleLowerCase().includes(query) ||
+            s.preview.toLocaleLowerCase().includes(query),
+        )
+
   const list = createElement(
     'div',
     { className: styles['sidebar'] },
     tabBar,
     tab === 'chats'
-      ? createElement(ConversationList, {
-          conversations: summaries,
-          ...(selectedId === undefined ? {} : { selectedId }),
-          onSelect: setSelectedId,
-        })
+      ? createElement(
+          'div',
+          { className: styles['chatColumn'] },
+          createElement(
+            'div',
+            { className: styles['searchWrap'] },
+            createElement(LocalSearch, {
+              value: search,
+              onValueChange: setSearch,
+            }),
+          ),
+          query.length > 0 && filteredSummaries.length === 0
+            ? createElement(
+                'div',
+                { className: styles['searchEmpty'] },
+                createElement('p', null, '没有匹配的会话或消息'),
+              )
+            : createElement(ConversationList, {
+                conversations: filteredSummaries,
+                ...(selectedId === undefined ? {} : { selectedId }),
+                onSelect: setSelectedId,
+                ...(query.length === 0 ? {} : { highlightQuery: search.trim() }),
+              }),
+        )
       : directory,
   )
 
   // 单栏钻取：选中后只显示消息，否则只显示列表
   if (!split && selectedId === undefined) {
-    return createElement('div', { className: styles['root'] }, list)
+    return createElement('div', { className: styles['root'] }, policyBanner, list)
   }
 
   const conversationPane = createElement(
@@ -520,6 +657,11 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
             // 外部传入的优先（设置面板里那个是静态预览），否则用真实连接状态。
             // §4：事件流断开必须显式呈现，不能表现为静默停止刷新
             streamState: props.streamState ?? stream.state,
+            // 发送失败的重试入口（ui-design.md §3.6）—— 只对 pending/failed
+            // 生效，accepted 不出现
+            onRetry: (messageId: string) => retryMessage(messageId),
+            // 撤回入口：先弹确认，确认后才调 host
+            onRevoke: (messageId: string) => setConfirmRevokeId(messageId),
           }),
         ),
     selectedId === undefined || props.composer === false
@@ -530,10 +672,60 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
         }),
   )
 
+  // 撤回二次确认（破坏性操作：不 overlay 误关、不 Esc 偷跑）
+  const revokeDialog =
+    confirmRevokeId === null
+      ? null
+      : createElement(Dialog, {
+          open: true,
+          title: '撤回这条消息？',
+          role: 'alertdialog',
+          size: 'sm',
+          onClose: () => setConfirmRevokeId(null),
+          closeOnOverlayClick: false,
+          children: [
+            createElement(
+              'p',
+              { key: 'body', className: styles['dialogBody'] },
+              '撤回后，对方将看到「[已撤回]」占位，原文不可恢复。',
+            ),
+            createElement(
+              'div',
+              { key: 'actions', className: styles['dialogActions'] },
+              createElement(
+                'button',
+                {
+                  type: 'button',
+                  className: styles['dialogCancel'],
+                  onClick: () => setConfirmRevokeId(null),
+                },
+                '取消',
+              ),
+              createElement(
+                'button',
+                {
+                  type: 'button',
+                  className: styles['dialogDanger'],
+                  onClick: () => {
+                    if (confirmRevokeId !== null) void doRevoke(confirmRevokeId)
+                  },
+                },
+                '撤回',
+              ),
+            ),
+          ],
+        })
+
   return createElement(
     'div',
-    { className: [styles['root'], split ? styles['split'] : ''].filter(Boolean).join(' ') },
-    split ? list : null,
-    conversationPane,
+    { className: styles['root'] },
+    policyBanner,
+    createElement(
+      'div',
+      { className: [styles['stage'], split ? styles['split'] : ''].filter(Boolean).join(' ') },
+      split ? list : null,
+      conversationPane,
+    ),
+    revokeDialog,
   )
 }
