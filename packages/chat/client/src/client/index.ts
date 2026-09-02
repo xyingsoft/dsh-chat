@@ -23,6 +23,10 @@
 
 import { createElement } from 'react'
 
+// design tokens（:root + [data-theme='dark'] 两套变量）。side-effect 导入，
+// 打包时内联为 <style>，全插件共享（ui-design.md §2.3）
+import '../styles/tokens.module.css'
+
 import type { Context } from '@deepseek-ai/cordis'
 
 // slots 服务由 ui-renderer 增强到 Context 上；settings.section 这个键由

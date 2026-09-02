@@ -1,0 +1,75 @@
+.wrap {
+  /* 包裹层只提供事件/上下文，不参与布局 —— 子元素按各自规则排布 */
+  display: contents;
+}
+
+.menu {
+  position: fixed;
+  z-index: var(--dsh-chat-z-menu);
+  min-width: 160px;
+  max-width: min(280px, calc(100vw - var(--dsh-chat-space-4)));
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  padding: var(--dsh-chat-space-1);
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg-elevated);
+  color: var(--dsh-chat-fg);
+  box-shadow: var(--dsh-chat-shadow-pop);
+  outline: none;
+  font-family: var(--dsh-chat-font-ui);
+  font-size: var(--dsh-chat-text-md);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-2);
+  width: 100%;
+  padding: var(--dsh-chat-space-2) var(--dsh-chat-space-3);
+  border: none;
+  border-radius: var(--dsh-chat-radius-sm);
+  background: none;
+  color: var(--dsh-chat-fg);
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.item:disabled {
+  color: var(--dsh-chat-fg-faint);
+  cursor: default;
+}
+
+.itemActive,
+.item:not(:disabled):hover {
+  background: var(--dsh-chat-bg-hover);
+}
+
+.item:not(:disabled):focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--dsh-chat-accent);
+}
+
+.itemLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.danger {
+  color: var(--dsh-chat-danger);
+}
+
+.danger.itemActive,
+.danger:not(:disabled):hover {
+  background: var(--dsh-chat-danger-soft);
+}
+
+.separator {
+  height: 1px;
+  margin: var(--dsh-chat-space-1) var(--dsh-chat-space-2);
+  background: var(--dsh-chat-divider);
+}
