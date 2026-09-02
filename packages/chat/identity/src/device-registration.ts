@@ -1,7 +1,7 @@
 /**
  * 设备注册。
  *
- * [§7](../../../../docs/03-details/01-identity-and-permission.md#7-身份与设备注册)：
+ * [§7](../../../../docs/archive/03-details/01-identity-and-permission.md#7-身份与设备注册)：
  *
  * > DSH host 在本地生成 Ed25519 签名密钥对和 X25519 密钥协商密钥对，并在注册时把
  * > 公钥、设备名称和公钥指纹与邀请码提交给 relay。

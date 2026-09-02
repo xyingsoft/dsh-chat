@@ -1,7 +1,7 @@
 /**
  * 协议版本协商。
  *
- * [§41](../../../../docs/03-details/05-observability-and-ops.md#41-协议版本协商与升级顺序)：
+ * [§41](../../../../docs/archive/03-details/05-observability-and-ops.md#41-协议版本协商与升级顺序)：
  *
  * > host 与 relay 独立升级，因此协议兼容性必须显式协商而不是靠同步发版。
  * >

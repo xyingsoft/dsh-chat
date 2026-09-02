@@ -1,7 +1,7 @@
 /**
  * §46 错误码目录。
  *
- * **本文件由 `docs/03-details/06-contracts-and-conventions.md` §46 的表格生成，
+ * **本文件由 `docs/archive/03-details/06-contracts-and-conventions.md` §46 的表格生成，
  * 不要手工编辑。** `errors.host.spec.ts` 会反向解析该文档并逐字段核对，任何漂移
  * 都会让测试失败 —— 新增或修改错误码必须先改文档。
  *

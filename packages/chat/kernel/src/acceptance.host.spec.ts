@@ -1,7 +1,7 @@
 /**
  * `P0-a` 失败路径验收。
  *
- * [§44.1.2](../../../../docs/04-roadmap/03-iteration-plan.md#4412-验收要求) 逐条列出了
+ * [§44.1.2](../../../../docs/archive/04-roadmap/03-iteration-plan.md#4412-验收要求) 逐条列出了
  * `P0-a` 必须覆盖的失败路径。本文件按那张清单**逐条**验证，并在文件末尾自动生成
  * 一份覆盖表 —— 那份表是给人读的证据，不是给测试读的。
  *
@@ -590,7 +590,7 @@ afterAll(() => {
     '',
   ]
   writeFileSync(
-    join(process.cwd(), 'docs', '_meta', 'acceptance-coverage.md'),
+    join(process.cwd(), 'docs', 'archive', '_meta', 'acceptance-coverage.md'),
     lines.join('\n'),
     'utf8',
   )

@@ -1,7 +1,7 @@
 /**
  * `@dsh-chat/contract` —— dsh-chat 的唯一共享协议包。
  *
- * 边界（见 docs/03-details/06-contracts-and-conventions.md §48 编码规范）：
+ * 边界（见 docs/archive/03-details/06-contracts-and-conventions.md §48 编码规范）：
  * 本包只定义类型、schema 与服务接口，不携带数据库驱动、HTTP 框架或任何业务副作用，
  * 浏览器与 Node 均可引用。错误码目录、`AuditEvent` 结构、`ProtocolVersion` 与术语表
  * 都只在这里定义，其他插件不得自定义同名概念或私有错误码。

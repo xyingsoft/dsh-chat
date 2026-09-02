@@ -1,7 +1,7 @@
 /**
  * 当前组织与切换时的缓存隔离。
  *
- * [§9](../../../../docs/03-details/01-identity-and-permission.md#9-账号设置与组织切换)：
+ * [§9](../../../../docs/archive/03-details/01-identity-and-permission.md#9-账号设置与组织切换)：
  *
  * > 一个账号可以属于多个组织。host 把组织无关的账号与设备信息同**组织级缓存、
  * > 草稿、通知游标和偏好**分开保存。

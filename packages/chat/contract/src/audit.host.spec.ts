@@ -22,7 +22,7 @@ import {
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const securityDoc = readFileSync(
-  join(repoRoot, 'docs', '03-details', '04-security-compliance.md'),
+  join(repoRoot, 'docs', 'archive', '03-details', '04-security-compliance.md'),
   'utf8',
 )
 

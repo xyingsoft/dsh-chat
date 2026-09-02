@@ -1,7 +1,7 @@
 /**
  * dsh-chat host 插件。
  *
- * 职责（见 docs/02-architecture/01-overall-architecture.md §4）：host 是浏览器访问组织
+ * 职责（见 docs/archive/02-architecture/01-overall-architecture.md §4）：host 是浏览器访问组织
  * 与 relay 的唯一入口，负责本地持久化缓存、保存设备凭证、运行 relay 客户端、发送在线
  * 心跳，并向浏览器提供同源 API。浏览器不直接与 relay 通信。
  *
@@ -93,7 +93,7 @@ export const name = 'dsh-chat-host'
 
 /**
  * 声明所需服务。缺少必需提供者时 profile 加载失败，不允许静默降级
- * （见 docs/02-architecture/02-plugin-model.md §6）。
+ * （见 docs/archive/02-architecture/02-plugin-model.md §6）。
  *
  * 用普通数组而非 `as const`：Cordis 的 `Inject` 类型是 `(keyof M)[] | {...}`，
  * readonly 元组不满足数组分支，只是靠落入对象分支才通过类型检查，且无法赋给
@@ -104,7 +104,7 @@ export const inject = ['webServer']
 export interface Config {
   /**
    * L1 只服务一个由部署明确指定的组织。
-   * 见 docs/04-roadmap/03-iteration-plan.md §44.1。
+   * 见 docs/archive/04-roadmap/03-iteration-plan.md §44.1。
    */
   organizationId?: string
   /** 本地数据库路径。缺省落在进程工作目录下。 */

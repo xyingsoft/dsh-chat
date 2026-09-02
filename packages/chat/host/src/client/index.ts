@@ -24,7 +24,7 @@
  * 那套约定。我们要做同样的事才能真正装载。
  *
  * **在那之前不声明 `dsh.client`** —— 声明了 DSH 就会去装载一个当前必然失败的
- * 入口，那比没有入口更糟。缺口登记见 `docs/_meta/implementation-log.md`。
+ * 入口，那比没有入口更糟。缺口登记见 `docs/archive/_meta/implementation-log.md`。
  *
  * 本文件不含逻辑，只做转发。真正的实现在 `@dsh-chat/client`。
  */
