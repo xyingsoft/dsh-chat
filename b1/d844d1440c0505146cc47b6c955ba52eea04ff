@@ -1,0 +1,86 @@
+packages/chat/workitem/src/comments.ts
+  s_2a0ad92afe8049::t_314ebc58fe432b 4
+packages/chat/contract/src/protocol.ts
+  s_2a0ad92afe8049::t_c62124da87a3df 4
+packages/chat/contract/src/states.ts
+  s_2a0ad92afe8049::t_4e079c63e0fe70 14
+packages/chat/contract/src/errors.host.spec.ts
+  s_2a0ad92afe8049::t_872efd66c638cf 20
+  s_2a0ad92afe8049::t_8bd780c8437ff5 4
+packages/chat/identity/src/invite-codes.ts
+  s_2a0ad92afe8049::t_af2967be2b4009 4
+packages/chat/organization/src/org-switch.ts
+  s_2a0ad92afe8049::t_a4219405265135 4
+packages/chat/host/src/client/index.ts
+  s_2a0ad92afe8049::t_eef349e25588ca 27
+packages/chat/messaging/src/delivery.host.spec.ts
+  s_2a0ad92afe8049::t_c9837f0cde1ad1 7
+packages/chat/kernel/src/skeleton.host.spec.ts
+  s_2a0ad92afe8049::t_63c4c9eb589c47 4
+packages/chat/identity/src/request-signing.ts
+  s_2a0ad92afe8049::t_290a5f45a1d209 4
+packages/chat/contract/src/commands.ts
+  s_2a0ad92afe8049::t_7a4849d7fda1db 37
+packages/chat/contract/src/index.ts
+  s_2a0ad92afe8049::t_c5b7b81c3d1faf 4
+packages/chat/kernel/src/bundle.host.spec.ts
+  s_2a0ad92afe8049::t_289a0cfda42133 8
+packages/chat/notification/src/aggregation.ts
+  s_2a0ad92afe8049::t_3a974ed6d236f3 4
+packages/chat/contract/src/protocol.host.spec.ts
+  s_2a0ad92afe8049::t_2a7913d70a979c 26
+packages/chat/identity/src/device-registration.ts
+  s_2a0ad92afe8049::t_58daf31e2b0184 4
+packages/chat/messaging/src/message-events.ts
+  s_2a0ad92afe8049::t_620b459cc79961 4
+packages/chat/workitem/src/reviews.ts
+  s_2a0ad92afe8049::t_ff630fe79615d5 4
+packages/chat/contract/src/audit.host.spec.ts
+  s_2a0ad92afe8049::t_9400692ab6a9a9 25
+packages/chat/kernel/src/acceptance.host.spec.ts
+  s_2a0ad92afe8049::t_e47e3cafdcb84b 4
+  s_2a0ad92afe8049::t_24480cef97a74e 593
+packages/chat/contract/src/errors.ts
+  s_2a0ad92afe8049::t_e25872cf07f017 4
+packages/chat/contract/src/commands.host.spec.ts
+  s_2a0ad92afe8049::t_d7eedba6d6dcc5 19
+packages/chat/kernel/cordis.patch.yml
+  s_2a0ad92afe8049::t_df2acb444a5ffb 3
+packages/chat/host/src/index.ts
+  s_2a0ad92afe8049::t_7b2573d71bad1d 4
+  s_2a0ad92afe8049::t_77ecb468a30bc4 96
+packages/chat/messaging/src/outgoing.ts
+  s_2a0ad92afe8049::t_8d144542a4c98b 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "b1d844d1440c0505146cc47b6c955ba52eea04ff",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "tool_name": "Edit",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "operation_id": "6a97f2d24cb341d16d3bd5aa",
+        "source_scene": "agent",
+        "edit_kind": "file_edit",
+        "runtime_client": "trae-tob-git-ai",
+        "client_type": "ide",
+        "tool_use_id": "6a97f2d24cb341d16d3bd5aa",
+        "external_session_id": "6a96879e877280e1af6dbbd6"
+      }
+    }
+  }
+}
