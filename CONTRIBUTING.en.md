@@ -14,7 +14,7 @@ This is not a suggestion — it is a mandatory process in this repository. [`doc
 
 **"Write the code now, document it later" is treated as a process defect, on par with skipping tests.**
 
-The full workflow, the change-classification table, and the review checklist live in the [documentation workflow](./docs/_meta/documentation-workflow.md). Before opening a PR, check your change against the table in section 2 of that document to confirm which documents you needed to update.
+The full workflow, the change-classification table, and the review checklist live in the [documentation workflow](./docs/archive/_meta/documentation-workflow.md). Before opening a PR, check your change against the table in section 2 of that document to confirm which documents you needed to update.
 
 ---
 
@@ -29,7 +29,7 @@ The full workflow, the change-classification table, and the review checklist liv
 dsh-chat is itself a set of DSH plugins. If you are writing a plugin that works alongside it:
 
 - Depend only on the types, commands, events, and error codes exposed by `@dsh-chat/contract`. **Do not** import a service provider's internal implementation or database models.
-- Consume capabilities through service interfaces (`ChatIdentity`, `ChatOrganization`, `ChatMessaging`, and so on). The capability matrix is in the [plugin architecture](./docs/02-architecture/02-plugin-model.md).
+- Consume capabilities through service interfaces (`ChatIdentity`, `ChatOrganization`, `ChatMessaging`, and so on). The capability matrix is in the [plugin architecture](./docs/archive/02-architecture/02-plugin-model.md).
 - Organization-public plugins always run within a capability lease and the member's ACL. They **cannot** replace the identity, authorization, audit, egress, or key-management plugins.
 
 ## Developers: contributing code
@@ -76,10 +76,10 @@ These boundaries come from the architecture documents. Violating them is a defec
 ### Testing requirements
 
 - Every state transition needs a focused unit test. Use `assertNever` to keep closed unions exhaustive.
-- **A change that touches authorization, content grants, egress, or execution paths must add both the corresponding entry in the [§39 security checklist](./docs/03-details/04-security-compliance.md#39-安全规范清单) and the matching rejection cases before it can land.** Security cases assert the rejection behaviour and the error code, not merely "it did not crash".
+- **A change that touches authorization, content grants, egress, or execution paths must add both the corresponding entry in the [§39 security checklist](./docs/archive/03-details/04-security-compliance.md#39-安全规范清单) and the matching rejection cases before it can land.** Security cases assert the rejection behaviour and the error code, not merely "it did not crash".
 - Test data **must not** contain real credentials, real organization data, or usable keys.
 
-The layered testing strategy is in the [test and acceptance strategy](./docs/04-roadmap/04-test-strategy.md).
+The layered testing strategy is in the [test and acceptance strategy](./docs/archive/04-roadmap/04-test-strategy.md).
 
 ---
 

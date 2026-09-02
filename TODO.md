@@ -1,6 +1,6 @@
 # 实现进度
 
-> 本文件跟踪 `P0-a` 的实现进度。**范围定义来自[迭代计划 §44.1.1](./docs/04-roadmap/03-iteration-plan.md#4411-两个验收关口)，不在这里另立标准。**
+> 本文件跟踪 `P0-a` 的实现进度。**范围定义来自[迭代计划 §44.1.1](./docs/archive/04-roadmap/03-iteration-plan.md#4411-两个验收关口)，不在这里另立标准。**
 >
 > 阶段划分是实现顺序的工程安排，不是文档概念；每个阶段对应的验收依据都标注了文档出处。
 
@@ -164,13 +164,13 @@
 >
 > 界面挂在 `conversation.session.header.utilities`，点会话头部右上角的「聊天」从右侧滑出可调宽度的抽屉。§5 把「会话列表」「消息视图」列为各自独立的 slot 贡献 —— 早先落在设置分区里是将就，现在纠正了。DSH 的 58 个 slot 里没有「右侧栏」，这是离右侧最近且语义对得上的挂载点。
 >
-> 截图与两处只有真机才暴露的问题（标题栏盖住抽屉头部、内容不填满容器）见 [DSH 装载验证 · 验证六、七](./docs/_meta/dsh-integration-evidence.md)。
+> 截图与两处只有真机才暴露的问题（标题栏盖住抽屉头部、内容不填满容器）见 [DSH 装载验证 · 验证六、七](./docs/archive/_meta/dsh-integration-evidence.md)。
 >
 > 测试盯的是「有没有说不该说的话」：遍历三态断言没有一个显示为「已送达」、遍历四种事件流状态断言非 `connected` 的都可见、断言树中不存在 `dangerouslySetInnerHTML`。
 
 > 早先认为 slot 注册被类型依赖挡住 —— `settings.section` 由 `@deepseek-ai/dsh-client-ui-settings` 声明，其**传递**闭包是 54 个包 / 1.9 MB。那个判断是错的：那些依赖只在 ui-settings 自己的 `.d.ts` 中被引用，而 `skipLibCheck: true` 会跳过对 `.d.ts` 的类型检查、**同时仍然处理其中的模块增强**。只 vendor 这一个包（28.6 KB）即可拿到 slot 键类型。
 >
-> slot 注册一度只在单元测试里通过。真实装载缺的是两件事：bundle 没有任何声明指向客户端插件；渲染侧入口必须是**预打包单文件**（`tsc` 产物里的 `import styles from './X.module.css'` 在渲染进程里会 `ERR_MODULE_NOT_FOUND`）。两者都已补上，界面已在 DSH Desktop v2.0.4 上截图验证 —— 见 [DSH 装载验证 · 验证五](./docs/_meta/dsh-integration-evidence.md)。
+> slot 注册一度只在单元测试里通过。真实装载缺的是两件事：bundle 没有任何声明指向客户端插件；渲染侧入口必须是**预打包单文件**（`tsc` 产物里的 `import styles from './X.module.css'` 在渲染进程里会 `ERR_MODULE_NOT_FOUND`）。两者都已补上，界面已在 DSH Desktop v2.0.4 上截图验证 —— 见 [DSH 装载验证 · 验证五](./docs/archive/_meta/dsh-integration-evidence.md)。
 
 ### 阶段 11 · 集成验收 ✅
 
@@ -185,9 +185,9 @@
 | §44.1.2 的 13 条失败路径逐条覆盖 | ✅ |
 | 真正的两个 host 进程 + 一个 relay 进程 | ✅ |
 
-> 证据：[骨架走查记录](./docs/_meta/skeleton-walkthrough.md)（测试生成）、[DSH 装载验证](./docs/_meta/dsh-integration-evidence.md)。
+> 证据：[骨架走查记录](./docs/archive/_meta/skeleton-walkthrough.md)（测试生成）、[DSH 装载验证](./docs/archive/_meta/dsh-integration-evidence.md)。
 >
-> 覆盖表由测试自动生成：[`P0-a` 失败路径覆盖](./docs/_meta/acceptance-coverage.md)。
+> 覆盖表由测试自动生成：[`P0-a` 失败路径覆盖](./docs/archive/_meta/acceptance-coverage.md)。
 >
 > 三进程验收起的是**真实 OS 进程**：relay 拥有共享库并提供 HTTP，两个 host 各有自己的本地 SQLite —— 那正是 §4 里「host 本地缓存」与「relay 共享状态」的分界。验证了同进程测试验不了的三件事：跨进程持久化、两份数据确实分离、relay 进程重启后队列与已 ACK 状态都还在。
 >
@@ -205,7 +205,7 @@
 | 签收状态与工作项状态的耦合未说明 | 两台状态机各自独立演进 | 需文档变更 |
 | 联系人**关系**状态枚举不完整 | `removed` 单列在实现侧 | 需文档变更 |
 
-> 完整缺口登记见[实现记录 §3](./docs/_meta/implementation-log.md)。
+> 完整缺口登记见[实现记录 §3](./docs/archive/_meta/implementation-log.md)。
 
 ## 已知未完成项
 

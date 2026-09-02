@@ -1,6 +1,6 @@
 <!--
-本项目强制文档先行。提交前请对照 docs/_meta/documentation-workflow.md 第 2 节的变更分类表。
-This project mandates documentation-first development. Check section 2 of docs/_meta/documentation-workflow.md before submitting.
+本项目强制文档先行。提交前请对照 docs/archive/_meta/documentation-workflow.md 第 2 节的变更分类表。
+This project mandates documentation-first development. Check section 2 of docs/archive/_meta/documentation-workflow.md before submitting.
 -->
 
 ## 改动内容 / What changed
@@ -30,8 +30,8 @@ This project mandates documentation-first development. Check section 2 of docs/_
 
 - [ ] 变更从最上层受影响的文档开始修改，未出现下层突破上层约束
 - [ ] 强约束词（必须／不得／绝不）未被无声弱化
-- [ ] 新增的状态、错误码、术语已登记到[契约与规范附录](https://github.com/xyingsoft/dsh-chat/blob/main/docs/03-details/06-contracts-and-conventions.md)
-- [ ] 新增能力已在[迭代计划](https://github.com/xyingsoft/dsh-chat/blob/main/docs/04-roadmap/03-iteration-plan.md)中定级
+- [ ] 新增的状态、错误码、术语已登记到[契约与规范附录](https://github.com/xyingsoft/dsh-chat/blob/main/docs/archive/03-details/06-contracts-and-conventions.md)
+- [ ] 新增能力已在[迭代计划](https://github.com/xyingsoft/dsh-chat/blob/main/docs/archive/04-roadmap/03-iteration-plan.md)中定级
 - [ ] 受影响的交叉引用链接已更新
 - [ ] 无「等实现完再补」的占位内容
 
@@ -45,6 +45,6 @@ This project mandates documentation-first development. Check section 2 of docs/_
 **测试 / Tests**
 
 - [ ] 每个新增或修改的状态转换都有聚焦单元测试
-- [ ] **触及授权、内容授权、出站或执行路径的改动，已同时补充[§39 安全规范清单](https://github.com/xyingsoft/dsh-chat/blob/main/docs/03-details/04-security-compliance.md#39-安全规范清单)对应条目**与拒绝用例，且拒绝用例断言了具体错误码
+- [ ] **触及授权、内容授权、出站或执行路径的改动，已同时补充[§39 安全规范清单](https://github.com/xyingsoft/dsh-chat/blob/main/docs/archive/03-details/04-security-compliance.md#39-安全规范清单)对应条目**与拒绝用例，且拒绝用例断言了具体错误码
 - [ ] 测试数据不含真实凭证、真实组织数据或可用密钥
 - [ ] `yarn check` 全绿

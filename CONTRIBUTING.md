@@ -14,7 +14,7 @@
 
 **「先写代码、以后补文档」被视为流程缺陷，与漏写测试同级。**
 
-完整流程、变更分类表与评审清单见[文档维护规范](./docs/_meta/documentation-workflow.md)。提 PR 前请对照该文档第 2 节的表格，确认已更新的文档范围。
+完整流程、变更分类表与评审清单见[文档维护规范](./docs/archive/_meta/documentation-workflow.md)。提 PR 前请对照该文档第 2 节的表格，确认已更新的文档范围。
 
 ---
 
@@ -29,7 +29,7 @@
 dsh-chat 自身就是一组 DSH 插件。若你要做与之协作的插件：
 
 - 只依赖 `@dsh-chat/contract` 暴露的类型、命令、事件与错误码，**不要**导入任何服务提供者的内部实现或数据库模型。
-- 消费能力通过服务接口调用（`ChatIdentity`、`ChatOrganization`、`ChatMessaging` 等），能力矩阵见[插件化架构](./docs/02-architecture/02-plugin-model.md)。
+- 消费能力通过服务接口调用（`ChatIdentity`、`ChatOrganization`、`ChatMessaging` 等），能力矩阵见[插件化架构](./docs/archive/02-architecture/02-plugin-model.md)。
 - 组织公共插件始终运行在能力租约与成员 ACL 内，**不能**替换身份、授权、审计、出站或密钥插件。
 
 ## 开发者：贡献代码
@@ -76,10 +76,10 @@ yarn check
 ### 测试要求
 
 - 每个状态转换都要有聚焦的单元测试；封闭联合类型用 `assertNever` 保证穷尽。
-- **触及授权、内容授权、出站或执行路径的改动，必须同时补充[§39 安全规范清单](./docs/03-details/04-security-compliance.md#39-安全规范清单)对应条目与拒绝用例才能合入。** 安全用例断言的是拒绝行为与错误码，而不仅是「未崩溃」。
+- **触及授权、内容授权、出站或执行路径的改动，必须同时补充[§39 安全规范清单](./docs/archive/03-details/04-security-compliance.md#39-安全规范清单)对应条目与拒绝用例才能合入。** 安全用例断言的是拒绝行为与错误码，而不仅是「未崩溃」。
 - 测试数据**不得**包含真实凭证、真实组织数据或可用密钥。
 
-分层测试策略见[测试与验收策略](./docs/04-roadmap/04-test-strategy.md)。
+分层测试策略见[测试与验收策略](./docs/archive/04-roadmap/04-test-strategy.md)。
 
 ---
 
