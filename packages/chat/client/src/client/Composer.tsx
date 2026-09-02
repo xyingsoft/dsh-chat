@@ -34,7 +34,11 @@ const MAX_GRAPHEMES = 8000
 /** 剩余不足这个数才显示计数，平时不占注意力。 */
 const COUNTER_THRESHOLD = 200
 
-function countGraphemes(text: string): number {
+/**
+ * 字素簇计数。导出供消息内联编辑复用 —— 编辑后的正文走同一条校验路径，
+ * 两把尺子会在「编辑框说没问题、提交被拒」上分叉。
+ */
+export function countGraphemes(text: string): number {
   // Intl.Segmenter 在所有目标浏览器里都有；真没有时退回 [...text]，
   // 那按码位算，比 .length 准，比字素簇粗
   if (typeof Intl?.Segmenter !== 'function') return [...text].length
@@ -44,12 +48,20 @@ function countGraphemes(text: string): number {
 export interface ComposerProps {
   /** 发送。返回错误码表示失败，返回 undefined 表示成功。 */
   readonly onSend: (body: string) => Promise<string | undefined>
+  /**
+   * 受控草稿文本（工单：草稿保存）。
+   *
+   * 草稿由父层持有并持久化 —— 切会话时换草稿、发送后清空都通过 `value`
+   * 生效，本组件不自己存。这样「打了没发」能活过页面刷新与设备重启
+   * （localStorage 在父层做），且列表上的草稿标记与输入框内容永远同源。
+   */
+  readonly value: string
+  readonly onChange: (text: string) => void
   readonly disabled?: boolean
   readonly placeholder?: string
 }
 
 export function Composer(props: ComposerProps): ReactElement {
-  const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -62,29 +74,30 @@ export function Composer(props: ComposerProps): ReactElement {
     if (el === null) return
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
-  }, [text])
+  }, [props.value])
 
-  const graphemes = countGraphemes(text)
+  const graphemes = countGraphemes(props.value)
   const overLimit = graphemes > MAX_GRAPHEMES
-  const empty = text.trim().length === 0
+  const empty = props.value.trim().length === 0
   const canSend = !empty && !overLimit && !sending && props.disabled !== true
 
   const send = useCallback(async () => {
     if (!canSend) return
-    const body = text
+    const body = props.value
     setSending(true)
     setError(undefined)
     // 先清空再发：等响应回来才清的话，慢网络下用户会以为没发出去而重复按。
-    // 失败时把内容放回去，不让用户白打一遍
-    setText('')
+    // 失败时把内容放回去，不让用户白打一遍 —— 两者都走 onChange，
+    // 父层的草稿持久化（含 localStorage）随之更新，不需要再单独同步
+    props.onChange('')
     const failure = await props.onSend(body)
     setSending(false)
     if (failure !== undefined) {
       setError(failure)
-      setText(body)
+      props.onChange(body)
     }
     inputRef.current?.focus()
-  }, [canSend, text, props])
+  }, [canSend, props])
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -112,13 +125,13 @@ export function Composer(props: ComposerProps): ReactElement {
       createElement('textarea', {
         ref: inputRef,
         className: styles['input'],
-        value: text,
+        value: props.value,
         rows: 1,
         placeholder: props.placeholder ?? '发消息…',
         disabled: props.disabled === true || sending,
         'aria-label': '消息内容',
         onChange: (event: { target: { value: string } }) => {
-          setText(event.target.value)
+          props.onChange(event.target.value)
           if (error !== undefined) setError(undefined)
         },
         onCompositionStart: () => {

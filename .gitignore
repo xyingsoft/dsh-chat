@@ -36,3 +36,6 @@ dsh-chat.db-journal
 dsh-chat.db-wal
 dsh-chat.db-shm
 dsh-chat.credentials.json
+
+# examples/two-users 联调环境的本地数据（relay 库与甲的凭据）
+examples/two-users/data/

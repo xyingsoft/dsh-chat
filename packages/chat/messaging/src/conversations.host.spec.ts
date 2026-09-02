@@ -9,7 +9,7 @@ import { DatabaseSync } from 'node:sqlite'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { conversationsOf } from './conversations.js'
+import { conversationsOf, messagesWith } from './conversations.js'
 import { REVOKED_PLACEHOLDER, editMessage, revokeMessage } from './message-events.js'
 
 let db: DatabaseSync
@@ -253,5 +253,61 @@ describe('limit', () => {
     for (let i = 0; i < 5; i += 1) message('jia', `peer-${i}`, 'x', i * 1000)
     const list = conversationsOf(db, ORG, 'jia', { limit: 2 })
     expect(list.map((c) => c.peerId)).toEqual(['peer-4', 'peer-3'])
+  })
+})
+
+describe('会话内消息（messagesWith）', () => {
+  it('带出当前 revision，客户端据此构造 targetRevision', () => {
+    // 编辑接口要求 targetRevision 严格大于当前值（§14.1）。history 不带
+    // revision 的话，客户端编辑功能就只能瞎填 —— 填低永远冲突，填高吞并发
+    const id = message('jia', 'yi', '初始正文', 0)
+    editMessage(db, {
+      organizationId: ORG,
+      senderId: 'jia',
+      messageId: id,
+      editorId: 'jia',
+      targetRevision: 2,
+      body: '第一次编辑',
+      now: new Date(T0.getTime() + 1000),
+      policyRevision: 1,
+      operationId: 'op-edit-1',
+      editWindowMs: 60_000,
+    })
+    const list = messagesWith(db, ORG, 'yi', 'jia')
+    expect(list).toHaveLength(1)
+    expect(list[0]?.revision).toBe(2)
+    expect(list[0]?.body).toBe('第一次编辑')
+    expect(list[0]?.edited).toBe(true)
+  })
+
+  it('撤回的消息 revision 也随之推进，正文为占位语义（undefined）', () => {
+    const id = message('jia', 'yi', '初始正文', 0)
+    revokeMessage(db, {
+      organizationId: ORG,
+      senderId: 'jia',
+      messageId: id,
+      actorId: 'jia',
+      actorHasComplianceAuthority: false,
+      now: new Date(T0.getTime() + 1000),
+      policyRevision: 1,
+      operationId: 'op-revoke',
+    })
+    const list = messagesWith(db, ORG, 'yi', 'jia')
+    expect(list[0]?.revoked).toBe(true)
+    expect(list[0]?.body).toBeUndefined()
+    expect(list[0]?.revision).toBe(2)
+  })
+
+  it('没动过的消息 revision 为 1', () => {
+    message('jia', 'yi', '没动过', 0)
+    expect(messagesWith(db, ORG, 'yi', 'jia')[0]?.revision).toBe(1)
+  })
+
+  it('只返回该会话双方的消息，按时间升序', () => {
+    message('jia', 'yi', '第一条', 0)
+    message('yi', 'jia', '第二条', 1000)
+    message('jia', 'bing', '发给别人的不算', 2000)
+    const list = messagesWith(db, ORG, 'yi', 'jia')
+    expect(list.map((m) => m.body)).toEqual(['第一条', '第二条'])
   })
 })
