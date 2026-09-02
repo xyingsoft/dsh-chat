@@ -1,0 +1,37 @@
+docs/ui-implementation-plan.md
+  s_2a0ad92afe8049::t_6401a4655aeb02 119,121,123-126,128,130-134,136,138,140,146,152
+  s_2a0ad92afe8049::t_b43004bd17e971 4-5
+  s_2a0ad92afe8049::t_94ce137b69d3be 153-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "b156ca7a9b5b67a4a8641bb2e678c570651e45a1",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "edit_kind": "file_edit",
+        "runtime_client": "trae-tob-git-ai",
+        "source_scene": "agent",
+        "tool_name": "Edit",
+        "operation_id": "6a97f2d24cb341d16d3bd5aa",
+        "tool_use_id": "6a97f2d24cb341d16d3bd5aa",
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "client_type": "ide"
+      }
+    }
+  }
+}
