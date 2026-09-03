@@ -600,6 +600,82 @@ const migration007: Migration = {
   ],
 }
 
+/**
+ * 版本 8：群聊的本地镜像（S4b）。
+ *
+ * relay 侧（v011/v012）已经把群聊落到自己的 schema：`groups`、`group_members`，
+ * 以及 `messages.recipient_type`（`'account' | 'group'`）。host 是自包含的
+ * 本地库，需要在本地也镜像出同一份契约，`/api/chat/conversations` 才能把群聊
+ * 当成一类会话返回。
+ *
+ * ## 为什么群消息不进 `messages` 表
+ *
+ * relay 的群消息行是 `recipient_id = 群 id, recipient_type = 'group'`。host 本地
+ * `messages.recipient_id` 在 v1 就带 `REFERENCES accounts(account_id)` —— 外键在
+ * 打开库时被 `PRAGMA foreign_keys = ON` 强制生效，而群的收件人不是账号。§29.1
+ * 只允许「扩展」：不能改列、不能删约束，因此群消息行在本地放进独立的
+ * `group_messages` 镜像表（结构对齐 messages 的其余列，幂等键同样是
+ * `(sender_id, message_id)`，§14）。`recipient_type` 列仍然加上 —— 它是契约的
+ * 一部分，也用于在将来 relay 直连取件路径真正把群消息写进 `messages` 时做分类
+ * （届时需要先解决外键问题，属后续里程碑）。
+ *
+ * 三张新表都带 `organization_id`（§48），且只做新增，不碰既有列。
+ */
+const migration008: Migration = {
+  version: 8,
+  name: 'group-chat-mirror',
+  statements: [
+    // relay v012 的契约列。默认 'account'：既有与私聊行全部落在此值
+    `ALTER TABLE messages ADD COLUMN recipient_type TEXT NOT NULL DEFAULT 'account'`,
+
+    // 群名册镜像（relay v011 groups + 本地已知的成员数与活动时间）。
+    // member_count 允许为 NULL = 名单尚未同步，界面据此不显示成员数徽标。
+    // STRICT 表里 INTEGER 可为 NULL；SQLite 的 STRICT 不要求列非空
+    `CREATE TABLE groups (
+       organization_id  TEXT NOT NULL,
+       group_id         TEXT NOT NULL,
+       name             TEXT NOT NULL,
+       member_count     INTEGER,
+       created_at       TEXT NOT NULL,
+       -- 镜像里最近一次活动（收消息或名单刷新）。同名群消息用 created_at 排序时以它为准
+       last_activity_at TEXT NOT NULL,
+       PRIMARY KEY (organization_id, group_id)
+     ) STRICT`,
+
+    // 群成员镜像（relay v011 group_members）。不带外键：本地镜像可能先于
+    // 对应账号行同步到群名单（relay 是权威，本地只是缓存）
+    `CREATE TABLE group_members (
+       organization_id TEXT NOT NULL,
+       group_id        TEXT NOT NULL,
+       account_id      TEXT NOT NULL,
+       joined_at       TEXT NOT NULL,
+       PRIMARY KEY (organization_id, group_id, account_id)
+     ) STRICT`,
+    `CREATE INDEX idx_group_members_account
+       ON group_members(organization_id, account_id)`,
+
+    // 群消息镜像。列与 messages 对齐（不含 recipient_id/recipient_type ——
+    // 收件人就是群本身，由 group_id 表达），幂等键与 messages 相同
+    `CREATE TABLE group_messages (
+       message_id       TEXT NOT NULL,
+       organization_id  TEXT NOT NULL,
+       group_id         TEXT NOT NULL,
+       sender_id        TEXT NOT NULL,
+       kind             TEXT NOT NULL,
+       body             TEXT NOT NULL,
+       revision         INTEGER NOT NULL DEFAULT 1,
+       created_at       TEXT NOT NULL,
+       received_at      TEXT NOT NULL,
+       operation_id     TEXT NOT NULL,
+       event_format_version INTEGER NOT NULL,
+       encryption_meta  TEXT NOT NULL,
+       PRIMARY KEY (sender_id, message_id)
+     ) STRICT`,
+    `CREATE INDEX idx_group_messages_group
+       ON group_messages(organization_id, group_id, created_at)`,
+  ],
+}
+
 /** 全部迁移，按版本升序。新增迁移只能追加，不能修改既有条目。 */
 export const MIGRATIONS: readonly Migration[] = [
   migration001,
@@ -609,4 +685,5 @@ export const MIGRATIONS: readonly Migration[] = [
   migration005,
   migration006,
   migration007,
+  migration008,
 ]

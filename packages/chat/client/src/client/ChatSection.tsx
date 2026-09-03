@@ -47,7 +47,7 @@ import { ProtocolUnsupportedPage } from '../components/ProtocolUnsupportedPage.j
 import { ConversationRowSkeleton } from '../components/Skeleton.js'
 import { notify } from '../components/Toast.js'
 import { Composer } from './Composer.js'
-import { ConversationList, type ConversationSummary } from './ConversationList.js'
+import { ConversationList, type ConversationKind, type ConversationSummary } from './ConversationList.js'
 import { DirectoryPanel } from './DirectoryPanel.js'
 import { EnrollmentPanel } from './EnrollmentPanel.js'
 import { MessageView, type DisplayMessage, type EditingState } from './MessageView.js'
@@ -100,6 +100,10 @@ const INTERACTION_EVENTS = ['keydown', 'pointerdown', 'focus'] as const
 interface RemoteConversation {
   readonly peerId: string
   readonly peerDisplayName: string
+  /** host 标注群聊时携带（缺省视为 1v1，由 ConversationList 呈现为直聊形态）。 */
+  readonly kind?: ConversationKind
+  /** 群成员数，host 提供时透传给列表徽标；1v1 不携带。 */
+  readonly memberCount?: number
   readonly preview: string
   readonly lastActivityAt: string
   readonly unreadCount: number
@@ -609,6 +613,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const summaries: ConversationSummary[] = conversations.map((c) => ({
     conversationId: c.peerId,
     title: c.peerDisplayName,
+    // host 只对群会话给 kind/memberCount；1v1 不带，列表按直聊形态呈现
+    ...(c.kind === undefined ? {} : { kind: c.kind }),
+    ...(c.memberCount === undefined ? {} : { memberCount: c.memberCount }),
     // 「你：」前缀由这里加而不是 host 拼进 preview —— host 不知道界面用什么
     // 措辞，而 preview 还要用于别处
     preview: c.lastMessageOutgoing ? `你：${c.preview}` : c.preview,

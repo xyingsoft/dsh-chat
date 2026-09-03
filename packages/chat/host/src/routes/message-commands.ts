@@ -15,6 +15,7 @@ import type { DatabaseSync } from 'node:sqlite'
 
 import type { ErrorCode } from '@dsh-chat/contract'
 import { recordAuditEvent } from '@dsh-chat/audit'
+import type { ConversationSummary } from '@dsh-chat/messaging'
 import {
   checkDirectMessageGate,
   acceptDirectMessage,
@@ -28,6 +29,10 @@ import {
 } from '@dsh-chat/messaging'
 
 import type { ChatDatabaseService } from '../storage/service.js'
+import {
+  groupConversationsOf,
+  type GroupConversationSummary,
+} from '../storage/groups.js'
 
 import { commandHandler, type CommandOutcome } from './command-router.js'
 
@@ -443,12 +448,43 @@ export function revokeMessageHandler(deps: MessageCommandDeps) {
 }
 
 /**
+ * 一个会话行：私聊（messaging 的 ConversationSummary）或群聊（本地镜像的
+ * GroupConversationSummary）。群行带 `kind: 'group'` 与可选的 `memberCount`，
+ * 私聊行不带 —— client 据此区分形态。
+ */
+export type ConversationRow = ConversationSummary | GroupConversationSummary
+
+/**
+ * 把私聊与群会话按最后活动时间合并成一个列表，并夹到 `limit`。
+ *
+ * ISO-8601 UTC 字符串字典序即时间序，直接比较即可。两侧各自先按 `limit`
+ * 截断（SQL 侧的 LIMIT），合后再夹一次 —— 界面上「最近 N 个会话」的顺序
+ * 不会因两类的存在而错位。
+ */
+export function mergeConversationRows(
+  direct: readonly ConversationSummary[],
+  groups: readonly GroupConversationSummary[],
+  limit: number,
+): readonly ConversationRow[] {
+  return [...direct, ...groups]
+    .sort((a, b) => {
+      if (a.lastActivityAt === b.lastActivityAt) return 0
+      return a.lastActivityAt < b.lastActivityAt ? 1 : -1
+    })
+    .slice(0, limit)
+}
+
+/**
  * 会话列表。
  *
  * 只读端点，但仍走 `commandHandler` —— 它带跨源防护。读端点也要防跨源：
  * 会话列表含对端显示名与消息摘要，被第三方站点读走就是一次通讯录泄露。
  *
  * `accountId` 取自认证结果，请求体里给什么都不看。
+ *
+ * 私聊行来自 messaging 的聚合（按消息推导对端）；群聊行来自本地群镜像
+ * （`groupConversationsOf`，按成员关系过滤）。两类在同一事务里读，保证
+ * 快照一致。
  */
 export function conversationsHandler(deps: MessageCommandDeps) {
   return commandHandler({
@@ -467,9 +503,15 @@ export function conversationsHandler(deps: MessageCommandDeps) {
           ? Math.min(limitInput, 200)
           : 50
 
-      const conversations = deps.database.transaction((db) =>
-        conversationsOf(db, principal.organizationId, principal.accountId, { limit }),
-      )
+      const conversations = deps.database.transaction((db) => {
+        const direct = conversationsOf(db, principal.organizationId, principal.accountId, {
+          limit,
+        })
+        const groups = groupConversationsOf(db, principal.organizationId, principal.accountId, {
+          limit,
+        })
+        return mergeConversationRows(direct, groups, limit)
+      })
       return { ok: true as const, value: { conversations } }
     },
   })
