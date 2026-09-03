@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 测试对手方「乙」的命令行。
  *
  * 乙没有 UI —— 它是这个脚本。甲（DSH Desktop）在 UI 里看到的会话另一头，
@@ -68,6 +68,9 @@ const { acceptDirectMessage } = await import(
 )
 const { createGroup, addGroupMember } = await import(
   pathToFileURL(join(relayDist, 'domain', 'messaging', 'groups.js')).href
+)
+const { acceptGroupMessage } = await import(
+  pathToFileURL(join(relayDist, 'domain', 'messaging', 'group-messages.js')).href
 )
 
 const chat = ChatDatabase.open({ location: relayDb })
@@ -211,9 +214,47 @@ function groupCreate() {
   )
 }
 
+function groupSend() {
+  // groupsend <甲的账号ID> <群名> <消息…>
+  const groupName = rest[0]
+  const body = rest.slice(1).join(' ')
+  if (groupName === undefined || body.length === 0) {
+    process.stderr.write('用法：node bob.mjs groupsend <甲的账号ID> <群名> <消息文本>\n')
+    process.exit(2)
+  }
+  const group = chat.readonlyHandle
+    .prepare('SELECT group_id FROM groups WHERE organization_id = ? AND name = ?')
+    .get(ORG, groupName) as { group_id: string } | undefined
+  if (group === undefined) {
+    process.stderr.write(`没有群「${groupName}」。先跑 bob.mjs group <甲的账号ID> <群名> 建群。\n`)
+    process.exit(2)
+  }
+  const result = chat.transaction((db) => {
+    addGroupMember({ db, organizationId: ORG, groupId: group.group_id, accountId: aliceId })
+    return acceptGroupMessage(db, {
+      messageId: randomUUID(),
+      organizationId: ORG,
+      senderId: BOB_ACCOUNT_ID,
+      groupId: group.group_id,
+      body,
+      operationId: `bob-group-${randomUUID()}`,
+      now: new Date(),
+      queueCapacity: 100,
+    })
+  })
+  if (!result.ok) {
+    process.stderr.write(`群消息发送被拒：${JSON.stringify(result)}\n`)
+    process.exit(1)
+  }
+  process.stdout.write(
+    `已向群「${groupName}」发出消息（成员 ${result.rows.length} 人入队）：${body}\n`,
+  )
+}
+
 if (action === 'contact') contact()
 else if (action === 'send') send()
 else if (action === 'group') groupCreate()
+else if (action === 'groupsend') groupSend()
 else log()
 
 chat.close()
