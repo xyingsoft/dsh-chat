@@ -14,6 +14,9 @@
  *   node bob.mjs log <甲的账号ID>
  *       打印乙与甲的双向消息历史（只读，不消费投递队列）。
  *
+ *   node bob.mjs group <甲的账号ID> [群名]
+ *       乙建一个群并把甲拉进去（P1 S2 播种；群消息收发在 S4 后可用）。
+ *
  * ## 前置
  *
  * start-relay.mjs 已在跑（乙的账号是它播种的）。
@@ -45,8 +48,8 @@ if (!existsSync(relayDb)) {
   process.stderr.write(`找不到 ${relayDb} —— 先跑 node examples/two-users/start-relay.mjs\n`)
   process.exit(2)
 }
-if (action !== 'contact' && action !== 'send' && action !== 'log') {
-  process.stderr.write('用法：node bob.mjs <contact|send|log> <甲的账号ID> [文本]\n')
+if (action !== 'contact' && action !== 'send' && action !== 'log' && action !== 'group') {
+  process.stderr.write('用法：node bob.mjs <contact|send|log|group> <甲的账号ID> [文本|群名]\n')
   process.exit(2)
 }
 if (action !== undefined && (aliceId === undefined || aliceId.length === 0)) {
@@ -62,6 +65,9 @@ const { createContactRequest, acceptContactRequest } = await import(
 )
 const { acceptDirectMessage } = await import(
   pathToFileURL(join(relayDist, 'domain', 'messaging', 'delivery.js')).href
+)
+const { createGroup, addGroupMember } = await import(
+  pathToFileURL(join(relayDist, 'domain', 'messaging', 'groups.js')).href
 )
 
 const chat = ChatDatabase.open({ location: relayDb })
@@ -169,8 +175,45 @@ function log() {
   }
 }
 
+function groupCreate() {
+  const name = (rest.length > 0 ? rest.join(' ') : '甲乙联调群').trim()
+  const alice = chat.readonlyHandle
+    .prepare('SELECT display_name FROM accounts WHERE account_id = ?')
+    .get(aliceId)
+  if (alice === undefined) {
+    process.stderr.write(
+      `relay 库里没有账号 ${aliceId}。确认甲已在 Desktop 完成开户，且账号 ID 复制完整。\n`,
+    )
+    process.exit(2)
+  }
+
+  // 幂等：已存在同名的群就复用，不再重复建
+  const existing = chat.readonlyHandle
+    .prepare('SELECT group_id FROM groups WHERE organization_id = ? AND name = ?')
+    .get(ORG, name)
+  if (existing !== undefined) {
+    // 仍确保甲在成员里（缺了只补，不报错）
+    chat.transaction((db) =>
+      addGroupMember({ db, organizationId: ORG, groupId: existing.group_id, accountId: aliceId }),
+    )
+    process.stdout.write(`群「${name}」已存在（${existing.group_id}），已确保成员含甲。\n`)
+    return
+  }
+
+  const { groupId } = chat.transaction((db) => {
+    const created = createGroup({ db, organizationId: ORG, creatorAccountId: BOB_ACCOUNT_ID, name })
+    addGroupMember({ db, organizationId: ORG, groupId: created.groupId, accountId: aliceId })
+    return created
+  })
+  process.stdout.write(
+    `已建群「${name}」（${groupId}），成员：乙 + ${alice.display_name}。\n` +
+      '群消息收发（S4）接通前，界面暂时还看不到这条群会话。\n',
+  )
+}
+
 if (action === 'contact') contact()
 else if (action === 'send') send()
+else if (action === 'group') groupCreate()
 else log()
 
 chat.close()
