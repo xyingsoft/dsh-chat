@@ -87,3 +87,5 @@ HTTP 后走的是同一段代码。这个模式在 kernel 的多进程验收
 `DSH_CHAT_RELAY_TLS_FINGERPRINT` 是给「relay 在反代后面」的部署防中间人
 用的。这里 relay 与 host 都在本机回环上，配了只会在两条签名实现之间引入
 与测试目标无关的失败面。
+
+### 播种联调群（P1 S2）\n\n\\\sh\nnode examples/two-users/bob.mjs group <甲的账号ID> 甲乙联调群\n\\\\n\n乙建群并把甲拉为成员（幂等）。群消息收发接通（S4）后，甲在会话列表即可看到该群。\n
