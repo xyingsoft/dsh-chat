@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "da589ee9d387a4d4e72e7a506dc6b31f51390058",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  }
+}
