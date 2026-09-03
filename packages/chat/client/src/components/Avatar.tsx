@@ -13,6 +13,8 @@ export interface AvatarProps {
   /** 用于取首字与派生颜色。空串时渲染占位而不报错。 */
   readonly name: string
   readonly size?: 'sm' | 'md' | 'lg'
+  /** 圆（1v1/成员）或圆角方块（群/组织）。 */
+  readonly variant?: 'circle' | 'square'
   /** 头像底色是否为当前会话的强调色（用于本端/群头像等）。 */
   readonly tone?: 'auto' | 'accent'
   readonly title?: string
@@ -29,7 +31,7 @@ function hashHue(name: string): number {
 }
 
 export function Avatar(props: AvatarProps): ReactElement {
-  const { name, size = 'md', tone = 'auto', title } = props
+  const { name, size = 'md', variant = 'circle', tone = 'auto', title } = props
   const trimmed = name.trim()
   const initial = trimmed.length > 0 ? [...trimmed][0]!.toLocaleUpperCase() : '?'
   const style = {
@@ -40,6 +42,7 @@ export function Avatar(props: AvatarProps): ReactElement {
     className: [
       styles['avatar'],
       styles[SIZE_CLASS[size] ?? 'sizeMd'],
+      variant === 'square' ? styles['square'] : styles['circle'],
       tone === 'accent' ? styles['avatarAccent'] : '',
     ]
       .filter(Boolean)

@@ -85,10 +85,32 @@
 
 .name {
   grid-area: name;
-  font-weight: 650;
-  font-size: var(--dsh-chat-text-md);
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-2);
+  min-width: 0;
+}
+
+.nameText {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 650;
+  font-size: var(--dsh-chat-text-md);
+}
+
+/* 群成员数徽标（群聊壳）：占位极小，超宽时先省略标题再挤掉徽标 */
+.groupBadge {
+  flex: none;
+  padding: 0 6px;
+  border-radius: var(--dsh-chat-radius-pill);
+  background: var(--dsh-chat-bg-inset);
+  border: 1px solid var(--dsh-chat-divider);
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-xs);
+  font-weight: 500;
   white-space: nowrap;
 }
 

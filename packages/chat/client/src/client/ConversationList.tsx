@@ -21,10 +21,16 @@ import { formatListTime } from './time.js'
 
 import styles from './ConversationList.module.css'
 
+export type ConversationKind = 'direct' | 'group'
+
 export interface ConversationSummary {
   readonly conversationId: string
-  /** 对方的显示名。由 host 解析 —— 客户端没有账号目录。 */
+  /** 会话名：1v1 是对方显示名；群是群名。由 host 解析。 */
   readonly title: string
+  /** P1 群聊类型（壳）：host 返回 `group` 时按群形态渲染；缺省按 1v1。 */
+  readonly kind?: ConversationKind
+  /** 群成员数（host 提供时显示徽标；1v1 不填）。 */
+  readonly memberCount?: number
   /**
    * 最后一条消息的摘要。**已撤回的消息在这里是撤回占位**，不是原文 ——
    * host 负责这个替换，客户端拿到什么显示什么。
@@ -186,19 +192,38 @@ export function ConversationList(props: ConversationListProps): ReactElement {
                 .join(' '),
               onClick: () => props.onSelect(conversation.conversationId),
             },
-            // 生成式头像：同一联系人颜色稳定可辨（ui-design.md §4.8）
+            // 生成式头像：1v1 用圆（联系人），群用圆角方块（群聊壳区分形态）
             createElement('span', { className: styles['avatar'] },
               createElement(Avatar, {
                 name: conversation.title,
                 size: 'md',
+                variant: conversation.kind === 'group' ? 'square' : 'circle',
                 title: conversation.title,
               }),
             ),
             createElement(
               'span',
               { className: styles['name'] },
-              presenceDot(conversation.presence ?? 'unknown'),
-              ...highlightSegments(conversation.title, props.highlightQuery),
+              // 群没有「对方在线状态」这一说 —— 不画状态点
+              conversation.kind === 'group'
+                ? null
+                : presenceDot(conversation.presence ?? 'unknown'),
+              createElement(
+                'span',
+                { className: styles['nameText'] },
+                ...highlightSegments(conversation.title, props.highlightQuery),
+              ),
+              // 群形态：成员数徽标（host 给数才显示，不给不臆测）
+              conversation.kind === 'group' && conversation.memberCount !== undefined
+                ? createElement(
+                    'span',
+                    {
+                      className: styles['groupBadge'],
+                      'aria-label': `${conversation.memberCount} 名成员`,
+                    },
+                    `${conversation.memberCount} 人`,
+                  )
+                : null,
             ),
             createElement(
               'span',
