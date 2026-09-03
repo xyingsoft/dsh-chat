@@ -17,13 +17,20 @@ import { createElement, type ReactElement, type ReactNode } from 'react'
 
 import type { PresenceState } from '../presentation.js'
 import { Avatar } from '../components/Avatar.js'
+import { formatListTime } from './time.js'
 
 import styles from './ConversationList.module.css'
 
+export type ConversationKind = 'direct' | 'group'
+
 export interface ConversationSummary {
   readonly conversationId: string
-  /** 对方的显示名。由 host 解析 —— 客户端没有账号目录。 */
+  /** 会话名：1v1 是对方显示名；群是群名。由 host 解析。 */
   readonly title: string
+  /** P1 群聊类型（壳）：host 返回 `group` 时按群形态渲染；缺省按 1v1。 */
+  readonly kind?: ConversationKind
+  /** 群成员数（host 提供时显示徽标；1v1 不填）。 */
+  readonly memberCount?: number
   /**
    * 最后一条消息的摘要。**已撤回的消息在这里是撤回占位**，不是原文 ——
    * host 负责这个替换，客户端拿到什么显示什么。
@@ -39,6 +46,13 @@ export interface ConversationSummary {
    * 都不该显示一个绿点。
    */
   readonly presence?: PresenceState
+  /**
+   * 未发送的草稿（工单：草稿保存）。
+   *
+   * 草稿是**设备本地的视图状态**（§5），不进 host —— 有草稿时预览行
+   * 显示 `[草稿] …` 而不是最后一条消息，让用户记得那里还有话没说完。
+   */
+  readonly draft?: string
 }
 
 export interface ConversationListProps {
@@ -47,6 +61,13 @@ export interface ConversationListProps {
   readonly onSelect: (conversationId: string) => void
   /** 本地搜索命中词。命中片段用 <mark> 高亮（正文仍是文本节点，U4）。 */
   readonly highlightQuery?: string
+  /**
+   * 空态引导：切换到通讯录开始新对话。
+   *
+   * 没有会话时用户唯一能做的是去通讯录找人 —— 不给入口的话，空列表
+   * 就是一个死胡同。
+   */
+  readonly onOpenDirectory?: () => void
   /**
    * 把 ISO 时间格式化为显示文本。
    *
@@ -57,10 +78,9 @@ export interface ConversationListProps {
   readonly formatTime?: (iso: string) => string
 }
 
-/** 默认时间格式化：`2026-08-30T12:34:56Z` → `08-30 12:34`。 */
+/** 默认时间格式化：`formatListTime`（今天 HH:MM / 昨天 / MM-DD）。相对语义按本地日历日切，见 `time.ts`。 */
 function defaultFormatTime(iso: string): string {
-  const match = /^\d{4}-(\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
-  return match === null ? iso : `${match[1]} ${match[2]}`
+  return formatListTime(iso, new Date())
 }
 
 /** 在线状态的文字说明。§49 要求颜色不作为唯一状态信号。 */
@@ -128,8 +148,24 @@ export function ConversationList(props: ConversationListProps): ReactElement {
 
   if (props.conversations.length === 0) {
     // 空态给一句明确的话，而不是一片空白。空白无法区分「没有会话」与
-    // 「还没加载出来」，而这两者用户该做的事完全不同
-    return createElement('p', { className: styles['empty'] }, '还没有会话')
+    // 「还没加载出来」，而这两者用户该做的事完全不同。
+    // 没有会话时唯一能开始对话的入口是通讯录 —— 给按钮，别让列表成死胡同
+    return createElement(
+      'p',
+      { className: styles['empty'] },
+      '还没有会话',
+      props.onOpenDirectory === undefined
+        ? null
+        : createElement(
+            'button',
+            {
+              type: 'button',
+              className: styles['emptyAction'],
+              onClick: props.onOpenDirectory,
+            },
+            '去通讯录发起对话',
+          ),
+    )
   }
 
   return createElement(
@@ -156,24 +192,54 @@ export function ConversationList(props: ConversationListProps): ReactElement {
                 .join(' '),
               onClick: () => props.onSelect(conversation.conversationId),
             },
-            // 生成式头像：同一联系人颜色稳定可辨（ui-design.md §4.8）
+            // 生成式头像：1v1 用圆（联系人），群用圆角方块（群聊壳区分形态）
             createElement('span', { className: styles['avatar'] },
               createElement(Avatar, {
                 name: conversation.title,
                 size: 'md',
+                variant: conversation.kind === 'group' ? 'square' : 'circle',
                 title: conversation.title,
               }),
             ),
             createElement(
               'span',
               { className: styles['name'] },
-              presenceDot(conversation.presence ?? 'unknown'),
-              ...highlightSegments(conversation.title, props.highlightQuery),
+              // 群没有「对方在线状态」这一说 —— 不画状态点
+              conversation.kind === 'group'
+                ? null
+                : presenceDot(conversation.presence ?? 'unknown'),
+              createElement(
+                'span',
+                { className: styles['nameText'] },
+                ...highlightSegments(conversation.title, props.highlightQuery),
+              ),
+              // 群形态：成员数徽标（host 给数才显示，不给不臆测）
+              conversation.kind === 'group' && conversation.memberCount !== undefined
+                ? createElement(
+                    'span',
+                    {
+                      className: styles['groupBadge'],
+                      'aria-label': `${conversation.memberCount} 名成员`,
+                    },
+                    `${conversation.memberCount} 人`,
+                  )
+                : null,
             ),
             createElement(
               'span',
               { className: styles['preview'] },
-              ...highlightSegments(conversation.preview, props.highlightQuery),
+              // 有草稿时预览行让位给草稿（§5：草稿是设备本地视图状态）——
+              // 「打了没发」比「最后收到什么」更需要被记住
+              conversation.draft !== undefined && conversation.draft.length > 0
+                ? [
+                    createElement(
+                      'span',
+                      { key: 'draft-tag', className: styles['draftTag'] },
+                      '草稿',
+                    ),
+                    ` ${conversation.draft}`,
+                  ]
+                : highlightSegments(conversation.preview, props.highlightQuery),
             ),
             createElement(
               'span',

@@ -113,3 +113,181 @@
 .counterOver {
   color: var(--dsh-chat-danger);
 }
+
+/* —— P1 附件壳（本地暂存） —— */
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dsh-chat-space-2);
+}
+
+.attachCard {
+  display: flex;
+  align-items: center;
+  gap: var(--dsh-chat-space-2);
+  max-width: 240px;
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-2);
+  border: 1px solid var(--dsh-chat-border);
+  border-radius: var(--dsh-chat-radius-md);
+  background: var(--dsh-chat-bg);
+}
+
+.thumb {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: var(--dsh-chat-radius-sm);
+}
+
+.fileIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--dsh-chat-radius-sm);
+  background: var(--dsh-chat-bg-inset);
+  font-size: 16px;
+}
+
+.attachMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.attachName {
+  font-size: var(--dsh-chat-text-sm);
+  color: var(--dsh-chat-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachSize {
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-fg-faint);
+}
+
+.attachRemove {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: var(--dsh-chat-fg-faint);
+  font-size: var(--dsh-chat-text-md);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--dsh-chat-radius-sm);
+  padding: 0 2px;
+}
+
+.attachRemove:hover {
+  color: var(--dsh-chat-danger);
+}
+
+.attachRemove:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+/* 附件按钮：紧贴输入框左侧，禁用与发送一致 */
+.attachBtn {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: var(--dsh-chat-radius-lg);
+  background: transparent;
+  color: var(--dsh-chat-fg-muted);
+  font-family: var(--dsh-chat-font-ui);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dsh-chat-dur-fast) var(--dsh-chat-ease),
+    color var(--dsh-chat-dur-fast) var(--dsh-chat-ease);
+}
+
+.attachBtn:hover:not(:disabled) {
+  background: var(--dsh-chat-bg-hover);
+  color: var(--dsh-chat-fg);
+}
+
+.attachBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.attachBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}
+
+/* 隐藏的文件选择框：点按钮触发 */
+.filePicker {
+  display: none;
+}
+
+/* 拖放进入时给输入区一个可见提示（不只有颜色） */
+.dropActive .input {
+  border-color: var(--dsh-chat-accent);
+  box-shadow: 0 0 0 2px var(--dsh-chat-accent-soft);
+}
+
+.dropHint {
+  margin: 0;
+  font-size: var(--dsh-chat-text-xs);
+  color: var(--dsh-chat-accent);
+}
+
+.gateBody {
+  margin: 0 0 var(--dsh-chat-space-4);
+  color: var(--dsh-chat-fg-muted);
+  font-size: var(--dsh-chat-text-sm);
+  line-height: var(--dsh-chat-leading-normal);
+}
+
+.gateActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dsh-chat-space-2);
+}
+
+.gateCancel,
+.gatePrimary {
+  padding: var(--dsh-chat-space-1) var(--dsh-chat-space-4);
+  border-radius: var(--dsh-chat-radius-md);
+  font-family: inherit;
+  font-size: var(--dsh-chat-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gateCancel {
+  border: 1px solid var(--dsh-chat-border);
+  background: transparent;
+  color: var(--dsh-chat-fg-muted);
+}
+
+.gateCancel:hover {
+  background: var(--dsh-chat-bg-hover);
+}
+
+.gatePrimary {
+  border: 1px solid var(--dsh-chat-accent);
+  background: var(--dsh-chat-accent);
+  color: var(--dsh-chat-fg-on-accent);
+}
+
+.gatePrimary:hover {
+  background: var(--dsh-chat-accent-hover);
+}
+
+.gateCancel:focus-visible,
+.gatePrimary:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-chat-focus-ring);
+}

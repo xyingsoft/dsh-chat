@@ -23,7 +23,7 @@ import type { ProtocolVersion } from './index.js'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const opsDoc = readFileSync(
-  join(repoRoot, 'docs', '03-details', '05-observability-and-ops.md'),
+  join(repoRoot, 'docs', 'archive', '03-details', '05-observability-and-ops.md'),
   'utf8',
 )
 

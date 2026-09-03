@@ -1,7 +1,7 @@
 /**
  * 通知聚合。
  *
- * [§17.1](../../../../docs/01-requirements/02-collaboration-requirements.md#171-通知与收件箱)：
+ * [§17.1](../../../../docs/archive/01-requirements/02-collaboration-requirements.md#171-通知与收件箱)：
  *
  * > **去重键与聚合是两件事。** 去重键防止同一领域事件重复投递产生多条记录；
  * > 聚合把多个不同事件折叠为一条可展开的收件箱条目。

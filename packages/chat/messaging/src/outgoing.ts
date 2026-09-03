@@ -1,7 +1,7 @@
 /**
  * 发送方本地的发送状态机。
  *
- * [§4](../../../../docs/02-architecture/01-overall-architecture.md)：
+ * [§4](../../../../docs/archive/02-architecture/01-overall-architecture.md)：
  *
  * > 离线时界面区分**「本地已保存待发送」「服务器已接收」和「终态失败」三种状态，
  * > 绝不把未确认内容显示为已送达**。

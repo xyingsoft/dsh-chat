@@ -1,6 +1,6 @@
 # @dsh-chat/kernel —— L1 社区 bundle 的 loader 补丁。
 #
-# 见 docs/02-architecture/02-plugin-model.md §6.2：本文件中条目的书写顺序
+# 见 docs/archive/02-architecture/02-plugin-model.md §6.2：本文件中条目的书写顺序
 # 不表达启动顺序。启动顺序由各插件声明的 inject 依赖推导，§6 要求的
 # 「先加载身份、组织和审计，再加载消息等消费者」由此保证，不靠人工排列。
 #

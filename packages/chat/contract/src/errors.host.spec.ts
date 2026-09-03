@@ -1,7 +1,7 @@
 /**
  * 错误码目录与文档的一致性测试。
  *
- * 这不是普通的单元测试 —— 它反向解析 `docs/03-details/06-contracts-and-conventions.md`
+ * 这不是普通的单元测试 —— 它反向解析 `docs/archive/03-details/06-contracts-and-conventions.md`
  * §46 的表格，逐条与 `errors.ts` 核对。任何一方改动而另一方未跟上，测试都会失败。
  *
  * 这是「文档先行」在 CI 层面的机械保障：`errors.ts` 由文档生成，本测试确保它不会
@@ -17,7 +17,7 @@ import { expect, it } from 'vitest'
 import { ERROR_CATALOGUE, type ErrorCode, isAutoRetryForbidden } from './errors.js'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
-const docPath = join(repoRoot, 'docs', '03-details', '06-contracts-and-conventions.md')
+const docPath = join(repoRoot, 'docs', 'archive', '03-details', '06-contracts-and-conventions.md')
 
 interface DocRow {
   code: string

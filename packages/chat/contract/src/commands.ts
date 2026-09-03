@@ -34,7 +34,7 @@ export type CommandName = (typeof COMMAND_NAMES)[number]
 /**
  * 全部持久领域事件名。
  *
- * 取值逐字来自 [§6.1 能力与提供者矩阵](../../../../docs/02-architecture/02-plugin-model.md#61-能力与提供者矩阵)
+ * 取值逐字来自 [§6.1 能力与提供者矩阵](../../../../docs/archive/02-architecture/02-plugin-model.md#61-能力与提供者矩阵)
  * 中「消费者与持久事件」一列。`events.host.spec.ts` 会反向解析该文档核对，
  * 与错误码目录同一套防漂移机制。
  */

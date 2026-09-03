@@ -17,6 +17,10 @@
  * 选中的会话、以及**尚未被服务端确认的待发消息** —— 最后一项是必须的：
  * §4 要求「本地已保存待发送」是一个可见状态，没有它就只能在发送成功后
  * 才显示，慢网络下界面像没反应。
+ *
+ * 草稿同样是本地状态（§5：设备本地的视图状态，不进 host）。它由这里持有
+ * 并镜像到 localStorage —— 切会话换草稿、发送清空、刷新页面恢复，Composer
+ * 只做受控输入。
  */
 
 import {
@@ -43,10 +47,10 @@ import { ProtocolUnsupportedPage } from '../components/ProtocolUnsupportedPage.j
 import { ConversationRowSkeleton } from '../components/Skeleton.js'
 import { notify } from '../components/Toast.js'
 import { Composer } from './Composer.js'
-import { ConversationList, type ConversationSummary } from './ConversationList.js'
+import { ConversationList, type ConversationKind, type ConversationSummary } from './ConversationList.js'
 import { DirectoryPanel } from './DirectoryPanel.js'
 import { EnrollmentPanel } from './EnrollmentPanel.js'
-import { MessageView, type DisplayMessage } from './MessageView.js'
+import { MessageView, type DisplayMessage, type EditingState } from './MessageView.js'
 import { useEventStream } from './useEventStream.js'
 
 /** host 返回此错误码时抽屉整体替换为升级提示页（ui-design.md §3.5）。 */
@@ -54,6 +58,28 @@ const PROTOCOL_UNSUPPORTED = 'PROTOCOL_VERSION_UNSUPPORTED'
 
 /** 宽到这个数才并排。低于它切单栏钻取。 */
 const SPLIT_THRESHOLD = 640
+
+/** 草稿在 localStorage 里的 key 前缀（`dsh-chat-draft:<peerId>`）。 */
+const DRAFT_KEY_PREFIX = 'dsh-chat-draft:'
+
+/** 读一个会话的持久化草稿。localStorage 会抛（隐私模式/策略禁用）—— 草稿存取不该把界面打崩。 */
+function readStoredDraft(peerId: string): string {
+  try {
+    return globalThis.localStorage?.getItem(DRAFT_KEY_PREFIX + peerId) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+/** 写（空串 = 清除）一个会话的草稿。存不下就只在内存里生效。 */
+function storeDraft(peerId: string, text: string): void {
+  try {
+    if (text.length === 0) globalThis.localStorage?.removeItem(DRAFT_KEY_PREFIX + peerId)
+    else globalThis.localStorage?.setItem(DRAFT_KEY_PREFIX + peerId, text)
+  } catch {
+    // 存不下就只在本次会话里生效
+  }
+}
 
 /**
  * 心跳间隔。与 §50.3 关闭的那条决策一致（host 侧的 online 窗口是它的三倍）。
@@ -74,6 +100,10 @@ const INTERACTION_EVENTS = ['keydown', 'pointerdown', 'focus'] as const
 interface RemoteConversation {
   readonly peerId: string
   readonly peerDisplayName: string
+  /** host 标注群聊时携带（缺省视为 1v1，由 ConversationList 呈现为直聊形态）。 */
+  readonly kind?: ConversationKind
+  /** 群成员数，host 提供时透传给列表徽标；1v1 不携带。 */
+  readonly memberCount?: number
   readonly preview: string
   readonly lastActivityAt: string
   readonly unreadCount: number
@@ -88,6 +118,8 @@ interface RemoteMessage {
   readonly revoked: boolean
   readonly edited: boolean
   readonly sentAt: string
+  /** host 透传的当前修订号。编辑提交的 targetRevision = 它 + 1（§14.1）。 */
+  readonly revision?: number
 }
 
 /** 本地待发/失败的消息。服务端确认后从这里移除，改由服务端列表提供。 */
@@ -179,6 +211,11 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<readonly RemoteMessage[]>([])
   const [pending, setPending] = useState<readonly PendingMessage[]>([])
+  // 内联编辑状态（受控下传给 MessageView，组件本身保持纯呈现）
+  const [editing, setEditing] = useState<EditingState | null>(null)
+  // 各会话的草稿（peerId → 文本）。内存镜像 + localStorage 持久化：
+  // 列表上的「草稿」标记从这里读，输入框的受控值也从这里读
+  const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({})
   const [presence, setPresence] = useState<Readonly<Record<string, PresenceState>>>({})
   // identity/status 返回 local | enrolled | unenrolled。local = 本机单机模式：
   // 没有 relay/组织，数据只在这台设备 —— 该事实占布局提示（U2），不隐藏
@@ -217,6 +254,19 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
         {},
       )
       setConversations(data.conversations)
+      // 从 localStorage 恢复各会话的草稿标记（页面刷新后内存是空的）。
+      // 只补不删：内存里已有的值保留 —— 它是刚刚击键写入的，比存储里的
+      // 更新；用存储值整体覆盖会让隐私模式（存不下）下标记闪没
+      setDrafts((prev) => {
+        let next: Record<string, string> | undefined
+        for (const conversation of data.conversations) {
+          const stored = readStoredDraft(conversation.peerId)
+          if (stored.length === 0 || prev[conversation.peerId] === stored) continue
+          next ??= { ...prev }
+          next[conversation.peerId] = stored
+        }
+        return next ?? prev
+      })
       setState({ kind: 'ready' })
     } catch (error) {
       setState({ kind: 'failed', errorCode: (error as Error).message })
@@ -299,10 +349,20 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   // 打开会话：拉消息 + 标记已读。
   // 标记已读放在这里而不是点击回调里 —— 组织切换或外部改选中时也要生效
   useEffect(() => {
+    // 切会话时退出编辑态。编辑锚在 messageId 上，换个会话还开着的话，
+    // 编辑器会试图套在另一段对话的消息上
+    setEditing(null)
     if (selectedId === undefined) {
       setMessages([])
       return
     }
+    // 恢复该会话的草稿到输入框。以存储为准 —— 内存里没有（刷新后刚打开）
+    // 或不一致（旧值）都以它为准；写入路径每次击键都同步过存储，
+    // 正常时序下这里不会丢字
+    setDrafts((prev) => {
+      const stored = readStoredDraft(selectedId)
+      return prev[selectedId] === stored ? prev : { ...prev, [selectedId]: stored }
+    })
     let cancelled = false
     void (async () => {
       try {
@@ -365,6 +425,23 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     },
     [loadMessages, loadConversations],
   )
+
+  /**
+   * 草稿变化：内存与 localStorage 同步写。
+   *
+   * 发送流程里的「先清空再发」「失败放回去」也走这里（Composer 受控），
+   * 所以草稿的清空/恢复不需要 send 再单独处理。用 selectedRef 读当前
+   * 会话而不是把 selectedId 放进依赖 —— 回调身份稳定，Composer 的
+   * memo 才有意义（虽然目前没有，但依赖漂移没有理由引进来）。
+   */
+  const onDraftChange = useCallback((text: string) => {
+    const peerId = selectedRef.current
+    if (peerId === undefined) return
+    setDrafts((prev) =>
+      prev[peerId] === text ? prev : { ...prev, [peerId]: text },
+    )
+    storeDraft(peerId, text)
+  }, [])
 
   const send = useCallback(
     async (body: string): Promise<string | undefined> => {
@@ -452,6 +529,38 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     [selectedId, loadMessages, loadConversations],
   )
 
+  // 编辑：targetRevision 由 MessageView 按当前 revision + 1 构造并传上来。
+  // 窗口/权限判定在 host（U7），这里只负责调用与刷新
+  const doEdit = useCallback(
+    async (messageId: string, targetRevision: number, body: string): Promise<void> => {
+      const peerId = selectedId
+      if (peerId === undefined) return
+      try {
+        // 幂等键带 revision：改第二次时 targetRevision 不同，不会被服务端
+        // 当成同一次操作的重放而返回旧结果
+        await callHost<{ revision: number }>('/api/chat/messages/edit', {
+          messageId,
+          targetRevision,
+          body,
+          operationId: `edit-${messageId}-r${targetRevision}`,
+        })
+        await loadMessages(peerId)
+        await loadConversations()
+      } catch (error) {
+        const code = (error as Error).message
+        notify({
+          id: `edit-failed-${messageId}`,
+          variant: 'error',
+          message: presentError(code as Parameters<typeof presentError>[0]).message,
+        })
+        // 拉一次消息：编辑失败常见于并发（对方先改了）或超窗，
+        // 刷新能让用户看到最新正文，而不是对着旧正文再改一遍
+        await loadMessages(peerId).catch(() => {})
+      }
+    },
+    [selectedId, loadMessages, loadConversations],
+  )
+
   if (state.kind === 'loading') {
     return createElement(
       'div',
@@ -504,6 +613,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
   const summaries: ConversationSummary[] = conversations.map((c) => ({
     conversationId: c.peerId,
     title: c.peerDisplayName,
+    // host 只对群会话给 kind/memberCount；1v1 不带，列表按直聊形态呈现
+    ...(c.kind === undefined ? {} : { kind: c.kind }),
+    ...(c.memberCount === undefined ? {} : { memberCount: c.memberCount }),
     // 「你：」前缀由这里加而不是 host 拼进 preview —— host 不知道界面用什么
     // 措辞，而 preview 还要用于别处
     preview: c.lastMessageOutgoing ? `你：${c.preview}` : c.preview,
@@ -511,6 +623,11 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     unreadCount: c.unreadCount,
     // 查不到时给 unknown 而不是 offline —— 后者是一个我们没有依据的断言
     presence: presence[c.peerId] ?? 'unknown',
+    // 草稿标记只给非当前会话：当前会话的草稿就在输入框里可见，
+    // 列表再标一遍是重复信息，还会让预览行跟着每次击键跳动
+    ...(c.peerId !== selectedId && (drafts[c.peerId] ?? '').length > 0
+      ? { draft: drafts[c.peerId] ?? '' }
+      : {}),
   }))
 
   const displayed: DisplayMessage[] = [
@@ -522,6 +639,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
       revoked: m.revoked,
       edited: m.edited,
       sentAt: m.sentAt,
+      // 本地待发消息没有 revision（见 MessageView 的 DisplayMessage），
+      // 菜单上也不该给它们「编辑」入口
+      ...(m.revision !== undefined ? { revision: m.revision } : {}),
       ...(m.outgoing ? { deliveryState: 'accepted' as const } : {}),
     })),
     ...pending
@@ -611,6 +731,9 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
                 conversations: filteredSummaries,
                 ...(selectedId === undefined ? {} : { selectedId }),
                 onSelect: setSelectedId,
+                // 空态引导：没有会话时唯一能开始对话的入口是通讯录，
+                // 给个按钮而不是留一个死胡同列表
+                onOpenDirectory: () => setTab('directory'),
                 ...(query.length === 0 ? {} : { highlightQuery: search.trim() }),
               }),
         )
@@ -662,12 +785,25 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
             onRetry: (messageId: string) => retryMessage(messageId),
             // 撤回入口：先弹确认，确认后才调 host
             onRevoke: (messageId: string) => setConfirmRevokeId(messageId),
+            // 编辑四件套：状态在这里，MessageView 只负责呈现
+            editing,
+            onStartEdit: (messageId: string, initialDraft: string) =>
+              setEditing({ messageId, draft: initialDraft }),
+            onChangeDraft: (text: string) =>
+              setEditing((prev) => (prev === null ? prev : { ...prev, draft: text })),
+            onCancelEdit: () => setEditing(null),
+            onEdit: (messageId: string, targetRevision: number, body: string) => {
+              void doEdit(messageId, targetRevision, body)
+            },
           }),
         ),
     selectedId === undefined || props.composer === false
       ? null
       : createElement(Composer, {
           onSend: send,
+          // 受控草稿：值来自 drafts（切会话已恢复），变化写回内存 + localStorage
+          value: selectedId === undefined ? '' : (drafts[selectedId] ?? ''),
+          onChange: onDraftChange,
           placeholder: `发消息给 ${selected?.peerDisplayName ?? ''}…`,
         }),
   )

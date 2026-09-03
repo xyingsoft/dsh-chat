@@ -4,7 +4,7 @@
  * 覆盖 §28 中最容易实现错、且错了之后很难察觉的几条：幂等重放、队列满的时机、
  * 不淘汰未 ACK 消息、租约按设备而非按账号、ACK 前崩溃后重投。
  *
- * 这些对应[骨架](../../../../docs/04-roadmap/02-minimum-skeleton.md)第 7、9、11 步。
+ * 这些对应[骨架](../../../../docs/archive/04-roadmap/02-minimum-skeleton.md)第 7、9、11 步。
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
