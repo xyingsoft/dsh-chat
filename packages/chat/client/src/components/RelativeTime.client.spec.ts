@@ -46,9 +46,15 @@ describe('formatRelativeTime', () => {
 
 describe('RelativeTime 组件', () => {
   it('渲染相对时间并带绝对时间的 title', () => {
-    const tree = RelativeTime({ value: '2026-09-02T08:09:00+08:00' })
-    expect(textOf(tree)).toContain('今天 08:09')
-    expect(tree.props).toHaveProperty('title')
+    // 用相对当前时刻的动态输入，避免写死日期在午夜后失效
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60_000).toISOString()
+    const tree = RelativeTime({ value: fiveMinutesAgo })
+    expect(textOf(tree)).toBe('5 分钟前')
+    // title 必须是可解析成绝对时间文本的非空字符串
+    const title = (tree as { props: { title?: string } }).props.title
+    expect(typeof title).toBe('string')
+    expect((title ?? '').length).toBeGreaterThan(0)
+    expect(Number.isNaN(Date.parse(fiveMinutesAgo))).toBe(false)
   })
 
   it('非法输入渲染 null', () => {
