@@ -1,0 +1,36 @@
+packages/chat/client/src/components/RelativeTime.tsx
+  s_2a0ad92afe8049::t_039cbe77d29972 31-32
+  s_2a0ad92afe8049::t_8e243f87e83d02 28-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "d1fe829a7c1d73a8af5e1551a057ad41a393b4b8",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "source_scene": "agent",
+        "operation_id": "6a97f2d24cb341d16d3bd5aa",
+        "runtime_client": "trae-tob-git-ai",
+        "edit_kind": "file_edit",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "tool_name": "Edit",
+        "tool_use_id": "6a97f2d24cb341d16d3bd5aa",
+        "client_type": "ide"
+      }
+    }
+  }
+}
