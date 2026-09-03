@@ -3,13 +3,20 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  border-radius: var(--dsh-chat-radius-pill);
   color: #ffffff;
   background: hsl(var(--dsh-chat-avatar-hue, 210) 42% 46%);
   font-family: var(--dsh-chat-font-ui);
   font-weight: 600;
   line-height: 1;
   user-select: none;
+}
+
+.circle {
+  border-radius: var(--dsh-chat-radius-pill);
+}
+
+.square {
+  border-radius: var(--dsh-chat-radius-md);
 }
 
 [data-theme='dark'] .avatar {
