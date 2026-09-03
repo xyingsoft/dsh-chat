@@ -1,0 +1,37 @@
+packages/chat/client/src/components/Avatar.module.css
+  s_2a0ad92afe8049::t_039cbe77d29972 17,20-21
+  s_2a0ad92afe8049::t_bee937d5274b9e 14-16
+  s_2a0ad92afe8049::t_fe198e2ad6b3e6 18-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "c8677dccdcd0af394fe64ab6f8e1f1b30cae00fb",
+  "prompts": {},
+  "humans": {
+    "h_547ec7b27189fe": {
+      "author": "徐苏洋 <2307456010@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "source_scene": "agent",
+        "tool_name": "Edit",
+        "tool_use_id": "6a97f2d24cb341d16d3bd5aa",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "edit_kind": "file_edit",
+        "client_type": "ide",
+        "operation_id": "6a97f2d24cb341d16d3bd5aa",
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "runtime_client": "trae-tob-git-ai"
+      }
+    }
+  }
+}
