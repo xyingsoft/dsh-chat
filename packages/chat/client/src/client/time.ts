@@ -1,40 +1,66 @@
 /**
- * 时间呈现的共享工具。
+ * 时间呈现的共享工具 —— **固定北京时间（Asia/Shanghai, UTC+8）**。
  *
- * 抽出来是因为消息视图与会话列表要用**同一套日历日语义**（今天/昨天/日期），
- * 各写一份会漂移：一边把「昨天」写成 23:59 截止的滚动窗口，另一边按本地日历
- * 日切，同一时刻的消息在两处标不同的日子。
+ * 消息时间戳存 UTC ISO（§48）；展示统一换算为北京时间，而不是读机器本地
+ * 时区：本产品界面语言为中文、团队以北京时间为约定时钟（用户明确要求），
+ * 避免同一条消息在开会机器/服务器时区下显示成另一天。
  *
- * ## 为什么按本地日历日而不是滚动 24 小时
+ * 会话列表、消息视图与消息分组头共用同一套日历日切分（今天/昨天/日期），
+ * 各写一份会漂移：一边把「昨天」写成 23:59 截止的滚动窗口，另一边按日历日
+ * 切，同一时刻的消息在两处标不同的日子。
  *
- * 「昨天」在用户语言里是日历概念 —— 今天早上收到的消息，下午看仍是「今天」，
- * 而滚动窗口会在几小时后把它变成「昨天」之外的更早日期。消息时间戳存 UTC
- * ISO（§48），换算成哪一天由**看的人的时区**决定，这也是聊天产品的通行语义。
- *
- * 所有函数都是纯函数，`now` 由调用方注入 —— 默认实现在渲染处取 `new Date()`，
+ * 实现不做时区表查询：UTC+8 无夏令时，换算 = 时刻 + 8h 后取 UTC 字段。
+ * 所有函数纯函数，`now` 由调用方注入 —— 默认实现在渲染处取 `new Date()`，
  * 测试传固定值，避免用例随运行日期漂移。
  */
 
-/** 两个时刻是否落在同一个本地日历日。 */
-export function isSameCalendarDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
-}
+/** UTC+8 固定偏移（毫秒）。 */
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000
 
-function yesterdayOf(now: Date): Date {
-  const d = new Date(now)
-  d.setDate(d.getDate() - 1)
-  return d
+export interface BeijingWall {
+  readonly year: number
+  readonly month: number
+  readonly day: number
+  readonly hour: number
+  readonly minute: number
 }
 
 const pad = (n: number): string => String(n).padStart(2, '0')
 
-/** 当天的 HH:MM。 */
-function clockOf(date: Date): string {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+/** 一个时刻的北京时间墙钟分量。 */
+export function beijingWallOf(instant: Date): BeijingWall {
+  const shifted = new Date(instant.getTime() + BEIJING_OFFSET_MS)
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  }
+}
+
+function dayKeyOf(instant: Date): string {
+  const w = beijingWallOf(instant)
+  return `${w.year}-${pad(w.month)}-${pad(w.day)}`
+}
+
+/** 北京时间「昨天」的日历日 key。 */
+function yesterdayKeyOf(now: Date): string {
+  const w = beijingWallOf(now)
+  // 北京昨天零点对应的时刻
+  const startOfTodayUtc = Date.UTC(w.year, w.month - 1, w.day) - BEIJING_OFFSET_MS
+  return dayKeyOf(new Date(startOfTodayUtc - 1))
+}
+
+/** 两个时刻是否落在同一个北京时间日历日。 */
+export function isSameCalendarDay(a: Date, b: Date): boolean {
+  return dayKeyOf(a) === dayKeyOf(b)
+}
+
+/** 北京时间的 HH:MM。 */
+function clockOf(instant: Date): string {
+  const w = beijingWallOf(instant)
+  return `${pad(w.hour)}:${pad(w.minute)}`
 }
 
 /**
@@ -43,12 +69,12 @@ function clockOf(date: Date): string {
  * 用作消息列表的分组头。
  */
 export function dayLabel(iso: string, now: Date): string {
-  const date = new Date(iso)
-  if (isSameCalendarDay(date, now)) return '今天'
-  if (isSameCalendarDay(date, yesterdayOf(now))) return '昨天'
-  const sameYear = date.getFullYear() === now.getFullYear()
-  const monthDay = `${date.getMonth() + 1}月${date.getDate()}日`
-  return sameYear ? monthDay : `${date.getFullYear()}年${monthDay}`
+  const instant = new Date(iso)
+  const w = beijingWallOf(instant)
+  if (dayKeyOf(instant) === dayKeyOf(now)) return '今天'
+  if (dayKeyOf(instant) === yesterdayKeyOf(now)) return '昨天'
+  const monthDay = `${w.month}月${w.day}日`
+  return w.year === beijingWallOf(now).year ? monthDay : `${w.year}年${monthDay}`
 }
 
 /**
@@ -59,14 +85,15 @@ export function dayLabel(iso: string, now: Date): string {
  * 是为了长截图脱离上下文时仍可指认。
  */
 export function formatMessageTime(iso: string, now: Date): string {
-  const date = new Date(iso)
-  const clock = clockOf(date)
-  if (isSameCalendarDay(date, now)) return clock
-  if (isSameCalendarDay(date, yesterdayOf(now))) return `昨天 ${clock}`
-  const monthDay = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-  return date.getFullYear() === now.getFullYear()
+  const instant = new Date(iso)
+  const w = beijingWallOf(instant)
+  const clock = clockOf(instant)
+  if (dayKeyOf(instant) === dayKeyOf(now)) return clock
+  if (dayKeyOf(instant) === yesterdayKeyOf(now)) return `昨天 ${clock}`
+  const monthDay = `${pad(w.month)}-${pad(w.day)}`
+  return w.year === beijingWallOf(now).year
     ? `${monthDay} ${clock}`
-    : `${date.getFullYear()}-${monthDay} ${clock}`
+    : `${w.year}-${monthDay} ${clock}`
 }
 
 /**
@@ -76,11 +103,12 @@ export function formatMessageTime(iso: string, now: Date): string {
  * 「要不要点进去」不需要精确到分钟。
  */
 export function formatListTime(iso: string, now: Date): string {
-  const date = new Date(iso)
-  if (isSameCalendarDay(date, now)) return clockOf(date)
-  if (isSameCalendarDay(date, yesterdayOf(now))) return '昨天'
-  const monthDay = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-  return date.getFullYear() === now.getFullYear()
+  const instant = new Date(iso)
+  const w = beijingWallOf(instant)
+  if (dayKeyOf(instant) === dayKeyOf(now)) return clockOf(instant)
+  if (dayKeyOf(instant) === yesterdayKeyOf(now)) return '昨天'
+  const monthDay = `${pad(w.month)}-${pad(w.day)}`
+  return w.year === beijingWallOf(now).year
     ? monthDay
-    : `${date.getFullYear()}-${monthDay}`
+    : `${w.year}-${monthDay}`
 }
