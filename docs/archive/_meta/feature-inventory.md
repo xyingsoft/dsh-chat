@@ -1,10 +1,10 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 功能全量清单 | [上一篇：DSH 装载验证](./dsh-integration-evidence.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · 功能全量清单 | [上一篇：DSH 装载验证](./dsh-integration-evidence.md)
 
 ---
 
 # 功能全量清单
 
-把设计文档里**所有**功能逐条列出并标注实现状态。与 [TODO.md](../../TODO.md) 的分工：
+把设计文档里**所有**功能逐条列出并标注实现状态。与 [TODO.md](../../../TODO.md) 的分工：
 TODO 跟踪 `P0-a` 的**实现顺序**，本文件回答「文档一共要求了多少，做到哪儿了」。
 
 > **本文件按文档条目组织，不按代码结构。** 因此会出现「一个代码模块对应多条」
@@ -317,4 +317,4 @@ P0 之后的三个阶段体量都大于 P0，所以「完成度 34%」这个数�
 
 ---
 
-[← 上一篇：DSH 装载验证](./dsh-integration-evidence.md) | [返回 Wiki 首页](../README.md)
+[← 上一篇：DSH 装载验证](./dsh-integration-evidence.md) | [返回 Wiki 首页](../../README.md)

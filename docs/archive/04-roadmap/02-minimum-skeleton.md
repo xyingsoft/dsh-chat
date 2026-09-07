@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **四、项目排期** · 02 最小可运行骨架 | [上一篇：关键操作状态矩阵](./01-operation-states.md) | [下一篇：迭代计划 P0–P4 →](./03-iteration-plan.md)
+[← 返回 Wiki 首页](../../README.md) | **四、项目排期** · 02 最小可运行骨架 | [上一篇：关键操作状态矩阵](./01-operation-states.md) | [下一篇：迭代计划 P0–P4 →](./03-iteration-plan.md)
 
 ---
 
@@ -141,4 +141,4 @@ dsh-chat/
 
 ---
 
-[← 上一篇：关键操作状态矩阵](./01-operation-states.md) | [返回 Wiki 首页](../README.md) | [下一篇：迭代计划 P0–P4 →](./03-iteration-plan.md)
+[← 上一篇：关键操作状态矩阵](./01-operation-states.md) | [返回 Wiki 首页](../../README.md) | [下一篇：迭代计划 P0–P4 →](./03-iteration-plan.md)

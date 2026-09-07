@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 04 安全与合规 | [上一篇：性能、分片与限流](./03-performance-and-limits.md) | [下一篇：可观测性与运维 →](./05-observability-and-ops.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 04 安全与合规 | [上一篇：性能、分片与限流](./03-performance-and-limits.md) | [下一篇：可观测性与运维 →](./05-observability-and-ops.md)
 
 ---
 
@@ -267,4 +267,4 @@ L2 起每条审计事件包含前一事件摘要，形成按 `OrganizationId` �
 
 ---
 
-[← 上一篇：性能、分片与限流](./03-performance-and-limits.md) | [返回 Wiki 首页](../README.md) | [下一篇：可观测性与运维 →](./05-observability-and-ops.md)
+[← 上一篇：性能、分片与限流](./03-performance-and-limits.md) | [返回 Wiki 首页](../../README.md) | [下一篇：可观测性与运维 →](./05-observability-and-ops.md)

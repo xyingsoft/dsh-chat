@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **四、项目排期** · 03 迭代计划 P0–P4 | [上一篇：最小可运行骨架](./02-minimum-skeleton.md) | [下一篇：测试与验收策略 →](./04-test-strategy.md)
+[← 返回 Wiki 首页](../../README.md) | **四、项目排期** · 03 迭代计划 P0–P4 | [上一篇：最小可运行骨架](./02-minimum-skeleton.md) | [下一篇：测试与验收策略 →](./04-test-strategy.md)
 
 ---
 
@@ -102,4 +102,4 @@ P0 的交付范围不变，但**分 `P0-a`、`P0-b` 两个关口验收**，以�
 
 ---
 
-[← 上一篇：最小可运行骨架](./02-minimum-skeleton.md) | [返回 Wiki 首页](../README.md) | [下一篇：测试与验收策略 →](./04-test-strategy.md)
+[← 上一篇：最小可运行骨架](./02-minimum-skeleton.md) | [返回 Wiki 首页](../../README.md) | [下一篇：测试与验收策略 →](./04-test-strategy.md)

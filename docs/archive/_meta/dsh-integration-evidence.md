@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · DSH 装载验证 | [上一篇：骨架走查记录](./skeleton-walkthrough.md) | [下一篇：功能全量清单 →](./feature-inventory.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · DSH 装载验证 | [上一篇：骨架走查记录](./skeleton-walkthrough.md) | [下一篇：功能全量清单 →](./feature-inventory.md)
 
 ---
 
@@ -237,14 +237,14 @@ tsdown + lightningcss 重新实现了同一套约定。我们要做同样的事�
 
 - **多设备与跨主机的界面行为**。当前验证是单机单账号：`P0-a` 还没有设备会话与
   token，插件用配置里的本地身份充当已认证主体（`authenticateFrom` 上标了边界）。
-  跨进程投递另有[三进程验收](../../packages/chat/kernel/src/multi-process.host.spec.ts)，
+  跨进程投递另有[三进程验收](../../../packages/chat/kernel/src/multi-process.host.spec.ts)，
   但那一层没有界面。
 - **SSE 推送到界面**。事件流端点已实现，界面目前是打开时拉一次，没有订阅。
 - **经 DSH 的端到端聊天**。host 的命令路由已接通并有 HTTP 端点测试
   （发送、拉取、ACK、编辑、撤回、组织、工作项、通知、SSE），
   但那些测试起的是独立的 `WebServer` 实例，不是 DSH 进程内的那一个。
-  跨进程投递另有[三进程验收](../../packages/chat/kernel/src/multi-process.host.spec.ts)。
+  跨进程投递另有[三进程验收](../../../packages/chat/kernel/src/multi-process.host.spec.ts)。
 
 ---
 
-[← 上一篇：骨架走查记录](./skeleton-walkthrough.md) | [返回 Wiki 首页](../README.md)
+[← 上一篇：骨架走查记录](./skeleton-walkthrough.md) | [返回 Wiki 首页](../../README.md)
