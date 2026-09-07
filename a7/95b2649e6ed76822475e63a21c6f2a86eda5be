@@ -1,0 +1,43 @@
+packages/chat/client/src/client/MessageView.tsx
+  s_2a0ad92afe8049::t_d7768303cfaee5 310-340
+  s_2a0ad92afe8049::t_4f0a4329ed5383 93-98
+  s_2a0ad92afe8049::t_014746cd448745 405-406
+  s_2a0ad92afe8049::t_935a5b4fd32049 26
+  s_2a0ad92afe8049::t_0dafcceb43f2fc 403-404
+  s_2a0ad92afe8049::t_269f37d2a8589d 407
+docs/ui-gap-analysis.md
+  s_2a0ad92afe8049::t_285382b971025c 78
+  s_2a0ad92afe8049::t_cdbc03fd08757f 79
+packages/chat/client/src/client/MessageView.module.css
+  s_2a0ad92afe8049::t_59d6983073ce09 250-263
+packages/chat/client/src/client/ChatSection.tsx
+  s_2a0ad92afe8049::t_315b2d4c8423d3 737
+  s_2a0ad92afe8049::t_67625288f1e29c 697-699,701-706,713-714
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "a795b2649e6ed76822475e63a21c6f2a86eda5be",
+  "prompts": {},
+  "sessions": {
+    "s_2a0ad92afe8049": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a96879e877280e1af6dbbd6",
+        "model": "glm-5.2__dev"
+      },
+      "human_author": "徐苏洋 <2307456010@qq.com>",
+      "custom_attributes": {
+        "tool_name": "RunCommand",
+        "runtime_client": "trae-tob-git-ai",
+        "tool_use_id": "6a9e80617e3eab915a5ea438",
+        "external_session_id": "6a96879e877280e1af6dbbd6",
+        "operation_id": "6a9e80617e3eab915a5ea438",
+        "source_scene": "agent",
+        "client_type": "ide",
+        "session_id": "6a96879e877280e1af6dbbd6",
+        "edit_kind": "bash"
+      }
+    }
+  }
+}
