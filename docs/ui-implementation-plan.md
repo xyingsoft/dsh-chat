@@ -14,7 +14,7 @@
 | 桌面集成 | DSH Desktop v2.0.4 desktop profile；`@dsh-chat/kernel` 单一 loader 源（已修复双源空白）；`--dump-config` 仅一条 `chat-host` |
 | 质量门槛 | 2026-09-07 复跑：`tsc -b` 0 错 · 全仓单测 **799/799**（57 文件）· 客户端 bundle **189.0 KB** 重建并通过 DSH 装载约定校验 |
 | 产物 | `packages/chat/host/dist/client.js`（Desktop 经 junction 实时读取） |
-| 待合入 | 三个栈式 PR 均已推送：#46（设计文档单文件化）→ #47（批 1）→ #48（批 2 + 批 3）。CI 曾因文档归档断链（48 处）全红，2026-09-07 已修复并 cherry-pick 至三个分支，待绿后串行合入 |
+| 待合入 | 栈式 PR：#46（设计文档单文件化）→ #47（批 1）→ #48（批 2 + 批 3）。CI 曾因文档归档断链（48 处）全红，2026-09-07 已修复；**#48 已全绿并将 base 切 main 一次性 rebase 合入**，#46/#47 随之关闭（见 §5） |
 
 ---
 
@@ -164,7 +164,7 @@
 - `packages/chat/host/dist/client.js`（构建产物，dist 已在 .gitignore）
 - `packages/chat/kernel/cordis.patch.yml` 的联调临时配置（用完必须还原回 `config: {}`，2026-09-07 已还原）
 
-**合入**：三个栈式 PR 串行合入 —— #46（`docs/single-file-ai-design` → main）→ #47（`feat/ui-batch1-foundations` → main）→ #48 base 改 main 后合入。三个分支含等价断链修复补丁（cherry-pick），rebase 合并时重复补丁自动跳过。
+**合入**：#48 两项 CI 已全绿；#46/#47 的 head 缺少只存在于本分支的后续修复（`b1d844d` spec 路径断链、`3600fa6` RelativeTime 动态化，后者部分依赖批 2 文件、无法干净回植），单独转绿成本高于收益。因此改为 **#48 base 切 main、rebase 一次合入**：全部提交线性落 main；#46/#47 的提交随补丁等价被识别为已合入（若未自动关闭则手动关闭并注明由 #48 收编）。
 
 ---
 
