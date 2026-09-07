@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **四、项目排期** · 01 关键操作状态矩阵 | [上一篇：契约与规范附录](../03-details/06-contracts-and-conventions.md) | [下一篇：最小可运行骨架 →](./02-minimum-skeleton.md)
+[← 返回 Wiki 首页](../../README.md) | **四、项目排期** · 01 关键操作状态矩阵 | [上一篇：契约与规范附录](../03-details/06-contracts-and-conventions.md) | [下一篇：最小可运行骨架 →](./02-minimum-skeleton.md)
 
 ---
 
@@ -55,4 +55,4 @@
 
 ---
 
-[← 上一篇：契约与规范附录](../03-details/06-contracts-and-conventions.md) | [返回 Wiki 首页](../README.md) | [下一篇：最小可运行骨架 →](./02-minimum-skeleton.md)
+[← 上一篇：契约与规范附录](../03-details/06-contracts-and-conventions.md) | [返回 Wiki 首页](../../README.md) | [下一篇：最小可运行骨架 →](./02-minimum-skeleton.md)

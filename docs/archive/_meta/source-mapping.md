@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 原文档映射表 | [上一篇：文档维护规范](./documentation-workflow.md) | [下一篇：实现记录 →](./implementation-log.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · 原文档映射表 | [上一篇：文档维护规范](./documentation-workflow.md) | [下一篇：实现记录 →](./implementation-log.md)
 
 ---
 
@@ -207,7 +207,7 @@
 
 | 新增内容 | 位置 | 用途 |
 |---|---|---|
-| Wiki 首页与四层导航 | [`docs/README.md`](../README.md) | 全局索引与阅读顺序 |
+| Wiki 首页与四层导航 | [`docs/README.md`](../../README.md) | 全局索引与阅读顺序 |
 | 各文档顶部/底部导航条 | 每份文档 | 顺序阅读与返回首页 |
 | 各文档「本篇目录」 | 每份文档 | 文档内快速跳转 |
 | 层级定位说明块 | 每份文档开头 | 声明该文档属于哪一层、受何约束 |
@@ -229,4 +229,4 @@
 
 ---
 
-[← 上一篇：文档维护规范](./documentation-workflow.md) | [返回 Wiki 首页](../README.md) | [下一篇：实现记录 →](./implementation-log.md)
+[← 上一篇：文档维护规范](./documentation-workflow.md) | [返回 Wiki 首页](../../README.md) | [下一篇：实现记录 →](./implementation-log.md)

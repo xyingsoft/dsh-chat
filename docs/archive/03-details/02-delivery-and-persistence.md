@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 02 消息投递与持久化 | [上一篇：身份、组织与权限](./01-identity-and-permission.md) | [下一篇：性能、分片与限流 →](./03-performance-and-limits.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 02 消息投递与持久化 | [上一篇：身份、组织与权限](./01-identity-and-permission.md) | [下一篇：性能、分片与限流 →](./03-performance-and-limits.md)
 
 ---
 
@@ -67,4 +67,4 @@ relay 数据库存储账号、密码验证值、公钥/指纹、第二验证因�
 
 ---
 
-[← 上一篇：身份、组织与权限](./01-identity-and-permission.md) | [返回 Wiki 首页](../README.md) | [下一篇：性能、分片与限流 →](./03-performance-and-limits.md)
+[← 上一篇：身份、组织与权限](./01-identity-and-permission.md) | [返回 Wiki 首页](../../README.md) | [下一篇：性能、分片与限流 →](./03-performance-and-limits.md)

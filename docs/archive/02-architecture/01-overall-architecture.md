@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **二、整体架构** · 01 三层总体架构 | [上一篇：协作能力需求](../01-requirements/02-collaboration-requirements.md) | [下一篇：插件化架构 →](./02-plugin-model.md)
+[← 返回 Wiki 首页](../../README.md) | **二、整体架构** · 01 三层总体架构 | [上一篇：协作能力需求](../01-requirements/02-collaboration-requirements.md) | [下一篇：插件化架构 →](./02-plugin-model.md)
 
 ---
 
@@ -70,4 +70,4 @@ host 路由通过 `ctx.webServer.register` 注册在 `/api/chat` 和 `/api/organ
 
 ---
 
-[← 上一篇：协作能力需求](../01-requirements/02-collaboration-requirements.md) | [返回 Wiki 首页](../README.md) | [下一篇：插件化架构 →](./02-plugin-model.md)
+[← 上一篇：协作能力需求](../01-requirements/02-collaboration-requirements.md) | [返回 Wiki 首页](../../README.md) | [下一篇：插件化架构 →](./02-plugin-model.md)

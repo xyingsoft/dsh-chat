@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 03 性能、分片与限流 | [上一篇：消息投递与持久化](./02-delivery-and-persistence.md) | [下一篇：安全与合规 →](./04-security-compliance.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 03 性能、分片与限流 | [上一篇：消息投递与持久化](./02-delivery-and-persistence.md) | [下一篇：安全与合规 →](./04-security-compliance.md)
 
 ---
 
@@ -54,4 +54,4 @@ P0 单节点按数据库事务、对象存储流式处理和有限队列运行�
 
 ---
 
-[← 上一篇：消息投递与持久化](./02-delivery-and-persistence.md) | [返回 Wiki 首页](../README.md) | [下一篇：安全与合规 →](./04-security-compliance.md)
+[← 上一篇：消息投递与持久化](./02-delivery-and-persistence.md) | [返回 Wiki 首页](../../README.md) | [下一篇：安全与合规 →](./04-security-compliance.md)

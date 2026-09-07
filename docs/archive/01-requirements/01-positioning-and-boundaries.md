@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **一、需求说明** · 01 定位与边界 | [下一篇：协作能力需求 →](./02-collaboration-requirements.md)
+[← 返回 Wiki 首页](../../README.md) | **一、需求说明** · 01 定位与边界 | [下一篇：协作能力需求 →](./02-collaboration-requirements.md)
 
 ---
 
@@ -71,4 +71,4 @@
 
 ---
 
-[← 返回 Wiki 首页](../README.md) | [下一篇：协作能力需求 →](./02-collaboration-requirements.md)
+[← 返回 Wiki 首页](../../README.md) | [下一篇：协作能力需求 →](./02-collaboration-requirements.md)

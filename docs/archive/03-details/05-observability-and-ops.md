@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 05 可观测性与运维 | [上一篇：安全与合规](./04-security-compliance.md) | [下一篇：契约与规范附录 →](./06-contracts-and-conventions.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 05 可观测性与运维 | [上一篇：安全与合规](./04-security-compliance.md) | [下一篇：契约与规范附录 →](./06-contracts-and-conventions.md)
 
 ---
 
@@ -63,4 +63,4 @@ host 与 relay 独立升级，因此协议兼容性必须显式协商而不是�
 
 ---
 
-[← 上一篇：安全与合规](./04-security-compliance.md) | [返回 Wiki 首页](../README.md) | [下一篇：契约与规范附录 →](./06-contracts-and-conventions.md)
+[← 上一篇：安全与合规](./04-security-compliance.md) | [返回 Wiki 首页](../../README.md) | [下一篇：契约与规范附录 →](./06-contracts-and-conventions.md)

@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 06 契约与规范附录 | [上一篇：可观测性与运维](./05-observability-and-ops.md) | [下一篇：关键操作状态矩阵 →](../04-roadmap/01-operation-states.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 06 契约与规范附录 | [上一篇：可观测性与运维](./05-observability-and-ops.md) | [下一篇：关键操作状态矩阵 →](../04-roadmap/01-operation-states.md)
 
 ---
 
@@ -186,4 +186,4 @@
 
 ---
 
-[← 上一篇：可观测性与运维](./05-observability-and-ops.md) | [返回 Wiki 首页](../README.md) | [下一篇：关键操作状态矩阵 →](../04-roadmap/01-operation-states.md)
+[← 上一篇：可观测性与运维](./05-observability-and-ops.md) | [返回 Wiki 首页](../../README.md) | [下一篇：关键操作状态矩阵 →](../04-roadmap/01-operation-states.md)

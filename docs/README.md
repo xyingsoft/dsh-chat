@@ -30,7 +30,7 @@ dsh-chat 是一组 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-ha
 | **P3** | 团队版、组织治理、插件目录、分析与排行 | ⬜ 未开始 |
 | **P4** | 企业版、分片、端到端加密、审计归档 | ⬜ 未开始 |
 
-**下一迭代入口 = `P0-b`**。逐阶段进度与已完成项见根目录 [`TODO.md`](../../TODO.md)；全量功能清单见 [`archive/_meta/feature-inventory.md`](./archive/_meta/feature-inventory.md)。
+**下一迭代入口 = `P0-b`**。逐阶段进度与已完成项见根目录 [`TODO.md`](../TODO.md)；全量功能清单见 [`archive/_meta/feature-inventory.md`](./archive/_meta/feature-inventory.md)。
 
 ---
 
