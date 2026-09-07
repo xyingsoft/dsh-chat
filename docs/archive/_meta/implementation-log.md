@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 实现记录 | [上一篇：原文档映射表](./source-mapping.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · 实现记录 | [上一篇：原文档映射表](./source-mapping.md)
 
 ---
 
@@ -162,4 +162,4 @@ wiki 由 `scripts/build-wiki.ps1` 从 `docs/` 生成，不手工编辑 wiki 页�
 
 ---
 
-[← 上一篇：原文档映射表](./source-mapping.md) | [返回 Wiki 首页](../README.md)
+[← 上一篇：原文档映射表](./source-mapping.md) | [返回 Wiki 首页](../../README.md)

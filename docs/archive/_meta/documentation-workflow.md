@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 文档维护规范 | [下一篇：原文档映射表 →](./source-mapping.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · 文档维护规范 | [下一篇：原文档映射表 →](./source-mapping.md)
 
 ---
 
@@ -129,11 +129,11 @@
 ## 5. 文档写作约定
 
 - **完整保留优于精简**：本 Wiki 的既有内容不做删减式「优化」。删除任何规范性内容都属于需求变更。
-- **一份文档一个主题**：新增内容应归入现有文档；仅当形成独立主题且篇幅可观时才新建文档，并同步更新[首页目录](../README.md)与[映射表](./source-mapping.md)。
+- **一份文档一个主题**：新增内容应归入现有文档；仅当形成独立主题且篇幅可观时才新建文档，并同步更新[首页目录](../../README.md)与[映射表](./source-mapping.md)。
 - **交叉引用用相对链接**：指向具体小节时带锚点，便于跳转。
 - **表格中的数字标注来源**：凡是可配置的数值，必须注明属于哪个版本化配置（`PlanLimits`、`RetentionPolicy`、`OrganizationAnalyticsPolicy` 等）。
 - **不写「TBD」**：未定问题一律进入[§50 开放决策](../03-details/06-contracts-and-conventions.md#50-开放决策)并标注最晚需要答案的阶段。
 
 ---
 
-[← 返回 Wiki 首页](../README.md) | [下一篇：原文档映射表 →](./source-mapping.md)
+[← 返回 Wiki 首页](../../README.md) | [下一篇：原文档映射表 →](./source-mapping.md)

@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **元文档** · 骨架走查记录 | [上一篇：实现记录](./implementation-log.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)
+[← 返回 Wiki 首页](../../README.md) | **元文档** · 骨架走查记录 | [上一篇：实现记录](./implementation-log.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)
 
 ---
 
@@ -72,4 +72,4 @@
 
 ---
 
-[← 上一篇：实现记录](./implementation-log.md) | [返回 Wiki 首页](../README.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)
+[← 上一篇：实现记录](./implementation-log.md) | [返回 Wiki 首页](../../README.md) | [下一篇：DSH 装载验证 →](./dsh-integration-evidence.md)

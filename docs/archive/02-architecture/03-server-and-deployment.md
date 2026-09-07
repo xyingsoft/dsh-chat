@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **二、整体架构** · 03 服务端结构与部署分层 | [上一篇：插件化架构](./02-plugin-model.md) | [下一篇：身份、组织与权限 →](../03-details/01-identity-and-permission.md)
+[← 返回 Wiki 首页](../../README.md) | **二、整体架构** · 03 服务端结构与部署分层 | [上一篇：插件化架构](./02-plugin-model.md) | [下一篇：身份、组织与权限 →](../03-details/01-identity-and-permission.md)
 
 ---
 
@@ -76,4 +76,4 @@ L2 通过服务注册替换 L1 的 SQLite 存储、内存 nonce、同步通知�
 
 ---
 
-[← 上一篇：插件化架构](./02-plugin-model.md) | [返回 Wiki 首页](../README.md) | [下一篇：身份、组织与权限 →](../03-details/01-identity-and-permission.md)
+[← 上一篇：插件化架构](./02-plugin-model.md) | [返回 Wiki 首页](../../README.md) | [下一篇：身份、组织与权限 →](../03-details/01-identity-and-permission.md)

@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **一、需求说明** · 02 协作能力需求 | [上一篇：定位与边界](./01-positioning-and-boundaries.md) | [下一篇：三层总体架构 →](../02-architecture/01-overall-architecture.md)
+[← 返回 Wiki 首页](../../README.md) | **一、需求说明** · 02 协作能力需求 | [上一篇：定位与边界](./01-positioning-and-boundaries.md) | [下一篇：三层总体架构 →](../02-architecture/01-overall-architecture.md)
 
 ---
 
@@ -556,4 +556,4 @@ Bot host 超时、模型失败、工具拒绝和策略违反都进入 `failed`�
 
 ---
 
-[← 上一篇：定位与边界](./01-positioning-and-boundaries.md) | [返回 Wiki 首页](../README.md) | [下一篇：三层总体架构 →](../02-architecture/01-overall-architecture.md)
+[← 上一篇：定位与边界](./01-positioning-and-boundaries.md) | [返回 Wiki 首页](../../README.md) | [下一篇：三层总体架构 →](../02-architecture/01-overall-architecture.md)

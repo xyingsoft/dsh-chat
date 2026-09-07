@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **四、项目排期** · 04 测试与验收策略 | [上一篇：迭代计划 P0–P4](./03-iteration-plan.md) | [下一篇：文档维护规范 →](../_meta/documentation-workflow.md)
+[← 返回 Wiki 首页](../../README.md) | **四、项目排期** · 04 测试与验收策略 | [上一篇：迭代计划 P0–P4](./03-iteration-plan.md) | [下一篇：文档维护规范 →](../_meta/documentation-workflow.md)
 
 ---
 
@@ -36,4 +36,4 @@
 
 ---
 
-[← 上一篇：迭代计划 P0–P4](./03-iteration-plan.md) | [返回 Wiki 首页](../README.md) | [下一篇：文档维护规范 →](../_meta/documentation-workflow.md)
+[← 上一篇：迭代计划 P0–P4](./03-iteration-plan.md) | [返回 Wiki 首页](../../README.md) | [下一篇：文档维护规范 →](../_meta/documentation-workflow.md)
