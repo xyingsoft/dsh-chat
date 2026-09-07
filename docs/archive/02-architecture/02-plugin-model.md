@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **二、整体架构** · 02 插件化架构 | [上一篇：三层总体架构](./01-overall-architecture.md) | [下一篇：服务端结构与部署分层 →](./03-server-and-deployment.md)
+[← 返回 Wiki 首页](../../README.md) | **二、整体架构** · 02 插件化架构 | [上一篇：三层总体架构](./01-overall-architecture.md) | [下一篇：服务端结构与部署分层 →](./03-server-and-deployment.md)
 
 ---
 
@@ -71,4 +71,4 @@ bundle 是一个可被 DSH 安装的包，通过 `package.json` 的 `dsh` 字段
 
 ---
 
-[← 上一篇：三层总体架构](./01-overall-architecture.md) | [返回 Wiki 首页](../README.md) | [下一篇：服务端结构与部署分层 →](./03-server-and-deployment.md)
+[← 上一篇：三层总体架构](./01-overall-architecture.md) | [返回 Wiki 首页](../../README.md) | [下一篇：服务端结构与部署分层 →](./03-server-and-deployment.md)

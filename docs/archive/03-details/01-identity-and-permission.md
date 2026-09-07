@@ -1,4 +1,4 @@
-[← 返回 Wiki 首页](../README.md) | **三、技术细节** · 01 身份、组织与权限 | [上一篇：服务端结构与部署分层](../02-architecture/03-server-and-deployment.md) | [下一篇：消息投递与持久化 →](./02-delivery-and-persistence.md)
+[← 返回 Wiki 首页](../../README.md) | **三、技术细节** · 01 身份、组织与权限 | [上一篇：服务端结构与部署分层](../02-architecture/03-server-and-deployment.md) | [下一篇：消息投递与持久化 →](./02-delivery-and-persistence.md)
 
 ---
 
@@ -218,4 +218,4 @@ relay 为每个账户维护单调的 `AccountStateSeq` 变更流。通知、私�
 
 ---
 
-[← 上一篇：服务端结构与部署分层](../02-architecture/03-server-and-deployment.md) | [返回 Wiki 首页](../README.md) | [下一篇：消息投递与持久化 →](./02-delivery-and-persistence.md)
+[← 上一篇：服务端结构与部署分层](../02-architecture/03-server-and-deployment.md) | [返回 Wiki 首页](../../README.md) | [下一篇：消息投递与持久化 →](./02-delivery-and-persistence.md)
