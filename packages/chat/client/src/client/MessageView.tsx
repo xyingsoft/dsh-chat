@@ -23,7 +23,7 @@
  * 注入面，而 P0 没有任何需求要求富文本。
  */
 
-import { createElement, type KeyboardEvent, type ReactElement } from 'react'
+import { createElement, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
 
 import {
   presentDeliveryState,
@@ -90,6 +90,12 @@ export interface MessageViewProps {
   /** 退出编辑（取消，或提交后收起）。 */
   readonly onCancelEdit?: () => void
   readonly formatTime?: (iso: string) => string
+  /**
+   * 本地搜索命中词。非撤回的消息正文按此切成文本 / `<mark>` 节点高亮
+   * （§18：正文不可信，只按字符串切片，绝不当 HTML）。
+   * 撤回消息不参与搜索（§14.1）。
+   */
+  readonly highlightQuery?: string
 }
 
 /** 撤回占位。与 messaging 包的 `REVOKED_PLACEHOLDER` 同值，各自独立定义 —— 客户端不依赖 host 包。 */
@@ -167,7 +173,7 @@ export function MessageView(props: MessageViewProps): ReactElement {
                 onChangeDraft: props.onChangeDraft,
                 onCancelEdit: props.onCancelEdit,
                 onEdit: props.onEdit,
-              }),
+              }, props.highlightQuery),
             ]
           }),
         ),
@@ -301,12 +307,44 @@ function renderInlineEditor(message: DisplayMessage, edit: EditContext): ReactEl
   )
 }
 
+/**
+ * 把一段文本按命中词切成 文本 / `<mark>` 节点。
+ *
+ * 与 ConversationList 的同名函数同一逻辑——正文作为不可信内容（§18），
+ * 只按字符串片段切，绝不把片段当 HTML；大小写不敏感。
+ */
+function highlightSegments(text: string, query: string | undefined): ReactNode[] {
+  if (query === undefined || query.length === 0) return [text]
+  const lower = text.toLocaleLowerCase()
+  const needle = query.toLocaleLowerCase()
+  const segments: ReactNode[] = []
+  let cursor = 0
+  let index = 0
+  for (;;) {
+    const at = lower.indexOf(needle, cursor)
+    if (at === -1) break
+    if (at > cursor) segments.push(text.slice(cursor, at))
+    segments.push(
+      createElement(
+        'mark',
+        { key: `hl-${index}`, className: styles['mark'] },
+        text.slice(at, at + needle.length),
+      ),
+    )
+    cursor = at + needle.length
+    index += 1
+  }
+  if (cursor < text.length) segments.push(text.slice(cursor))
+  return segments.length === 0 ? [text] : segments
+}
+
 function renderMessage(
   message: DisplayMessage,
   format: (iso: string) => string,
   onRetry: ((messageId: string) => void) | undefined,
   onRevoke: ((messageId: string) => void) | undefined,
   edit: EditContext,
+  highlightQuery: string | undefined,
 ): ReactElement {
   const delivery =
     message.outgoing && message.deliveryState !== undefined
@@ -362,8 +400,11 @@ function renderMessage(
               .join(' '),
           },
           // 撤回后展示占位而非正文（§14.1）。正文经文本节点输出，
-          // 不做任何标记解释（§18：不可信内容）
-          message.revoked ? REVOKED_PLACEHOLDER : (message.body ?? REVOKED_PLACEHOLDER),
+          // 不做任何标记解释（§18：不可信内容）。搜索命中时按字符串
+          // 切片包 <mark>，撤回消息不参与搜索（正文已不可得）
+          message.revoked
+            ? REVOKED_PLACEHOLDER
+            : highlightSegments(message.body ?? REVOKED_PLACEHOLDER, highlightQuery),
         )
   const meta = createElement(
     'span',
