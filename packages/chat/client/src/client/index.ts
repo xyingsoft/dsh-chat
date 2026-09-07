@@ -70,8 +70,9 @@ const CAPABILITIES: readonly CapabilityRow[] = [
   { name: '会话列表与消息视图', status: 'ready', note: '接 host 端点，编辑与撤回如实呈现' },
   { name: '本插件被 DSH 装载', status: 'ready', note: '已在 DSH Desktop v2.0.4 上验证渲染' },
   { name: '第二验证因素与恢复', status: 'not_implemented', note: '属 P0-b 关口' },
-  { name: '在线状态', status: 'not_implemented', note: '属 P0-b 关口' },
-  { name: '群聊与附件', status: 'not_implemented', note: '属 P1 及之后' },
+  { name: '在线状态', status: 'partial', note: '心跳上报与会话在线点已实现；可见范围控制属 P0-b' },
+  { name: '群聊', status: 'partial', note: 'host 群镜像/聚合与客户端群会话壳已实现；UI 群发送与管理属 P1' },
+  { name: '附件', status: 'partial', note: '上传壳（暂存/预览/发送前如实门禁）已实现；真实上传与下载属 P1' },
 ]
 
 export interface ClientConfig {
