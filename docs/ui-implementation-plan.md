@@ -1,8 +1,8 @@
 # dsh-chat UI 实施规划（AI 迭代版）
 
 > 配套 [`ui-design.md`](./ui-design.md)（设计契约）与 [`ui-gap-analysis.md`](./ui-gap-analysis.md)（缺口清单）。
-> 本文记录**已完成批 1（基础设施 + 视觉重设计）与批 2（P0 收尾）的真实状态**，以及下一步的优先级顺序，作为 AI 迭代工单来源。
-> 截止：2026-09-02。批 1 已提交（docs 2h4f3f2 → feat b5abaed，分支 `feat/ui-batch1-foundations`）；批 2 在 `feat/p0-ui-followup`（见 §5）。
+> 本文记录**已完成批 1（基础设施 + 视觉重设计）、批 2（P0 收尾）与批 3（P1 首批壳）的真实状态**，以及下一步的优先级顺序，作为 AI 迭代工单来源。
+> 截止：2026-09-07。批 1 在 `feat/ui-batch1-foundations`（PR #47）；批 2、批 3 在 `feat/p0-ui-followup`（PR #48）；#46 → #47 → #48 三个 PR 栈式待串行合入（见 §5）。
 
 ---
 
@@ -12,9 +12,9 @@
 |---|---|
 | 目标 | 按 `ui-design.md` 批 1（基础设施 + 视觉重设计 + 同步真机）落地 |
 | 桌面集成 | DSH Desktop v2.0.4 desktop profile；`@dsh-chat/kernel` 单一 loader 源（已修复双源空白）；`--dump-config` 仅一条 `chat-host` |
-| 质量门槛 | 批 2 后复跑：`tsc -b` 0 错 · 全仓单测 **770/770**（53 文件）· 客户端 bundle **176.3 KB** 重建并通过 DSH 装载约定校验 |
+| 质量门槛 | 2026-09-07 复跑：`tsc -b` 0 错 · 全仓单测 **799/799**（57 文件）· 客户端 bundle **189.0 KB** 重建并通过 DSH 装载约定校验 |
 | 产物 | `packages/chat/host/dist/client.js`（Desktop 经 junction 实时读取） |
-| 待提交 | 批 1 已提交并推送；批 2（P0 收尾）在 `feat/p0-ui-followup` 待提交（见 §5） |
+| 待合入 | 三个栈式 PR 均已推送：#46（设计文档单文件化）→ #47（批 1）→ #48（批 2 + 批 3）。CI 曾因文档归档断链（48 处）全红，2026-09-07 已修复并 cherry-pick 至三个分支，待绿后串行合入 |
 
 ---
 
@@ -59,6 +59,25 @@
 | 5 | 时间细化 | 新建 `time.ts` + spec：`isSameCalendarDay`/`dayLabel`/`formatMessageTime`/`formatListTime`；`MessageView` 日历日分组头（今天/昨天/M月D日/跨年带年份），列表与消息统一相对时间口径 |
 | — | 附带修复 | 上一批文档归档的遗漏：24 处源码注释与 spec 的 `docs/` → `docs/archive/` 断链（13 文件，含 5 个测试套件） |
 
+### 2.5 P1 首批（批 3，2026-09-03）
+
+| # | 工单 | 落地 |
+|---|---|---|
+| 1 | 群聊类型会话壳 | `ConversationList` `kind`/`memberCount` 模型、方形群头像与成员徽标（`Avatar` 扩展）、渲染单测 |
+| 2 | 附件上传壳 | `Composer` 选择/拖拽暂存、图片预览与移除、发送前**如实门禁**（不能真发就不假装能发）；含单测 |
+| 3 | host 群会话镜像与聚合（S4b） | 迁移 008 + `storage/groups.ts` + `ingestGroupMessage` + `/conversations` 群行合并；单测 595 行 |
+| 4 | examples 联调扩展 | bob `group`（播种甲乙联调群，S2）、`groupsend`（向群组播，S4c） |
+| 5 | 附带修复 | 时间显示统一北京时间（UTC+8），跨时区/机器不漂移；RelativeTime 测试改动态相对时间 |
+
+### 2.6 收尾（2026-09-07）
+
+| # | 项 | 说明 |
+|---|---|---|
+| 1 | 文档断链修复 48 处 | 归档（`docs/**` → `docs/archive/**`）后相对链接少一层 `../`（`../README.md`、`../../TODO.md`、spec 路径等），`check-links` 令三个栈式 PR 的 CI 全红；修复（`c6bae98`）后 cherry-pick 至 `docs/single-file-ai-design` 与 `feat/ui-batch1-foundations`；另修 `docs/README.md` 的 `../../TODO.md` → `../TODO.md` |
+| 2 | 能力表如实更新 | `在线状态`（#37 已实现心跳 + 在线点）、`群聊`、`附件`（批 3 壳）由 `not_implemented` 改为 `partial`，并把「群聊与附件」拆为两行（`1735d5f`） |
+| 3 | 工作区清理 | `cordis.patch.yml` 联调临时配置还原回 `config: {}`；`bob.mjs` 头部 BOM 意外损坏还原；`.yarnrc.yml` 保持本地修改（不纳入提交） |
+| 4 | 复跑验证 | `tsc -b` 0 错 · 799/799（57 文件）· bundle 189.0 KB 通过装载约定校验 |
+
 ---
 
 ## 3. 未完成 / 受限（诚实清单）
@@ -66,10 +85,11 @@
 | 项 | 原因 / 依赖 |
 |---|---|
 | 聊天收发**实测** | 联调环境已就绪（`examples/two-users`，冒烟通过：relay 启动/播种/bob 命令）；**真机双端全流程待人工跑**（按 README 接线 Desktop → 开户 → `bob.mjs contact`） |
+| 群聊全流程**实测** | 批 3 落地播种 → 组播 → host 镜像 → 客户端呈现的壳与单测；**真机群消息全流程待人工跑**（bob `group`/`groupsend` + Desktop 呈现） |
 | PolicyBanner 策略条件 | 未登记 2FA / 配额等条件数据属 P0-b 后端，未到 |
 | 账号安全分区（2FA/Recovery/设备管理） | 后端 P0-b 未开始；当前只在能力表标注「未装载」 |
 | i18n | 全中文硬编码，尚未引入 message bundle |
-| P1+ 大项 | 附件 / 群聊 / @提及 / 工作项 / 通知中心 / 服务端搜索 / 虚拟滚动 等 |
+| P1+ 大项 | @提及 / 工作项 UI / 通知中心 UI / 服务端搜索 / 虚拟滚动 等；群聊与附件已落壳（§2.5），完整能力（UI 群发送、成员管理、真实上传）仍缺 |
 | 视觉定稿 | 已重设计但需真机逐屏确认微调 |
 | dream-skin 壁纸 | 第三方插件启动不自动重绘，需「切一次壁纸」（临时）；治本要查它 boot 时序 |
 | 编辑窗口默认值 | relay `DEFAULT_EDIT_WINDOW_MS` 取 15 分钟（文档未给默认值，已登记为缺口）；客户端未显示剩余可编辑时间 |
@@ -108,9 +128,9 @@
 
 | # | 工单 | 依赖 |
 |---|---|---|
-| 12 | 附件（选择/拖拽/粘贴、进度、预览、撤回连带） | P1 后端 |
+| 12 | 附件（选择/拖拽/粘贴、进度、预览、撤回连带） | **上传壳已落地**（§2.5）；真实上传/下载待 P1 后端 |
 | 13 | 工作项 UI、通知中心 UI | P1 后端 |
-| 14 | 群聊类型会话 + @提及补全 | P1 后端 |
+| 14 | 群聊类型会话 + @提及补全 | **群会话壳与 host 镜像已落地**（§2.5）；UI 群发送、@提及待做 |
 | 15 | 服务端搜索入口（与本地搜索区分） | P1 后端 |
 | 16 | 设置页重构（账号安全/通知/隐私/外观分栏） | 无 |
 
@@ -125,19 +145,26 @@
 - 提交 `b5abaed` — feat(client)：UI 批 1 基础设施与视觉重设计
 - 已推送 origin
 
-**批 2（本次，P0 收尾）**：分支 `feat/p0-ui-followup`（基于批 1）
+**批 2 + 批 3（已推送）**：分支 `feat/p0-ui-followup` → PR #48（base `feat/ui-batch1-foundations`）
 
-| 提交 | 内容 | 信息 |
-|---|---|---|
-| 1 — fix | 13 文件的 `docs/` → `docs/archive/` 断链修复（注释 + spec，无逻辑改动） | `fix: 修复文档归档后的注释与 spec 路径断链` |
-| 2 — feat | client 五工单（编辑/草稿/空态/时间分组）+ host `revision` 透传 + `examples/two-users/` + `.gitignore` | `feat(client): P0 收尾——消息编辑、草稿、空态引导、时间分组与双用户联调环境` |
-| 3 — docs | 回写本文与 `ui-gap-analysis.md` | `docs: 回写 UI 实施规划与缺口清单（P0 收尾完成）` |
+| 提交 | 内容 |
+|---|---|
+| `b1d844d` fix | 13 文件的 `docs/` → `docs/archive/` 断链修复（注释 + spec，无逻辑改动） |
+| `0b3f84e` feat | client 五工单（编辑/草稿/空态/时间分组）+ host `revision` 透传 + `examples/two-users/` + `.gitignore` |
+| `b156ca7` docs | 回写本文与 `ui-gap-analysis.md`（P0 收尾完成） |
+| `3600fa6`/`d1fe829` fix | RelativeTime 测试动态化；时间统一北京时间（UTC+8） |
+| `c8677dc`/`2d6986a` feat | 群聊会话壳；附件上传壳（批 3） |
+| `1a95a90`/`549b465`/`da589ee` feat | bob `group` 播种（S2）；host 群镜像与聚合（S4b）；bob `groupsend`（S4c） |
+| `c6bae98` fix | 48 处文档断链（cherry-pick 至 #46/#47 分支） |
+| `1735d5f` fix | 能力表如实更新（在线状态/群聊/附件 → partial） |
+| 本次回写 | docs：TODO.md + 本文 + 缺口清单同步批 3 与收尾 |
 
 **不纳入提交**：
 - `.yarnrc.yml`（本机沙盒缓存路径，环境特定，保留为本地修改）
 - `packages/chat/host/dist/client.js`（构建产物，dist 已在 .gitignore）
+- `packages/chat/kernel/cordis.patch.yml` 的联调临时配置（用完必须还原回 `config: {}`，2026-09-07 已还原）
 
-**推送**：`git push -u origin feat/p0-ui-followup` → 开 PR（基 `feat/ui-batch1-foundations`，两 PR 串行合入）
+**合入**：三个栈式 PR 串行合入 —— #46（`docs/single-file-ai-design` → main）→ #47（`feat/ui-batch1-foundations` → main）→ #48 base 改 main 后合入。三个分支含等价断链修复补丁（cherry-pick），rebase 合并时重复补丁自动跳过。
 
 ---
 
@@ -146,7 +173,7 @@
 批 1 + 批 2 已对照 U1–U7 与 a11y/i18n/暗色条目自检；以下项**未达标**，需后续工单跟进：
 
 - [ ] U2（必须显式呈现异常态）：PolicyBanner 真实策略条件未接（依赖 P0-b 后端）
-- [ ] U4（不可信内容）：附件预览未到位（依赖 P1）
+- [ ] U4（不可信内容）：附件上传壳已有本地图片预览与如实门禁；接收侧预览与真实传输依赖 P1 后续
 - [ ] i18n：文案 key 化未做
 - [ ] 虚拟滚动：消息/会话列表仍全量渲染
 
@@ -159,4 +186,4 @@
 
 ---
 
-*本文档基于 2026-09-02 工作区状态撰写（批 2 完成后回写）。下一步工单按 §4.2 起推进，每工单完成后回写本文与 `ui-gap-analysis.md`。*
+*本文档基于 2026-09-07 工作区状态撰写（批 3 + 收尾后回写）。下一步工单按 §4.2 起推进，每工单完成后回写本文与 `ui-gap-analysis.md`。*
