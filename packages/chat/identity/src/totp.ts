@@ -15,6 +15,14 @@ export interface TotpConfig {
   readonly toleranceSteps: number
 }
 
+/** P0 agreed interoperable profile: six digits, SHA-1, 30 seconds, ±1 step. */
+export const DEFAULT_TOTP_CONFIG: TotpConfig = Object.freeze({
+  algorithm: 'SHA1',
+  digits: 6,
+  periodSeconds: 30,
+  toleranceSteps: 1,
+})
+
 export interface TotpMatch {
   readonly ok: true
   readonly matchedStep: bigint
