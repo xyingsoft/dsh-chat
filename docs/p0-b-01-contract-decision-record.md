@@ -36,6 +36,18 @@ A3 仍不是批准的实现。至少必须冻结：AEAD 算法与版本、封装
 
 推荐以 `(factor_id, accepted_step)` 建立唯一约束，并在同一验证事务中执行“验证结果 → 严格新 step 检查 → 写入 accepted_step”。如果产品要求同一时间步跨设备只允许一次，则改为 `(account_id, accepted_step)`；该选择会改变用户体验和并发语义，必须显式决定，不能由实现隐含。
 
+## 已落地的 contract 边界
+
+`packages/chat/contract/src/totp.ts` 现已定义：
+
+- P0 默认 profile、`TotpFactorId` 与 `ConfirmationChallengeId`
+- 版本化 `TotpSecretEnvelope` 元数据；API 响应不含明文 secret
+- 登记开始/确认、验证、撤销的最小请求/响应类型
+- 验证失败统一为 `authentication_failed`，不暴露因素是否存在
+- 验证成功返回 `acceptedStep`，供事务层执行重放门禁
+
+这些类型只定义数据边界，不代表 HTTP 路由、密钥解封或数据库事务已经实现。
+
 ## 需要冻结的 contract 产物
 
 - `TotpFactorId`、`TotpEnrollment`、`TotpVerificationRequest/Result`、`TotpRevokeRequest` 的字段和品牌 ID。
