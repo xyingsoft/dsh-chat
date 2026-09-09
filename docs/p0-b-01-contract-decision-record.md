@@ -63,6 +63,10 @@ A3 仍不是批准的实现。至少必须冻结：AEAD 算法与版本、封装
 
 migration 009 新增账号级 `totp_factors` 表，保存 `TotpSecretEnvelope` 的 key id、nonce、AAD、ciphertext、auth tag，以及 profile 参数和 `last_accepted_step`。表结构不含 `secret` 列；因素 ID 主键、账号索引和状态字段为后续登记/验证/撤销事务提供基础。该迁移只完成 schema 扩展，不代表业务写入路径已接通。
 
+## 已实现的 ConfirmationChallenge 事务边界
+
+`packages/chat/identity/src/confirmation.ts` 提供无副作用的绑定/生命周期校验；`packages/chat/host/src/storage/confirmation-challenges.ts` 提供必须在 `ChatDatabase.transaction()` 内调用的插入与原子消费函数。消费更新同时匹配 challenge、operation、账号、设备、摘要、状态和有效期；重复消费、错误绑定和过期均返回失败且不改变 pending 状态。迁移 010 新增持久化表。
+
 ## 当前结论
 
 在上述 contract 产物冻结前，继续写 HTTP handler 或数据库迁移会把 A3、重放粒度和替换语义变成不可逆事实。本轮先完成决策记录与工单拆分；可继续安全推进的代码仅限 RFC 6238 验证器和纯函数重放门禁。

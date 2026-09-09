@@ -110,6 +110,7 @@ describe('§27 要求第一版即存在的字段', () => {
       'devices',
       'recovery_kits',
       'totp_factors',
+      'confirmation_challenges',
       'request_nonces',
       'schema_migrations',
     ])

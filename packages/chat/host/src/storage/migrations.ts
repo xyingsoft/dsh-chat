@@ -621,6 +621,26 @@ const migration007: Migration = {
  *
  * 三张新表都带 `organization_id`（§48），且只做新增，不碰既有列。
  */
+const migration010: Migration = {
+  version: 10,
+  name: 'confirmation-challenges',
+  statements: [
+    `CREATE TABLE confirmation_challenges (
+       challenge_id       TEXT PRIMARY KEY,
+       operation_id       TEXT NOT NULL,
+       account_id         TEXT NOT NULL REFERENCES accounts(account_id),
+       device_id          TEXT NOT NULL REFERENCES devices(device_id),
+       operation_digest   TEXT NOT NULL,
+       state              TEXT NOT NULL,
+       created_at         TEXT NOT NULL,
+       expires_at         TEXT NOT NULL,
+       consumed_at        TEXT
+     ) STRICT`,
+    `CREATE UNIQUE INDEX idx_confirmation_pending_operation
+       ON confirmation_challenges(account_id, operation_id)`,
+  ],
+}
+
 const migration009: Migration = {
   version: 9,
   name: 'totp-factors',
@@ -715,4 +735,5 @@ export const MIGRATIONS: readonly Migration[] = [
   migration007,
   migration008,
   migration009,
+  migration010,
 ]
