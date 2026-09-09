@@ -23,12 +23,11 @@ export const DEFAULT_TOTP_CONFIG: TotpConfig = Object.freeze({
   toleranceSteps: 1,
 })
 
+import type { ConfirmationChallengeId } from './confirmation.js'
 import type { OperationId } from './persistence.js'
 
 export type TotpFactorId = string & { readonly __totpFactorId: unique symbol }
-export type ConfirmationChallengeId = string & {
-  readonly __confirmationChallengeId: unique symbol
-}
+export type { ConfirmationChallengeId } from './confirmation.js'
 export type { OperationId } from './persistence.js'
 
 export type TotpFactorState = 'pending_verification' | 'active' | 'suspended' | 'revoked'
