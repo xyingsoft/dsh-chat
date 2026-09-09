@@ -245,7 +245,7 @@
 
 - 已建立 `docs/p0-b-work-orders.md`，拆分 P0-b 为 10 个带依赖和验收标准的工单。
 - P0-b-07 当前会话本地消息正文搜索已完成：撤回消息排除、正文 `<mark>` 高亮，并补充 2 条安全边界测试；全仓验证为 801/801。
-- P0-b-01 已完成规格审计，但暂缓编码：TOTP 算法参数、密钥保护、确认挑战、错误码、迁移和幂等语义尚未全部冻结，详见 `docs/p0-b-01-totp-design-gaps.md`。
+- P0-b-01 已完成 TOTP profile、共享 contract、RFC 6238 验证器和重放门禁；业务 API、密钥保护、确认挑战、错误码、迁移和幂等语义尚未全部冻结，详见 `docs/p0-b-01-totp-design-gaps.md` 与 `docs/p0-b-01-contract-decision-record.md`。
 
 ## relay 仓库
 
