@@ -20,6 +20,8 @@
 
 ## 已冻结的 P0 profile
 
+共享契约位于 `packages/chat/contract/src/totp.ts`，identity 验证器从该包引用，避免参数在不同边界重复定义。
+
 ```ts
 DEFAULT_TOTP_CONFIG = {
   algorithm: 'SHA1',

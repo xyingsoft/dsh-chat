@@ -6,22 +6,12 @@
  * accepting it, so replay prevention remains an account/device transaction rule.
  */
 
-export type TotpAlgorithm = 'SHA1' | 'SHA256' | 'SHA512'
+import type { TotpAlgorithm, TotpConfig } from '@dsh-chat/contract'
 
-export interface TotpConfig {
-  readonly algorithm: TotpAlgorithm
-  readonly digits: 6 | 8
-  readonly periodSeconds: number
-  readonly toleranceSteps: number
-}
+export type { TotpAlgorithm, TotpConfig } from '@dsh-chat/contract'
+import { DEFAULT_TOTP_CONFIG } from '@dsh-chat/contract'
 
-/** P0 agreed interoperable profile: six digits, SHA-1, 30 seconds, ±1 step. */
-export const DEFAULT_TOTP_CONFIG: TotpConfig = Object.freeze({
-  algorithm: 'SHA1',
-  digits: 6,
-  periodSeconds: 30,
-  toleranceSteps: 1,
-})
+export { DEFAULT_TOTP_CONFIG }
 
 export interface TotpMatch {
   readonly ok: true
