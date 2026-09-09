@@ -621,6 +621,34 @@ const migration007: Migration = {
  *
  * 三张新表都带 `organization_id`（§48），且只做新增，不碰既有列。
  */
+const migration009: Migration = {
+  version: 9,
+  name: 'totp-factors',
+  statements: [
+    // 账号级第二因素。明文 secret 不落库；封装材料由 relay 的密钥边界管理。
+    // last_accepted_step 与因素同表，供验证事务做严格递增 CAS。
+    `CREATE TABLE totp_factors (
+       factor_id          TEXT PRIMARY KEY,
+       account_id         TEXT NOT NULL REFERENCES accounts(account_id),
+       state              TEXT NOT NULL,
+       algorithm          TEXT NOT NULL,
+       digits             INTEGER NOT NULL,
+       period_seconds     INTEGER NOT NULL,
+       tolerance_steps    INTEGER NOT NULL,
+       key_id             TEXT NOT NULL,
+       nonce              TEXT NOT NULL,
+       aad                TEXT NOT NULL,
+       ciphertext         TEXT NOT NULL,
+       auth_tag           TEXT NOT NULL,
+       last_accepted_step INTEGER,
+       created_at         TEXT NOT NULL,
+       updated_at         TEXT NOT NULL
+     ) STRICT`,
+    `CREATE INDEX idx_totp_factors_account_state
+       ON totp_factors(account_id, state)`,
+  ],
+}
+
 const migration008: Migration = {
   version: 8,
   name: 'group-chat-mirror',
@@ -686,4 +714,5 @@ export const MIGRATIONS: readonly Migration[] = [
   migration006,
   migration007,
   migration008,
+  migration009,
 ]

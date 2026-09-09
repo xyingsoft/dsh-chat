@@ -41,4 +41,6 @@ P0-b-10 P0-b 集成验收与文档回写
 - 验证结果：目标 spec 41/41 通过，类型检查通过，客户端 bundle 校验通过。
 - P0-b-01 已完成共享 TOTP profile 契约、RFC 6238 验证器和纯函数重放门禁；contract/identity 组合测试 11/11 通过。业务 API、密钥保护和重放事务仍待契约冻结。
 - 本轮新增 `docs/p0-b-01-contract-decision-record.md`，记录 secret envelope、API 最小范围、重放粒度和待冻结 contract 产物；落地最小 TOTP 请求/响应类型，明确不回传明文 secret；并完成 AES-256-GCM envelope 纯函数边界测试，推荐方向不等于已批准的存储实现。
-- 下一工单：评审并冻结该决策记录中的 secret envelope、ConfirmationChallenge、错误码/幂等和迁移字段，再实现登记/验证/撤销事务。
+- 本轮追加第二因素迁移 009：`totp_factors` 保存封装材料、profile 和 `last_accepted_step`，不保存明文 secret；迁移验收锁定字段集合与账号级隔离。
+- 验证结果：全仓 61 个测试文件、818/818 通过；TypeScript 检查通过。既有群聊迁移测试已改为读取最新 migration 版本，避免后续合法迁移造成脆弱测试。
+- 下一工单：评审并冻结 `ConfirmationChallenge`、错误码/幂等和迁移事务接入，再实现登记/验证/撤销事务。

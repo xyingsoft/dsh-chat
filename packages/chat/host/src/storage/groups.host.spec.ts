@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest'
 import { acceptDirectMessage } from '@dsh-chat/messaging'
 
 import { ChatDatabase } from './database.js'
+import { MIGRATIONS } from './migrations.js'
 import {
   addGroupMember,
   groupConversationsOf,
@@ -37,7 +38,7 @@ function columnsOf(db: ChatDatabase, table: string): string[] {
 describe('迁移 v8：群聊镜像', () => {
   it('打开空库后 schema 为最新版本，且镜像表齐备', () => {
     const db = openMemory()
-    expect(db.schemaVersion).toBe(8)
+    expect(db.schemaVersion).toBe(MIGRATIONS[MIGRATIONS.length - 1]!.version)
     for (const table of ['groups', 'group_members', 'group_messages']) {
       const columns = columnsOf(db, table)
       expect(columns, `${table} 缺 organization_id`).toContain('organization_id')

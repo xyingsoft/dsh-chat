@@ -28,7 +28,10 @@ describe('TOTP secret envelope', () => {
       '密钥封装验证失败',
     )
 
-    const tampered = { ...envelope, authTag: `0${envelope.authTag.slice(1)}` }
+    const tampered = {
+      ...envelope,
+      authTag: `${envelope.authTag.slice(0, -1)}${envelope.authTag.endsWith('0') ? '1' : '0'}`,
+    }
     expect(() => decryptTotpSecret(tampered, key, envelope.aad)).toThrow('密钥封装验证失败')
   })
 

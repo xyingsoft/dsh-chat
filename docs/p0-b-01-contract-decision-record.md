@@ -56,6 +56,10 @@ A3 仍不是批准的实现。至少必须冻结：AEAD 算法与版本、封装
 - `totp_enrollment_started/confirmed/failed/replayed/revoked` 等审计事件是否采用这些名称，以及事件目标引用格式。
 - 迁移编号、因素表字段、唯一约束、`last_accepted_step` 的存储方式和并发更新策略。
 
+## 数据库迁移边界
+
+migration 009 新增账号级 `totp_factors` 表，保存 `TotpSecretEnvelope` 的 key id、nonce、AAD、ciphertext、auth tag，以及 profile 参数和 `last_accepted_step`。表结构不含 `secret` 列；因素 ID 主键、账号索引和状态字段为后续登记/验证/撤销事务提供基础。该迁移只完成 schema 扩展，不代表业务写入路径已接通。
+
 ## 当前结论
 
 在上述 contract 产物冻结前，继续写 HTTP handler 或数据库迁移会把 A3、重放粒度和替换语义变成不可逆事实。本轮先完成决策记录与工单拆分；可继续安全推进的代码仅限 RFC 6238 验证器和纯函数重放门禁。

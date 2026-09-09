@@ -109,6 +109,7 @@ describe('§27 要求第一版即存在的字段', () => {
       'accounts',
       'devices',
       'recovery_kits',
+      'totp_factors',
       'request_nonces',
       'schema_migrations',
     ])
@@ -145,6 +146,28 @@ describe('§27 要求第一版即存在的字段', () => {
   it('账户与设备同步状态第一版即存在', () => {
     expect(columnsOf('accounts')).toContain('account_state_seq')
     expect(columnsOf('devices')).toContain('seen_account_state_seq')
+  })
+
+  it('TOTP 因素只保存封装材料与重放游标，不保存明文 secret', () => {
+    const columns = columnsOf('totp_factors')
+    expect(columns).toEqual([
+      'factor_id',
+      'account_id',
+      'state',
+      'algorithm',
+      'digits',
+      'period_seconds',
+      'tolerance_steps',
+      'key_id',
+      'nonce',
+      'aad',
+      'ciphertext',
+      'auth_tag',
+      'last_accepted_step',
+      'created_at',
+      'updated_at',
+    ])
+    expect(columns).not.toContain('secret')
   })
 
   it('恢复水位以 stream_state 表承载，epoch 与高水位成对', () => {
