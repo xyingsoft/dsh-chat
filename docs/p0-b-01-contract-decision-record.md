@@ -46,7 +46,7 @@ A3 仍不是批准的实现。至少必须冻结：AEAD 算法与版本、封装
 - 验证失败统一为 `authentication_failed`，不暴露因素是否存在
 - 验证成功返回 `acceptedStep`，供事务层执行重放门禁
 
-这些类型只定义数据边界，不代表 HTTP 路由、密钥解封或数据库事务已经实现。
+这些类型只定义数据边界，不代表 HTTP 路由、密钥解封或数据库事务已经实现。`packages/chat/identity/src/totp-envelope.ts` 另提供 AES-256-GCM 纯函数封装/解封：密钥由调用方注入，AAD 必须匹配，认证失败统一拒绝；密钥来源、轮换和持久化仍由 relay 契约决定。
 
 ## 需要冻结的 contract 产物
 
