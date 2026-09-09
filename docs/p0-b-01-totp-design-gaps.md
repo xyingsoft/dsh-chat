@@ -33,6 +33,10 @@ DEFAULT_TOTP_CONFIG = {
 
 这是 RFC 6238 的项目默认互操作 profile；验证器仍支持显式传入 SHA-256/SHA-512 和 8 位配置，以便标准向量测试和未来兼容，不代表 P0 业务 API 默认启用这些变体。
 
+## 已实现的纯函数边界
+
+`packages/chat/identity/src/totp-replay.ts` 提供 `acceptTotpStep`：只有严格大于已接受时间步的验证结果才能进入接受分支；首次验证允许 `null`；负数计数器一律拒绝。它不执行持久化，调用方必须在账号/因素范围内用原子 CAS 或数据库事务写入 `nextLastAcceptedStep`，否则并发请求仍可能重放。
+
 ## 当前仍缺少的实现契约
 
 这些内容不能通过代码猜测，必须在契约层或安全细节文档中冻结：
