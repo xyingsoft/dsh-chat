@@ -56,6 +56,8 @@
 | `ARTIFACT_NOT_ACCEPTED` | 409 | 协作 | conditional | 候选产物需有写权限成员确认 |
 | `PROTOCOL_VERSION_UNSUPPORTED` | 426 | 协议 | terminal | 需升级 host 或 relay |
 | `SERVICE_READ_ONLY` | 503 | 恢复 | retryable | 处于 `read_only_recovery` |
+| `TOTP_AUTHENTICATION_FAILED` | 401 | 认证 | conditional | 统一返回，不区分因素不存在、验证码错误或格式错误 |
+| `TOTP_REPLAY_DETECTED` | 401 | 认证 | terminal | 当前时间步已消费，需等待新时间步后重新验证 |
 
 `SANDBOX_QUOTA_EXCEEDED` 与 `ATTACHMENT_UNAVAILABLE` 映射为 200，因为它们是被正常返回的领域状态而不是请求失败；调用方按状态机处理，不按 HTTP 错误处理。
 

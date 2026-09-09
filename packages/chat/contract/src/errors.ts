@@ -222,6 +222,18 @@ export const ERROR_CATALOGUE = {
     category: '恢复',
     idempotency: '处于 `read_only_recovery`',
   },
+  TOTP_AUTHENTICATION_FAILED: {
+    http: 401,
+    retryability: 'conditional',
+    category: '认证',
+    idempotency: '统一返回，不区分因素不存在、验证码错误或格式错误',
+  },
+  TOTP_REPLAY_DETECTED: {
+    http: 401,
+    retryability: 'terminal',
+    category: '认证',
+    idempotency: '当前时间步已消费，需等待新时间步后重新验证',
+  },
 } as const satisfies Record<string, ErrorDefinition>
 
 /** 全部错误码构成的封闭联合类型。 */

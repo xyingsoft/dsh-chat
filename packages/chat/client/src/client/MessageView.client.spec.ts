@@ -437,6 +437,34 @@ describe('消息视图 · 事件流状态必须可见（§5）', () => {
   })
 })
 
+describe('消息视图 · 本地搜索正文（P0-b-07）', () => {
+  it('命中正文时使用 mark 高亮原始文本', () => {
+    const tree = MessageView({
+      messages: [message({ body: '请查阅项目计划' })],
+      streamState: 'connected',
+      highlightQuery: '项目',
+    })
+
+    const marks = findAll(tree, 'mark')
+    expect(marks).toHaveLength(1)
+    expect(marks[0]?.props['children']).toBe('项目')
+    expect(textOf(tree)).toContain('请查阅项目计划')
+    expect(hasDangerousHtml(tree)).toBe(false)
+  })
+
+  it('撤回消息不高亮且不泄露原正文', () => {
+    const tree = MessageView({
+      messages: [message({ body: '这段敏感内容已撤回', revoked: true })],
+      streamState: 'connected',
+      highlightQuery: '敏感',
+    })
+
+    expect(findAll(tree, 'mark')).toHaveLength(0)
+    expect(textOf(tree)).toContain(REVOKED_PLACEHOLDER)
+    expect(textOf(tree)).not.toContain('这段敏感内容已撤回')
+  })
+})
+
 describe('消息视图 · 正文是不可信内容（§18）', () => {
   it('不使用 dangerouslySetInnerHTML', () => {
     // §18：消息正文作为不可信内容处理。P0 没有任何需求要求富文本，

@@ -694,15 +694,24 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
     },
   })
 
-  // 本地搜索：只过滤客户端已拿到的会话（标题/预览），结果与列表同源
+  // 本地搜索：过滤会话标题/预览。当前选中会话的消息正文也在搜（内存里有
+  // 就搜，没有就不搜——不跨会话预载，那是 P1 服务端搜索的事）。命中时该
+  // 会话即使标题/预览不匹配也保留在列表里，消息区高亮命中片段。
   const query = search.trim().toLocaleLowerCase()
+  const selectedMessagesMatch =
+    query.length > 0 &&
+    selectedId !== undefined &&
+    messages.some(
+      (m) => !m.revoked && m.body !== undefined && m.body.toLocaleLowerCase().includes(query),
+    )
   const filteredSummaries =
     query.length === 0
       ? summaries
       : summaries.filter(
           (s) =>
             s.title.toLocaleLowerCase().includes(query) ||
-            s.preview.toLocaleLowerCase().includes(query),
+            s.preview.toLocaleLowerCase().includes(query) ||
+            (selectedMessagesMatch && s.conversationId === selectedId),
         )
 
   const list = createElement(
@@ -725,7 +734,7 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
             ? createElement(
                 'div',
                 { className: styles['searchEmpty'] },
-                createElement('p', null, '没有匹配的会话或消息'),
+                createElement('p', null, '没有匹配的会话'),
               )
             : createElement(ConversationList, {
                 conversations: filteredSummaries,
@@ -785,6 +794,8 @@ export function ChatSection(props: ChatSectionProps): ReactElement {
             onRetry: (messageId: string) => retryMessage(messageId),
             // 撤回入口：先弹确认，确认后才调 host
             onRevoke: (messageId: string) => setConfirmRevokeId(messageId),
+            // 搜索命中词：只在当前会话的消息正文里高亮
+            ...(query.length === 0 ? {} : { highlightQuery: search.trim() }),
             // 编辑四件套：状态在这里，MessageView 只负责呈现
             editing,
             onStartEdit: (messageId: string, initialDraft: string) =>

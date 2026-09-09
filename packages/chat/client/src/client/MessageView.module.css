@@ -247,3 +247,17 @@
 .editHint.overLimit {
   color: var(--dsh-chat-danger);
 }
+
+/* 搜索命中高亮：与 ConversationList 同一视觉口径 */
+.mark {
+  background: var(--dsh-chat-warning-soft);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dsh-chat-warning) 55%, transparent);
+}
+
+[data-theme='dark'] .mark {
+  background: #4d3a11;
+  color: #f0c46a;
+}
